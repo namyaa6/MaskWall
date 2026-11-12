@@ -20,6 +20,11 @@ Usage:
     python ml/data/load_datasets.py [--benign-ratio 3] [--seed 42]
                                     [--near-dup-threshold 0.9] [--out-dir ml/data/processed]
                                     [--label-fixes ml/data/label_fixes.csv | --no-label-fixes]
+                                    [--augment-indirect [--augment-n 400]]
+
+--augment-indirect additionally writes train_augmented.parquet (train + synthetic indirect-injection
+rows, see ml/data/augment_indirect.py) and augmented_indirect.parquet (the synthetic rows with metadata).
+val, test, xstest and train.parquet are unchanged by the flag.
 """
 
 import argparse
@@ -94,6 +99,12 @@ def load_trustairlab_regular() -> pd.DataFrame:
 def load_dolly() -> pd.DataFrame:
     df = _all_splits("databricks/databricks-dolly-15k")
     return pd.DataFrame({"text": df["instruction"], "label": 0, "source": "dolly"})
+
+
+def load_dolly_contexts() -> list[str]:
+    """Dolly context passages (Wikipedia-style text). Only used to build augmented_indirect rows."""
+    df = _all_splits("databricks/databricks-dolly-15k")
+    return [c for c in df["context"].dropna().astype(str) if c.strip()]
 
 
 def load_xstest_safe() -> pd.DataFrame:
@@ -259,6 +270,9 @@ def main() -> None:
     p.add_argument("--near-dup-threshold", type=float, default=0.9)
     p.add_argument("--out-dir", type=Path, default=Path(__file__).parent / "processed")
     p.add_argument("--label-fixes", type=Path, default=Path(__file__).parent / "label_fixes.csv")
+    p.add_argument("--augment-indirect", action="store_true",
+                   help="also write train_augmented.parquet: train + synthetic indirect-injection rows (train only)")
+    p.add_argument("--augment-n", type=int, default=400, help="rows per class for --augment-indirect")
     p.add_argument("--no-label-fixes", action="store_true", help="skip hand-reviewed label fixes")
     args = p.parse_args()
 
@@ -326,6 +340,19 @@ def main() -> None:
     for name, d in [("train", train), ("val", val), ("test", test), ("xstest_safe", xstest)]:
         d[cols].to_parquet(args.out_dir / f"{name}.parquet", index=False)
     print(f"\nsaved to {args.out_dir}")
+
+    if args.augment_indirect:
+        import json
+
+        import augment_indirect as ai
+
+        aug, summary = ai.build(train, val, test, xstest, pd.read_csv(Path(__file__).parent / "tricky.csv"),
+                                load_dolly_contexts(), is_english, n_each=args.augment_n, seed=args.seed)
+        aug.to_parquet(args.out_dir / "augmented_indirect.parquet", index=False)
+        pd.concat([train[cols], aug[cols]], ignore_index=True).to_parquet(args.out_dir / "train_augmented.parquet", index=False)
+        print("\n=== indirect-injection augmentation (train only) ===")
+        print(json.dumps(summary, indent=2, default=str))
+        print(f"train_augmented: {len(train)} + {len(aug)} rows; val/test/xstest/tricky untouched")
 
 
 if __name__ == "__main__":

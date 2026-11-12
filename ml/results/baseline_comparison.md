@@ -1,3 +1,5 @@
+> **Superseded (2026-11-12):** measured before the template-cluster drop; current numbers are in `augmentation_comparison.md` and `metrics.json` (`baselines`).
+
 ### Cleaned labels (test n=953, 218 attacks)
 
 | model | C | thr | P | R | F1 | FPR | ROC-AUC | PR-AUC | recall @ val-FPR≤1% (test FPR) | tricky | xstest FP |

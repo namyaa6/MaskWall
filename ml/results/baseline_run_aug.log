@@ -1,0 +1,49 @@
+[cleaned] training length_lr ...
+[cleaned] training word_tfidf ...
+[cleaned] training wordchar ...
+[cleaned] training minilm_emb ...
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 1796.92it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Batches:   0%|          | 0/2 [00:00<?, ?it/s]Batches:  50%|█████     | 1/2 [00:01<00:01,  1.52s/it]Batches: 100%|██████████| 2/2 [00:01<00:00,  1.27it/s]
+[cleaned_aug] training length_lr ...
+[cleaned_aug] training word_tfidf ...
+[cleaned_aug] training wordchar ...
+[cleaned_aug] training minilm_emb ...
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 1907.89it/s]
+Batches:   0%|          | 0/25 [00:00<?, ?it/s]Batches:   4%|▍         | 1/25 [00:01<00:32,  1.36s/it]Batches:   8%|▊         | 2/25 [00:02<00:30,  1.34s/it]Batches:  12%|█▏        | 3/25 [00:03<00:28,  1.31s/it]Batches:  16%|█▌        | 4/25 [00:05<00:27,  1.30s/it]Batches:  20%|██        | 5/25 [00:06<00:26,  1.32s/it]Batches:  24%|██▍       | 6/25 [00:07<00:24,  1.31s/it]Batches:  28%|██▊       | 7/25 [00:09<00:23,  1.30s/it]Batches:  32%|███▏      | 8/25 [00:10<00:22,  1.34s/it]Batches:  36%|███▌      | 9/25 [00:13<00:30,  1.89s/it]Batches:  40%|████      | 10/25 [00:16<00:34,  2.30s/it]Batches:  44%|████▍     | 11/25 [00:22<00:45,  3.22s/it]Batches:  48%|████▊     | 12/25 [00:25<00:41,  3.17s/it]Batches:  52%|█████▏    | 13/25 [00:28<00:37,  3.13s/it]Batches:  56%|█████▌    | 14/25 [00:31<00:33,  3.09s/it]Batches:  60%|██████    | 15/25 [00:34<00:30,  3.02s/it]Batches:  64%|██████▍   | 16/25 [00:36<00:25,  2.88s/it]Batches:  68%|██████▊   | 17/25 [00:39<00:22,  2.84s/it]Batches:  72%|███████▏  | 18/25 [00:41<00:19,  2.72s/it]Batches:  76%|███████▌  | 19/25 [00:43<00:14,  2.35s/it]Batches:  80%|████████  | 20/25 [00:44<00:09,  1.90s/it]Batches:  84%|████████▍ | 21/25 [00:45<00:07,  1.80s/it]Batches:  88%|████████▊ | 22/25 [00:48<00:05,  1.98s/it]Batches:  92%|█████████▏| 23/25 [00:49<00:03,  1.86s/it]Batches:  96%|█████████▌| 24/25 [00:51<00:01,  1.70s/it]Batches: 100%|██████████| 25/25 [00:52<00:00,  1.50s/it]Batches: 100%|██████████| 25/25 [00:52<00:00,  2.09s/it]
+[original_labels] training length_lr ...
+[original_labels] training word_tfidf ...
+[original_labels] training wordchar ...
+[original_labels] training minilm_emb ...
+[original_labels_aug] training length_lr ...
+[original_labels_aug] training word_tfidf ...
+[original_labels_aug] training wordchar ...
+[original_labels_aug] training minilm_emb ...
+
+== cleaned ==
+model          C    thr |      P     R    F1   FPR   AUC |   R@1%   FPR | tricky | xstest FP
+length_lr    0.1  0.184 |  0.247 0.870 0.385 0.770 0.558 |  0.010 0.006 | 16/49    | 79/250
+word_tfidf   100  0.363 |  0.906 0.880 0.893 0.026 0.992 |  0.837 0.007 | 38/49    | 0/250
+wordchar     100  0.454 |  0.915 0.880 0.897 0.024 0.991 |  0.846 0.010 | 33/49    | 0/250
+minilm_emb    10  0.424 |  0.837 0.865 0.851 0.049 0.977 |  0.784 0.014 | 36/49    | 7/250
+
+== cleaned_aug ==
+model          C    thr |      P     R    F1   FPR   AUC |   R@1%   FPR | tricky | xstest FP
+length_lr    0.1  0.190 |  0.243 0.817 0.374 0.739 0.556 |  0.010 0.006 | 16/49    | 54/250
+word_tfidf   100  0.414 |  0.919 0.875 0.897 0.022 0.990 |  0.779 0.004 | 34/49    | 0/250
+wordchar     100  0.647 |  0.947 0.856 0.899 0.014 0.990 |  0.812 0.011 | 31/49    | 0/250
+minilm_emb    10  0.553 |  0.829 0.841 0.835 0.050 0.968 |  0.716 0.015 | 35/49    | 5/250
+
+== original_labels ==
+model          C    thr |      P     R    F1   FPR   AUC |   R@1%   FPR | tricky | xstest FP
+length_lr    0.1  0.188 |  0.254 0.882 0.394 0.765 0.561 |  0.009 0.006 | 16/49    | 77/250
+word_tfidf   100  0.239 |  0.858 0.886 0.872 0.043 0.969 |  0.754 0.008 | 38/49    | 0/250
+wordchar      10  0.306 |  0.862 0.891 0.876 0.042 0.970 |  0.773 0.013 | 33/49    | 0/250
+minilm_emb    10  0.369 |  0.801 0.839 0.819 0.062 0.957 |  0.720 0.020 | 35/49    | 11/250
+
+== original_labels_aug ==
+model          C    thr |      P     R    F1   FPR   AUC |   R@1%   FPR | tricky | xstest FP
+length_lr    0.1  0.191 |  0.251 0.872 0.390 0.768 0.559 |  0.009 0.006 | 16/49    | 79/250
+word_tfidf   100  0.349 |  0.874 0.858 0.866 0.036 0.969 |  0.730 0.006 | 33/49    | 0/250
+wordchar      10  0.403 |  0.876 0.839 0.857 0.035 0.970 |  0.744 0.014 | 32/49    | 0/250
+minilm_emb    10  0.566 |  0.818 0.787 0.802 0.052 0.947 |  0.626 0.017 | 32/49    | 5/250

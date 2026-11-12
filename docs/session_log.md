@@ -110,3 +110,8 @@ How to read it:
 
 ## Not done (out of scope for this session)
 Step 5 (ONNX export, quantization, benchmark), Step 6 (Prompt Guard), Step 7 (final comparison chart and the review subagent), Day 3's PII model selection, bootstrap CIs, and any run of the Colab notebook.
+
+## Update after review (2026-11-12, later)
+- Spot-check rows #13 (CHUM) and #15 (Resumaster) confirmed benign by the reviewer.
+- The 183-row template item is closed: the whole cluster (817 distinct texts in the raw data) was dropped; see `docs/decisions.md` Day 1.5. **All numbers in this log's results tables are superseded** by the splits train 7,857 / val 921 / test 925 and by Day 1.6 (`ml/results/augmentation_comparison.md`).
+- Indirect-injection augmentation, bootstrap CIs, `.gitattributes` and the notebook update are done; see Day 1.6. Headline: augmentation gave no measurable gain for the linear baselines.
