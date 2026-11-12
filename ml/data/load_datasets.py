@@ -3,18 +3,27 @@
 Labels: 0 = benign, 1 = injection or jailbreak (merged; the firewall blocks both).
 Every row keeps a `source` column so metrics can be reported per source.
 
-Pipeline: load -> clean -> exact dedup -> sample benign -> stratified split
+Pipeline: load -> clean -> apply hand-reviewed label fixes -> exact dedup -> sample benign
+          -> remove rows dropped as ambiguous -> stratified split
           -> English-only filter -> drop near-duplicates of train from val/test
           -> save + report.
+
+Label fixes (ml/data/label_fixes.csv, keyed by SHA-256 of the normalized text) come from a
+hand review of rows an out-of-fold classifier flagged as possibly mislabeled; see
+docs/decisions.md. Output has `label` (cleaned) and `label_original` (before fixes), so any
+metric can be reported on either. Benign sampling uses `label_original`, so the sampled rows
+don't change when labels do. Pass --no-label-fixes to reproduce the unfixed dataset.
 
 See docs/decisions.md for why each dataset was included or excluded.
 
 Usage:
     python ml/data/load_datasets.py [--benign-ratio 3] [--seed 42]
                                     [--near-dup-threshold 0.9] [--out-dir ml/data/processed]
+                                    [--label-fixes ml/data/label_fixes.csv | --no-label-fixes]
 """
 
 import argparse
+import hashlib
 import re
 from pathlib import Path
 
@@ -109,6 +118,28 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
+def apply_label_fixes(df: pd.DataFrame, path: Path | None) -> pd.DataFrame:
+    """Add `label_original`, apply relabels, and flag rows to drop (removed after benign sampling)."""
+    df = df.assign(label_original=df["label"], drop_row=False)
+    if path is None:
+        return df
+    fixes = pd.read_csv(path, dtype={"new_label": str})
+    df["hash"] = df["norm"].map(lambda t: hashlib.sha256(t.encode()).hexdigest())
+    missing = set(fixes["text_hash"]) - set(df["hash"])
+    assert not missing, f"{len(missing)} label fixes match no row (text changed or source removed)"
+    for _, f in fixes.iterrows():
+        rows = df["hash"] == f["text_hash"]
+        assert (df.loc[rows, "label_original"] == f["old_label"]).all(), "fix old_label disagrees with data"
+        if f["new_label"] == "drop":
+            df.loc[rows, "drop_row"] = True
+        else:
+            df.loc[rows, "label"] = int(f["new_label"])
+    kinds = fixes["new_label"].map(lambda v: "drop" if v == "drop" else f"relabel->{v}").value_counts()
+    print(f"label fixes applied from {path.name}: {len(fixes)} texts ({kinds.to_dict()}), "
+          f"{int((df['label'] != df['label_original']).sum())} rows relabeled, {int(df['drop_row'].sum())} rows flagged to drop")
+    return df.drop(columns="hash")
+
+
 def dedup(df: pd.DataFrame) -> pd.DataFrame:
     """Exact dedup on normalized text; drop texts seen with conflicting labels."""
     n_labels = df.groupby("norm")["label"].nunique()
@@ -154,9 +185,11 @@ def sample_benign(df: pd.DataFrame, ratio: float, seed: int) -> pd.DataFrame:
     """Keep all attacks and native benign rows; top up from the big benign pools
     (TrustAIRLab-regular, Dolly) evenly until benign ~= ratio * attacks."""
     pools = ["trustairlab_regular", "dolly"]
+    # Sample on the ORIGINAL labels so label fixes don't change which rows are drawn.
+    lab = df["label_original"] if "label_original" in df else df["label"]
     fixed = df[~df["source"].isin(pools)]
-    n_attacks = int((df["label"] == 1).sum())
-    budget = int(ratio * n_attacks) - int((fixed["label"] == 0).sum())
+    n_attacks = int((lab == 1).sum())
+    budget = int(ratio * n_attacks) - int((lab[fixed.index] == 0).sum())
     per_pool = max(budget, 0) // len(pools)
     sampled = [
         df[df["source"] == p].sample(n=min(per_pool, int((df["source"] == p).sum())), random_state=seed)
@@ -225,6 +258,8 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--near-dup-threshold", type=float, default=0.9)
     p.add_argument("--out-dir", type=Path, default=Path(__file__).parent / "processed")
+    p.add_argument("--label-fixes", type=Path, default=Path(__file__).parent / "label_fixes.csv")
+    p.add_argument("--no-label-fixes", action="store_true", help="skip hand-reviewed label fixes")
     args = p.parse_args()
 
     loaders = [
@@ -238,12 +273,16 @@ def main() -> None:
     raw = pd.concat([f() for f in loaders], ignore_index=True)
     print(f"loaded {len(raw)} rows from {raw['source'].nunique()} sources")
 
-    df = dedup(clean(raw))
+    df = dedup(apply_label_fixes(clean(raw), None if args.no_label_fixes else args.label_fixes))
     df = sample_benign(df, args.benign_ratio, args.seed)
+    n_dropped = int(df["drop_row"].sum())
+    df = df[~df["drop_row"]].reset_index(drop=True)
+    print(f"removed {n_dropped} sampled rows dropped as ambiguous by label review")
     train, val, test = split(df, args.seed)
 
     # XSTest: drop anything that already appears in the training pool, then report near-dups.
     xstest = clean(load_xstest_safe())
+    xstest["label_original"] = xstest["label"]  # no label fixes for the eval-only safe set
     xstest = xstest[~xstest["norm"].isin(df["norm"])].reset_index(drop=True)
 
     # English only: DistilBERT/MiniLM are English models (see docs/decisions.md).
@@ -274,12 +313,16 @@ def main() -> None:
         n1 = int(d["label"].sum())
         print(f"{name}: {len(d)} rows, {n1} attacks, benign:attack = {(len(d) - n1) / max(n1, 1):.2f}")
     print(f"xstest_safe: {len(xstest)} rows (eval only)")
+    print("\n=== label fixes in final splits (rows whose label != label_original) ===")
+    for name, d in [("train", train), ("val", val), ("test", test)]:
+        up, down = int(((d.label_original == 0) & (d.label == 1)).sum()), int(((d.label_original == 1) & (d.label == 0)).sum())
+        print(f"{name}: relabeled 0->1: {up}, 1->0: {down}")
 
     print("\n=== text length per label x source (train+val+test) ===")
     print(length_stats(pd.concat([train, val, test])).to_string())
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    cols = ["text", "label", "source"]
+    cols = ["text", "label", "source", "label_original"]
     for name, d in [("train", train), ("val", val), ("test", test), ("xstest_safe", xstest)]:
         d[cols].to_parquet(args.out_dir / f"{name}.parquet", index=False)
     print(f"\nsaved to {args.out_dir}")

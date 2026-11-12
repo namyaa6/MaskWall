@@ -1,0 +1,82 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+loaded 33119 rows from 6 sources
+label fixes applied from label_fixes.csv: 170 texts ({'relabel->0': 73, 'relabel->1': 66, 'drop': 31}), 155 rows relabeled, 36 rows flagged to drop
+dedup: dropping 43 texts with conflicting labels
+dedup: dropped 1385 exact duplicates
+removed 31 sampled rows dropped as ambiguous by label review
+
+=== non-English rows dropped ===
+                             train  val  test  xstest_safe
+source                label                               
+deepset               0        153   20    20            0
+                      1         84    9     9            0
+dolly                 0         10    1     2            0
+gandalf               1          6    2     0            0
+jackhhao              0          5    0     0            0
+                      1          4    0     0            0
+trustairlab_jailbreak 1          9    3     0            0
+trustairlab_regular   0        121   14    21            0
+total                          392   49    52            0
+
+=== near-duplicates vs train (cosine > 0.9) ===
+val: 64 / 1009 dropped
+source                 label
+deepset                0         2
+                       1         2
+dolly                  0         7
+gandalf                1         1
+jackhhao               1        17
+trustairlab_jailbreak  1        14
+trustairlab_regular    0        19
+                       1         2
+test: 54 / 1007 dropped
+source                 label
+deepset                0         1
+                       1         2
+dolly                  0         7
+jackhhao               1        19
+trustairlab_jailbreak  1        13
+trustairlab_regular    0        11
+                       1         1
+xstest_safe: 1 / 250 reported only
+source       label
+xstest_safe  0        1
+
+=== counts per split x source x label ===
+                             train  val  test
+source                label                  
+deepset               0        174   19    20
+                      1        113   14    13
+dolly                 0       2758  338   338
+gandalf               1        793   97   100
+jackhhao              0        516   65    65
+                      1        483   44    42
+trustairlab_jailbreak 0         40    5     5
+                      1        556   53    58
+trustairlab_regular   0       2586  305   307
+                      1         53    5     5
+train: 8072 rows, 1998 attacks, benign:attack = 3.04
+val: 945 rows, 213 attacks, benign:attack = 3.44
+test: 953 rows, 218 attacks, benign:attack = 3.37
+xstest_safe: 250 rows (eval only)
+
+=== label fixes in final splits (rows whose label != label_original) ===
+train: relabeled 0->1: 53, 1->0: 55
+val: relabeled 0->1: 5, 1->0: 11
+test: relabeled 0->1: 5, 1->0: 6
+
+=== text length per label x source (train+val+test) ===
+                                n  chars_med  chars_p90  words_med  words_p90
+label source                                                                 
+0     deepset                 213         42        158          7         29
+      dolly                  3434         55        123         10         20
+      jackhhao                646        235       1310         39        217
+      trustairlab_jailbreak    50        788       3850        130        650
+      trustairlab_regular    3198        830       4233        135        651
+1     deepset                 140        116        290         20         52
+      gandalf                 990         61        129          9         21
+      jackhhao                569       1555       4207        261        725
+      trustairlab_jailbreak   667       2045       6423        336       1025
+      trustairlab_regular      63       2515       7149        420       1118
+
+saved to D:\Projects2025\MaskWall\ml\data\processed
