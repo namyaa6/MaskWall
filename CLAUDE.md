@@ -37,7 +37,7 @@ Response shown to user
 ```
 
 ## Tech stack
-- **ML:** Python 3.11, scikit-learn (baseline), Hugging Face Transformers + Datasets, fine-tune DistilBERT or MiniLM on Google Colab GPU
+- **ML:** Python 3.13, scikit-learn (baseline), Hugging Face Transformers + Datasets, fine-tune DistilBERT or MiniLM on Google Colab GPU
 - **Optimization:** ONNX export + int8 quantization (Hugging Face Optimum / ONNX Runtime)
 - **Backend:** FastAPI, Pydantic, SQLite (logs), slowapi (rate limiting), pytest
 - **Frontend:** React + Vite, Transformers.js (WASM backend, not WebGPU)

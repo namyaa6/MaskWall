@@ -4,3 +4,4 @@ __pycache__/
 node_modules/
 models/*.onnx
 *.bin
+ml/data/processed/
