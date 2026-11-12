@@ -117,3 +117,14 @@ Step 5 (ONNX export, quantization, benchmark), Step 6 (Prompt Guard), Step 7 (fi
 - Indirect-injection augmentation, bootstrap CIs, `.gitattributes` and the notebook update are done; see Day 1.6. Headline: augmentation gave no measurable gain for the linear baselines.
 - Held-out `indirect_eval.parquet` (114 + 114, val/test attack strings, fresh passages and wordings) built and evaluated; newline asymmetry in the augmentation found and fixed. Details and results: `docs/decisions.md` Day 1.7. Notebook now needs 8 uploads and evaluates every model on it.
 - Colab results (4 transformer runs) are in `ml/results/metrics_transformers.json`; full comparison in `ml/results/comparison.md`; findings and the open selection-rule question in `docs/decisions.md` Day 1.8. DeBERTa fp16 crash fixed in the notebook generator (`.float()`).
+
+# Session log: Step 5 unattended work (ONNX export, int8, benchmark), 2026-11-12 (night)
+
+Nothing was pushed. `.env` was not touched. Nothing was deleted outside `ml/cache/`, `ml/results/` and `models/onnx/`. Work is committed locally after each part.
+
+## Decisions made while you were away
+
+1. **The fine-tuned checkpoints are NOT on this machine.** You said they were in `models/ckpt/`; that folder does not exist, and a search of the project, Downloads, Desktop, Documents and D: found no `model.safetensors`, no `maskwall_ckpt`, no checkpoint zip. I did not try to fetch them from Drive: the Drive connector returns file contents as base64 text inside the conversation, which is not workable for 570 MB. **Everything that needs the trained weights is therefore not done** (F1 of the exported models, indirect_val recall, the server/browser model selection). See "Blocked" at the end.
+2. **Built and tested everything that does not need the weights**, using pretrained stand-ins of the same architectures (random classification head): export, parity gate, int8 quantization, size, CPU latency, and the DeBERTa exportability question. Size, latency and exportability depend on the architecture, not on the fine-tuned weights, so those numbers are valid for the real checkpoints; F1 numbers are not available and are not faked.
+3. **Selection is scripted, not decided.** `ml/select_models.py` implements the amended rule and the browser rule; it refuses to run without real results. One command finishes Step 5 once `models/ckpt/` exists.
+4. **Amended selection rule** logged in `docs/decisions.md` Day 1.9 as a post-hoc change, with `indirect_val` / `indirect_test` (split by attack-string origin, benign rows split at random, seed 42).

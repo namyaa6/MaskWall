@@ -348,3 +348,23 @@ What this says:
 - indirect_eval and the augmentation share a recipe and an author; tricky is 49 rows drafted by the same author.
 - Label noise remains in train/val/test (Day 1.3 residual estimate ~4%, plus the cases above); metrics are against my cleaned labels.
 - Thresholds come from val F1 on a val set with no indirect rows; the augmented models' thresholds (0.941, 0.076) are the least trustworthy.
+
+## Day 1.9: Amended server-model selection rule, `indirect_val` / `indirect_test` (post-hoc)
+
+### The change, and why it is post hoc
+The rule written in CLAUDE.md before any results existed: **highest val F1 among int8 models with p50 CPU latency under 50 ms.** After the Colab run (Day 1.8) it turned out that val has no indirect-injection rows, so the rule cannot reward augmentation: val F1 is 0.925 / 0.923 / 0.920 / 0.914 for DeBERTa+aug / MiniLM / DeBERTa / MiniLM+aug (a spread inside noise), and the rule could pick plain MiniLM, whose indirect_eval F1 is 0.345 against 0.950 for MiniLM+aug. The owner chose to amend the rule. **This amendment was made after seeing indirect_eval and the 12-model comparison, so it is tailored to results already seen; it is not a pre-registered rule.** It is recorded as a post-hoc change, and the original rule's pick is reported next to it.
+
+**Amended rule.** Among int8 models with p50 natural-length CPU latency < 50 ms (2 intra-op threads), keep those with
+**indirect_val recall >= 0.80 and indirect_val FPR <= 0.05**, at the threshold tuned on the main val set (re-tuned for the int8 model); among those, the **highest val F1** wins. If no model passes, fall back to the original rule and say so. `indirect_test` is reporting only.
+
+### The split (`ml/data/split_indirect_eval.py`, seed 42)
+`indirect_eval.parquet` (114 + 114) is split by where the attack string came from:
+- **indirect_val:** 116 rows = 59 attacks built from **val** attack strings + 57 randomly chosen benign rows (gandalf 29, jackhhao 12, deepset 10, trustairlab_jailbreak 8).
+- **indirect_test:** 112 rows = 55 attacks built from **test** attack strings + the other 57 benign rows (reporting only).
+Benign rows have no attack-string origin, so they are split at random. Thresholds are still tuned on the main val set only; `indirect_val` is used only to check recall/FPR at that threshold.
+
+### Caveats (to say out loud)
+- **Small gates:** recall >= 0.80 on 59 attacks has a 95% interval of about +/-0.10; a model at 0.80 is not distinguishable from one at 0.70. FPR <= 0.05 on 57 benign rows allows at most 2 false positives.
+- **Not blind:** I (and the owner) already saw indirect_eval results for all 12 models before choosing the thresholds 0.80 / 0.05, and the val-derived attacks in indirect_val were part of what we saw. The gate was chosen knowing the augmented models pass it and the plain ones don't.
+- **It still only measures the augmentation's own recipe** (indirect_eval is partly in-distribution, Day 1.7). A model can pass the gate without being robust to real indirect injections.
+- **The gate does not constrain main-val/test FPR**, so a trigger-happy model (DeBERTa+aug: test FPR 0.052, xstest 3 FP) can still win on val F1. Reported alongside the pick.
