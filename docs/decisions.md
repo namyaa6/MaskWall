@@ -368,3 +368,38 @@ Benign rows have no attack-string origin, so they are split at random. Threshold
 - **Not blind:** I (and the owner) already saw indirect_eval results for all 12 models before choosing the thresholds 0.80 / 0.05, and the val-derived attacks in indirect_val were part of what we saw. The gate was chosen knowing the augmented models pass it and the plain ones don't.
 - **It still only measures the augmentation's own recipe** (indirect_eval is partly in-distribution, Day 1.7). A model can pass the gate without being robust to real indirect injections.
 - **The gate does not constrain main-val/test FPR**, so a trigger-happy model (DeBERTa+aug: test FPR 0.052, xstest 3 FP) can still win on val F1. Reported alongside the pick.
+
+## Day 1.10: Step 5, ONNX export, int8 quantization, latency (PARTIAL: architecture results only, no trained weights yet)
+
+**Status.** The fine-tuned checkpoints were not on the machine when this ran (`models/ckpt/` did not exist; see `docs/session_log.md`). Everything that depends only on the *architecture* was built, tested and measured on **pretrained stand-ins with random classification heads**: export, parity gate, int8 quantization, size, CPU latency, DeBERTa exportability. Anything that needs trained weights (F1 of the exported models, indirect_val recall, the server and browser model selection) is **not done**; the code is written and smoke-tested, and the selection script refuses to run on stand-ins. No stand-in accuracy number appears anywhere.
+
+### Method (fixed before any number was seen)
+- **Export** (`ml/export_quantize.py`): legacy TorchScript exporter, opset 17, inputs `input_ids` + `attention_mask`, dynamic batch and sequence axes, output `logits`. Weights loaded and cast to fp32. Both architectures exported on the first attempt; the dynamo fallback was never needed.
+- **Parity gate:** PyTorch vs ONNX-fp32 logits on 200 val prompts at batch 1 (natural head+tail lengths); max |diff| must be <= 1e-3 or the job stops. Result: MiniLM **7.5e-8**, DeBERTa-v3-small **2.5e-7**.
+- **int8:** `onnxruntime` dynamic quantization, QInt8 weights, per-channel, ops `MatMul` and `Gather` (the embedding table is a large share of these models, so it is quantized too), after `quant_pre_process`. Dynamic quantization needs no calibration data.
+- **Latency** (`ml/benchmark.py`): CPUExecutionProvider, 2 intra-op threads (to mimic a 2-vCPU Hugging Face Space), batch 1, 20 warm-ups, 300 timed runs each on a different random val prompt at its natural head+tail length, plus 100 runs on a full 512-token input; only `session.run` is timed. Machine: Intel Tiger Lake laptop CPU (8 cores, limited to 2 threads here).
+- **Shared tokenization** (`ml/headtail.py`): identical to the notebook's head 256 + tail 254. The server and the browser layer must reproduce it (Transformers.js truncates the head only by default).
+
+### Results (stand-ins; size and latency are valid for the real checkpoints, which have the same shapes)
+| model | fp32 MB | int8 MB | fp32 p50 / p95 ms (natural) | int8 p50 / p95 ms (natural) | 512-token p50 fp32 / int8 ms |
+|---|---|---|---|---|---|
+| MiniLM-L6 (22M) | 91.0 | **23.1** | 21.1 / 447 | **9.1 / 295** | 442 / 289 |
+| DeBERTa-v3-small (142M) | 568.1 | 161.2 | 82.4 / 1409 | **42.8 / 882** | 1349 / 785 |
+(median natural prompt is about 30 tokens; the p95 is dominated by long prompts.)
+
+What this says:
+- **Both int8 models pass the 50 ms p50 gate on this machine, DeBERTa narrowly (42.8 ms).** A free Hugging Face CPU is likely slower than this laptop, so DeBERTa may fail on the deployment target; MiniLM has a 5x margin.
+- **Latency is dominated by input length:** a 512-token prompt costs 289 ms (MiniLM int8) to 785 ms (DeBERTa int8). Server design should cap or rate-limit long inputs; the p50 hides this.
+- **int8 speed-up:** 2.3x (MiniLM), 1.9x (DeBERTa). **MiniLM int8 is 23.1 MB, under the 30 MB browser budget**; DeBERTa (161 MB) cannot go in the browser.
+- **int8 accuracy cost is unknown.** The only signal is score agreement between fp32 and int8 with a random head (not meaningful as accuracy): Pearson r = 0.989 for MiniLM and 0.854 for DeBERTa. DeBERTa is the one to watch on the real weights.
+
+### Bugs found on the way
+- **Train-mode flip (harness bug, caught by the parity gate):** `torch.onnx.export` restores the module's original train/eval flag afterwards, and a fresh wrapper module starts in train mode, so exporting silently switched the wrapped model back to train mode (dropout on) and the PyTorch reference then disagreed with ONNX by ~4e-2. Fix: wrap with `.eval()` and call `model.eval()` after export. A re-loaded model matched ONNX to 7e-8, which is how it was located.
+- **Disk:** the system drive was 100% full (503 MB free) and Python's temp directory is on it; quantizing DeBERTa failed with "No space left on device". Run with `TEMP`/`TMP` pointed at `ml/cache/tmp` on D:.
+
+### Not tested
+- Padded-batch masking in the exported graphs (all measurements and the planned server use batch size 1).
+- Any real-weight accuracy, any browser (Transformers.js) loading of the int8 model.
+
+### Pending (needs `models/ckpt/`): selection
+Run order and the rules are in `docs/session_log.md` ("How to finish Step 5") and `ml/select_models.py`: the amended server rule (Day 1.9) plus the browser rule (int8 <= 30 MB, same indirect gate, best val F1), with the original rule's pick printed alongside.

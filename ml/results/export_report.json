@@ -1,0 +1,50 @@
+{
+  "standin:minilm": {
+    "job": "minilm",
+    "standin": true,
+    "dir": "models\\onnx\\_standin\\minilm",
+    "params_m": 22.7,
+    "exporter": "torchscript",
+    "fp32_mb": 91.0,
+    "parity_fp32": {
+      "n": 200,
+      "max_abs_logit_diff": 7.450580596923828e-08,
+      "mean_abs_logit_diff": 2.443033686461149e-08,
+      "tolerance": 0.001
+    },
+    "quantize_note": "pre-processed",
+    "int8_mb": 23.1,
+    "int8_vs_fp32": {
+      "n": 200,
+      "score_pearson": 0.9892001957016517,
+      "decision_agreement_at_0.5": 0.955,
+      "max_abs_score_diff": 0.0026328563690185547
+    },
+    "status": "ok",
+    "seconds": 98
+  },
+  "standin:deberta_v3_small": {
+    "job": "deberta_v3_small",
+    "standin": true,
+    "dir": "models\\onnx\\_standin\\deberta_v3_small",
+    "params_m": 141.9,
+    "exporter": "torchscript",
+    "fp32_mb": 568.1,
+    "parity_fp32": {
+      "n": 200,
+      "max_abs_logit_diff": 2.5331974029541016e-07,
+      "mean_abs_logit_diff": 9.820796265103127e-08,
+      "tolerance": 0.001
+    },
+    "quantize_note": "pre-processed",
+    "int8_mb": 161.2,
+    "int8_vs_fp32": {
+      "n": 200,
+      "score_pearson": 0.8540141724303169,
+      "decision_agreement_at_0.5": 1.0,
+      "max_abs_score_diff": 0.009654521942138672
+    },
+    "status": "ok",
+    "seconds": 859
+  }
+}

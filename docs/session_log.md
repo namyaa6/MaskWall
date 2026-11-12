@@ -128,3 +128,36 @@ Nothing was pushed. `.env` was not touched. Nothing was deleted outside `ml/cach
 2. **Built and tested everything that does not need the weights**, using pretrained stand-ins of the same architectures (random classification head): export, parity gate, int8 quantization, size, CPU latency, and the DeBERTa exportability question. Size, latency and exportability depend on the architecture, not on the fine-tuned weights, so those numbers are valid for the real checkpoints; F1 numbers are not available and are not faked.
 3. **Selection is scripted, not decided.** `ml/select_models.py` implements the amended rule and the browser rule; it refuses to run without real results. One command finishes Step 5 once `models/ckpt/` exists.
 4. **Amended selection rule** logged in `docs/decisions.md` Day 1.9 as a post-hoc change, with `indirect_val` / `indirect_test` (split by attack-string origin, benign rows split at random, seed 42).
+5. **Disk space:** the C: drive is at 99-100% (0.5-3 GB free). Python's temp directory is on it, which broke the DeBERTa int8 quantization (`No space left on device`). I did not delete anything on C: (outside the allowed paths); I ran the export/benchmark with `TEMP`/`TMP` set to `ml/cache/tmp` on D:. Do the same for the real run (command below), and consider freeing space on C:.
+6. **Benchmark protocol as agreed** (2 threads, batch 1), with details I chose: 20 warm-ups, 300 timed runs on random val prompts at natural length (the p50 the 50 ms rule uses), plus 100 runs at 512 tokens; only `session.run` is timed.
+7. **Quantization settings** (my choice, fixed before measuring): dynamic QInt8, per-channel, ops `MatMul` and `Gather` (so the embedding table is quantized and MiniLM fits the 30 MB browser budget), `quant_pre_process` first.
+8. **Browser rule extension:** CLAUDE.md says "most accurate model under ~30 MB int8". I apply the same indirect_val gate to the browser model as to the server model (your amendment's reasoning, that val cannot see indirect injection, applies equally to the MiniLM plain/aug choice). `select_models.py` also prints what the unamended rule would pick, so you can overrule this.
+9. **DeBERTa 30-minute debugging cap:** not needed. DeBERTa-v3-small exported on the first attempt with the legacy TorchScript exporter (parity 2.5e-7). The only failure was the full disk.
+10. **Smoke tests:** `benchmark.py --smoke` and `select_models.py --smoke` exercise the accuracy and selection code on a MiniLM stand-in (random head, tiny subsets) and write only to `ml/cache/`. Their numbers are meaningless; they exist so the real run does not hit a code bug.
+
+## What's done (Step 5)
+| Part | Status | Commit |
+|---|---|---|
+| indirect_val / indirect_test split, amended rule logged | done | `c01b486` |
+| `export_quantize.py`, `benchmark.py`, `select_models.py`, `headtail.py` | written; export, parity, int8, latency run on stand-ins; accuracy and selection code smoke-tested only | see git log |
+| Stand-in results (size, latency, parity, exportability) | done; table in `docs/decisions.md` Day 1.10 | |
+| Export / int8 / F1 of the real checkpoints, server and browser model selection | **NOT DONE: checkpoints missing** | |
+
+Headline (stand-ins, valid for the real models' size and speed): MiniLM int8 **23.1 MB, p50 9.1 ms**; DeBERTa-v3-small int8 161.2 MB, **p50 42.8 ms (passes the 50 ms gate narrowly on this laptop CPU)**; 512-token worst case 289 ms / 785 ms.
+
+## Blocked: what you need to do
+1. **Put the checkpoints at `models/ckpt/`** so these four folders exist: `models/ckpt/cleaned/minilm`, `cleaned/deberta_v3_small`, `cleaned_aug/minilm`, `cleaned_aug/deberta_v3_small` (each with `config.json`, `model.safetensors`, tokenizer files). Download the Drive folder `maskwall_ckpt` (right-click, Download), unzip so that `models/ckpt/` contains `cleaned/` and `cleaned_aug/`. `models/ckpt/` is gitignored.
+2. **Then run, from the repo root** (set TEMP because C: is full; about 1 to 1.5 hours in total, DeBERTa dominates):
+```
+export TEMP="D:\Projects2025\MaskWall\ml\cache\tmp" TMP="D:\Projects2025\MaskWall\ml\cache\tmp"
+.venv/Scripts/python.exe ml/export_quantize.py --all-real     # export + parity gate + int8 for all 4 checkpoints
+.venv/Scripts/python.exe ml/benchmark.py --all-real           # size, latency, accuracy (fp32 and int8)
+.venv/Scripts/python.exe ml/select_models.py                  # applies the amended rule; writes ml/results/selection.md
+```
+3. Then record the two picks in `docs/decisions.md` (the selection script prints both, and the original rule's pick for comparison).
+
+## Need your decision or review
+1. The browser rule extension (decision 8) and the quantization settings (decision 7).
+2. **DeBERTa's latency margin is thin** (42.8 vs 50 ms) on this machine; on a 2-vCPU Hugging Face Space it will probably be slower. Decide whether the 50 ms gate should be re-measured on the target hardware before deployment.
+3. Server design implication: a 512-token prompt costs 289 ms (MiniLM int8) to 785 ms (DeBERTa int8), so the server needs an input-length cap or rate limit regardless of the model.
+4. C: drive nearly full.

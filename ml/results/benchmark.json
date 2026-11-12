@@ -1,0 +1,97 @@
+{
+  "env": {
+    "cpu": "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+    "cores": 8,
+    "onnxruntime": "1.31.1",
+    "threads": 2,
+    "python": "3.13.3",
+    "protocol": {
+      "warmup": 20,
+      "runs": 300,
+      "runs_512": 100,
+      "batch": 1
+    }
+  },
+  "standin:minilm": {
+    "job": "minilm",
+    "standin": true,
+    "status": "ok",
+    "fp32": {
+      "size_mb": 91.0,
+      "latency": {
+        "natural": {
+          "p50_ms": 21.07695000086096,
+          "p95_ms": 446.9578900028865,
+          "mean_ms": 107.08732733323511,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 441.58900000184076,
+          "p95_ms": 716.3901599989912,
+          "mean_ms": 479.73345399928803,
+          "n": 100
+        },
+        "natural_tokens_median": 31.0
+      }
+    },
+    "int8": {
+      "size_mb": 23.1,
+      "latency": {
+        "natural": {
+          "p50_ms": 9.142650000285357,
+          "p95_ms": 294.7849650041462,
+          "mean_ms": 59.16865233327068,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 289.35850000198116,
+          "p95_ms": 386.16019999826676,
+          "mean_ms": 295.869268000024,
+          "n": 100
+        },
+        "natural_tokens_median": 31.0
+      }
+    }
+  },
+  "standin:deberta_v3_small": {
+    "job": "deberta_v3_small",
+    "standin": true,
+    "status": "ok",
+    "fp32": {
+      "size_mb": 568.1,
+      "latency": {
+        "natural": {
+          "p50_ms": 82.40639999712585,
+          "p95_ms": 1409.0740899948287,
+          "mean_ms": 330.09596466661606,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 1349.2495999998937,
+          "p95_ms": 3173.8999749944924,
+          "mean_ms": 1659.9629299996013,
+          "n": 100
+        },
+        "natural_tokens_median": 30.5
+      }
+    },
+    "int8": {
+      "size_mb": 161.2,
+      "latency": {
+        "natural": {
+          "p50_ms": 42.7511499983666,
+          "p95_ms": 882.1654399973341,
+          "mean_ms": 188.6767349997293,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 785.0452000020596,
+          "p95_ms": 1295.244560001083,
+          "mean_ms": 876.3916480005719,
+          "n": 100
+        },
+        "natural_tokens_median": 30.5
+      }
+    }
+  }
+}
