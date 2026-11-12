@@ -91,11 +91,11 @@ maskwall/
 ### Day 1 — Models (`ml/`)
 1. Load prompt-injection / jailbreak datasets from Hugging Face; add plenty of benign prompts so false positives can be measured honestly. Check licenses.
 2. Hold out a test set; also hand-write ~50 tricky examples (subtle attacks + benign prompts that *look* suspicious).
-3. Train TF-IDF + logistic regression baseline; record metrics.
-4. Write the Colab notebook to fine-tune DistilBERT/MiniLM; record metrics.
-5. Export to ONNX, quantize to int8, benchmark size / latency / F1 for both.
-6. Pick a PII NER model with an ONNX version usable by Transformers.js.
-7. Save all metrics to `ml/results/metrics.json`.
+3. `ml/train_baseline.py`: four models on the same splits: (1) length-only LR, (2) word TF-IDF + LR, (3) word+char n-gram TF-IDF + LR, (4) all-MiniLM-L6-v2 embeddings + LR. Tune threshold on val only. Evaluate on test (precision, recall, F1, FPR, confusion matrix), tricky set (counts per category), xstest_safe (FPR). List the 15 most confident FPs and FNs on val. Save to `ml/results/metrics.json`.
+4. `ml/train_transformer.ipynb` (Colab GPU): fine-tune MiniLM and DeBERTa-v3-small on the same splits; head+tail truncation (first 256 + last 256 tokens); 3–4 epochs with early stopping on val; fixed seed; threshold tuned on val; same evaluation as baselines.
+5. `ml/export_quantize.py` + `ml/benchmark.py`: ONNX fp32 and int8 for both models; report size (MB), CPU latency p50/p95 at batch size 1, and F1 for each. Server model selection rule decided in advance: highest val F1 among int8 models with p50 CPU latency under 50 ms. Also pick a browser pre-check model: the most accurate model under ~30 MB int8 (fall back to the word+char TF-IDF model exported with skl2onnx). Record both selections in `docs/decisions.md`.
+6. (Optional) Evaluate Meta's Prompt Guard on test, tricky, and xstest as an external reference only; skip if gated access causes friction.
+7. Comparison table + chart in `ml/results/`, update `docs/decisions.md` and `docs/interview_notes.md`, then a review subagent checks the day's code for bugs and leakage.
 
 ### Day 2 — Firewall API (`backend/`)
 1. `/chat` endpoint: input scan → policy → Groq call → output scan → response.
@@ -106,7 +106,7 @@ maskwall/
 6. pytest tests for every scanner and the policy engine.
 
 ### Day 3 — Frontend + browser layer (`frontend/`)
-1. Load the quantized PII model in the browser with Transformers.js (WASM).
+1. Pick a PII NER model with an ONNX version usable by Transformers.js, then load the quantized model in the browser with Transformers.js (WASM).
 2. Mask PII to placeholders, keep the mapping in memory only, unmask the response client-side.
 3. Build Chat (split screen), Attack Playground, Dashboard, Benchmarks pages.
 4. **Fallback rule:** if in-browser loading blocks progress for more than ~2 hours, move masking to the server temporarily and continue. Do not let this layer sink the project.
