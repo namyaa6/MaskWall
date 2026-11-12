@@ -105,15 +105,23 @@ def insert_text(passage: str, ins: str, rng) -> tuple[str, str]:
     pos = [0] + [m.end() for m in _BOUNDARY.finditer(passage)] + [len(passage)]
     p = int(rng.choice(pos))
     where = "start" if p == 0 else "end" if p == len(passage) else "middle"
+    # One plain space at every position: the insertion adds no newline/paragraph break, so line structure
+    # cannot differ between label 1 (always inserted) and label 0 (inserted in 40%).
     if where == "start":
-        return ins + "\n\n" + passage, where
+        return ins + " " + passage, where
     if where == "end":
-        return passage + "\n\n" + ins, where
+        return passage + " " + ins, where
     return passage[:p] + ins + " " + passage[p:], where
 
 
-def build_request(passage_text: str, rng) -> tuple[str, str]:
-    req = REQUESTS[int(rng.integers(len(REQUESTS)))]
+def one_line(text: str) -> str:
+    """Collapse all whitespace (multi-line attack strings would otherwise add label-linked newlines)."""
+    return " ".join(text.split())
+
+
+def build_request(passage_text: str, rng, requests=None) -> tuple[str, str]:
+    requests = requests or REQUESTS
+    req = requests[int(rng.integers(len(requests)))]
     j = JOINERS[int(rng.integers(len(JOINERS)))]
     colon = j == "\n" and req.endswith(".") and rng.random() < 0.5
     return req, (req[:-1] + ":" if colon else req) + j + passage_text
@@ -127,22 +135,26 @@ def max_sim(vec, eval_matrix, texts, chunk=500):
     return np.concatenate(out)
 
 
-def build(train, val, test, xstest, tricky, passages, is_english, n_each=400, seed=42):
-    """Return (augmented rows with metadata, summary dict). All inputs are plain DataFrames/lists."""
-    rng = np.random.default_rng(seed)
-    eval_texts = pd.concat([val["text"], test["text"], xstest["text"], tricky["text"]]).tolist()
+def passage_pool(eval_texts, passages, is_english, seed=42):
+    """Usable Dolly passages in a seeded random order: length, English, not (near-)equal to any eval row.
+    The augmentation takes the first 2*n rows; indirect_eval takes rows after those, so they never share a passage."""
     eval_norm = {_norm(t) for t in eval_texts}
     vec = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=1).fit(eval_texts + list(passages))
     E = vec.transform(eval_texts)
-
-    # --- passages: length, English, not near-duplicate of any eval row
     pool = sorted({p.strip() for p in passages if PASSAGE_MIN <= len(p.strip()) <= PASSAGE_MAX})
     pool = [p for p in pool if is_english(p) and _norm(p) not in eval_norm]
     sims = max_sim(vec, E, pool)
     pool = [p for p, s in zip(pool, sims) if s <= SIM_THRESHOLD]
+    order = np.random.default_rng(seed).permutation(len(pool))
+    return [pool[i] for i in order], vec, E, eval_norm
+
+
+def build(train, val, test, xstest, tricky, passages, is_english, n_each=400, seed=42):
+    """Return (augmented rows with metadata, summary dict). All inputs are plain DataFrames/lists."""
+    rng = np.random.default_rng(seed + 1)
+    eval_texts = pd.concat([val["text"], test["text"], xstest["text"], tricky["text"]]).tolist()
+    pool, vec, E, eval_norm = passage_pool(eval_texts, passages, is_english, seed)
     assert len(pool) >= 2 * n_each, f"only {len(pool)} usable passages"
-    order = rng.permutation(len(pool))
-    pool = [pool[i] for i in order]
 
     # --- attack strings: train label 1, short, never a val/test string, source cap
     cand = train[(train["label"] == 1) & (train["text"].str.len() <= ATTACK_MAX_CHARS)]
@@ -158,7 +170,7 @@ def build(train, val, test, xstest, tricky, passages, is_english, n_each=400, se
                   for lab in (1, 0)}
     rows = []
     for i in range(n_each):  # label 1
-        attack = picked.loc[i, "text"].strip()
+        attack = one_line(picked.loc[i, "text"])
         wrapped = bool(wrap_flags[1][i])
         style = STYLES[int(rng.integers(len(STYLES)))] if wrapped else None
         ins = style.format(x=attack) if wrapped else attack
@@ -197,6 +209,8 @@ def build(train, val, test, xstest, tricky, passages, is_english, n_each=400, se
         "position_label1": aug[aug.label == 1]["position"].value_counts().to_dict(),
         "passage_chars_median_mean": pl.round(1).to_dict(),
         "max_sim_to_eval": float(s.max()),
+        "newlines_per_row_mean": aug.assign(n=aug["text"].str.count("\n")).groupby("label")["n"].mean().round(2).to_dict(),
+        "rows_with_paragraph_break": aug.assign(b=aug["text"].str.contains("\n\n")).groupby("label")["b"].mean().round(3).to_dict(),
         "usable_passages": len(pool),
     }
     return aug.drop(columns="norm"), summary

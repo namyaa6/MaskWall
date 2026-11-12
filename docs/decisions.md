@@ -248,33 +248,72 @@ Synthetic examples of the attack the public data barely contains: instructions h
 - **Attack strings up to 500 chars, not 300.** At 300 only 161 non-Gandalf attacks exist, which can't fill 400 rows under the 50% cap; 500 gives 236. The consequence: some inserted "attacks" are long persona-style jailbreaks, less typical of indirect injections than a one-liner.
 - **Wrap rate fixed at exactly 40% per class**, not sampled (a sampled first draw gave 35% vs 41%, itself a weak cue).
 - **Not blind to the tricky set:** `tricky.csv` was drafted by Claude, and so were the request wordings and benign notes here. I wrote the wordings without copying tricky texts and checked similarity (max 0.54 to any eval row), but the two share a format ("<request>: <passage>"), so this is not a fully blind test of `hidden_injection_document` / `benign_document`.
-- Drop-in for later steps: the Colab notebook now trains each model with and without augmentation (7 files to upload).
+- Drop-in for later steps: the Colab notebook now trains each model with and without augmentation (8 files to upload, incl. `indirect_eval.parquet`).
 
 ### Bootstrap CIs
 Percentile bootstrap over test rows (1,000 resamples, seed 42) at the **frozen** val thresholds (no retuning per resample), for F1 and FPR. The with/without delta uses the same resamples for both variants (paired). Test is 925 rows with 208 attacks, so a CI on F1 is about +/-0.03, and **differences below that are noise**.
 
 ### Results (test, cleaned labels; full tables incl. original labels and per-category tricky: `ml/results/augmentation_comparison.md`)
+These are the numbers after the newline fix described in Day 1.7. An earlier run of the same recipe (before the fix) gave slightly different values (e.g. word_tfidf delta FPR -0.004 instead of +0.008, `sneaky_attack` 4 -> 2 instead of 4 -> 5): the small tricky-set swings are within run-to-run noise of a 49-row set.
+
 | model | plain F1 [CI] | +aug F1 [CI] | delta F1 [paired CI] | plain FPR | +aug FPR | delta FPR [paired CI] |
 |---|---|---|---|---|---|---|
 | length_lr | 0.385 | 0.374 | -0.010 [-0.023, +0.001] | 0.770 | 0.739 | -0.031 [-0.044, -0.018] |
-| word_tfidf | 0.893 [0.861, 0.925] | 0.897 [0.863, 0.928] | +0.004 [-0.012, +0.020] | 0.026 | 0.022 | -0.004 [-0.011, +0.001] |
+| word_tfidf | 0.893 [0.861, 0.925] | 0.904 [0.872, 0.931] | +0.011 [-0.007, +0.030] | 0.026 | 0.035 | +0.008 [+0.003, +0.016] |
 | wordchar | 0.897 [0.865, 0.927] | 0.899 [0.866, 0.930] | +0.002 [-0.016, +0.019] | 0.024 | 0.014 | -0.010 [-0.018, -0.003] |
-| minilm_emb | 0.851 [0.815, 0.885] | 0.835 [0.796, 0.875] | -0.016 [-0.042, +0.005] | 0.049 | 0.050 | +0.001 [-0.010, +0.012] |
+| minilm_emb | 0.851 [0.815, 0.885] | 0.844 [0.805, 0.881] | -0.007 [-0.030, +0.013] | 0.049 | 0.050 | +0.001 [-0.009, +0.012] |
 
 Tricky set (correct/total, plain -> +aug), cleaned labels:
 | category | word_tfidf | wordchar | minilm_emb |
 |---|---|---|---|
 | hidden_injection_document (5, attacks) | 1 -> 1 | 0 -> 1 | 0 -> 1 |
 | benign_document (6) | 6 -> 5 | 6 -> 5 | 4 -> 4 |
-| sneaky_attack (6, attacks) | 4 -> 2 | 4 -> 3 | 6 -> 5 |
-| benign_mentions_instructions (5) | 2 -> 2 | 2 -> 1 | 2 -> 2 |
+| sneaky_attack (6, attacks) | 4 -> 5 | 4 -> 3 | 6 -> 5 |
+| benign_mentions_instructions (5) | 2 -> 1 | 2 -> 1 | 2 -> 2 |
+| benign_suspicious (6) | 6 -> 6 | 6 -> 6 | 6 -> 4 |
 
 ### What this says (honestly)
-- **Augmentation did not fix the indirect-injection weakness in these linear baselines.** `hidden_injection_document` stays at 0-1 of 5; word_tfidf scores on those five rows barely moved (0.41/0.01/0.05/0.17/0.11 -> 0.71/0.01/0.12/0.11/0.12, threshold ~0.4). Hypothesis, not tested: TF-IDF with L2 normalisation dilutes a one-sentence attack inside a 700-char passage, and the tricky attacks are phrased differently from the train attack strings. A model that attends to the sentence (the fine-tuned transformers) may do better; that is the Colab comparison.
-- **Test F1 is unchanged within noise** for all content models (every paired CI includes 0). The only significant effects are lower FPR for wordchar (-0.010) and for length_lr (a floor model; ignore).
-- **It cost something on tricky:** word_tfidf lost 4 tricky rows overall (38 -> 34), mostly `sneaky_attack` (4 -> 2), and `benign_document` went 6 -> 5 for two models. With 5-6 rows per category these are 1-2 row swings; I'd call them "no evidence of improvement, possible small harm", not a measured loss.
-- **Val has no indirect-injection rows**, so thresholds and C are tuned on a distribution without them. A val/test set built the same way from val/test attack strings (never train) would be a fairer test of the augmentation. Not built.
-- The cleaned-vs-original-labels gap persists after the template drop (word_tfidf F1 0.893 vs 0.872; see the second table in the comparison file), still partly because the cleaned labels remove noisy rows.
+- **On the public test set, augmentation changes F1 by nothing measurable** (every paired F1 CI includes 0). FPR moves both ways: wordchar -0.010 (better), word_tfidf +0.008 (worse), both significant but tiny.
+- **On the hand-written tricky set it did not fix indirect injection:** `hidden_injection_document` stays at 0-1 of 5 (word_tfidf scores on those rows: 0.41/0.01/0.05/0.17/0.11 -> 0.71/0.01/0.12/0.11/0.12 in the first run, threshold ~0.4). Hypothesis, not tested: TF-IDF with L2 normalisation dilutes a one-sentence attack inside a 700-char passage, and the tricky attacks are phrased differently from the train strings.
+- **It cost a little on benign look-alikes:** `benign_document` 6 -> 5 for two models, `benign_suspicious` 6 -> 4 for MiniLM. With 5-6 rows per category these are 1-2 row swings; read as "no evidence of improvement, possible small harm", not as a measured loss.
+- **Val has no indirect-injection rows**, so thresholds and C are tuned on a distribution without them. The held-out set in Day 1.7 addresses the evaluation side of that.
+- The cleaned-vs-original-labels gap persists after the template drop (word_tfidf F1 0.893 vs 0.872; second table in the comparison file), partly because cleaning removes noisy rows.
 
 ### Reproduce
 `python ml/data/load_datasets.py --augment-indirect` then `python ml/train_baseline.py` (about 10 min; MiniLM embeddings are cached). Pre-change copies of the metrics are under `baselines_run1_original_splits` and `baselines_run2_before_template_drop` in `metrics.json`.
+
+## Day 1.7: Held-out indirect eval set, newline fix (`ml/data/indirect_eval.py`, `indirect_eval.parquet`)
+
+### Newline / paragraph-break check on the augmentation (a possible shortcut)
+Question: do label-1 and label-0 augmented rows differ in line structure? **They did.** Before the fix: 3.86 newlines per row in label 1 vs 2.90 in label 0, and 80% vs 72% of rows with a paragraph break. Cause: every label-1 row has an inserted attack but only 40% of label-0 rows have a note, and start/end insertions added a blank line; multi-line attack strings added more. Fix, applied to both the augmentation and the eval set: insertion always uses one plain space (no line break at any position), and attack strings are collapsed to one line (formatting-only change to the attack text). After the fix: 2.58 vs 2.60 newlines per row, 67.5% vs 62.5% paragraph breaks (augmentation); 2.76 vs 2.85 and 70% vs 73% (eval set). Joiners and request lists are shared across classes, and Dolly passages supply the rest of the natural line structure.
+
+### The set
+Evaluation only, never trained on or used for any choice. **114 label 1 + 114 label 0** (requested ~150).
+- **Attacks:** val + test attack strings only (59 from val, 55 from test), one-line, <= 500 chars, not equal/near-equal (cosine > 0.9) to any train or train_augmented text.
+- **Passages:** Dolly contexts after the 800 the augmentation used in the same seeded pool, so none shared. Dolly contains near-duplicate passages (two versions of the same Wikipedia paragraph), and the leakage assert caught one fresh passage that was a near-copy of an augmented one; passages are therefore also filtered against every train/train_augmented text (8 of 2,167 unused passages dropped).
+- **Fresh wording:** 13 new request wordings and 12 new benign notes, asserted disjoint from the augmentation lists. Same five annotation styles, exactly 40% of each class annotated (46 of 114, 40.4%), same joiners, same 50% per-source cap on attacks.
+- **Size deviation:** only 57 non-Gandalf val/test attacks of <= 500 chars exist, so under the 50% cap at most 114 per class fit (Gandalf 57, deepset 26, jackhhao 18, TrustAIRLab-jailbreak 13). I kept the cap rather than let Gandalf dominate the eval.
+- **Leakage:** asserts passed (no exact match, max TF-IDF cosine 0.73 to any train/train_augmented text); val, test, xstest and train parquet files are byte-identical to before.
+
+### Caveat: partly in-distribution
+It is built the same way as the training augmentation: same recipe, same annotation styles, same passage source, and the same author wrote the wordings (me, who also drafted the tricky set). It tests whether a model generalises to new attack strings, passages and request wordings, **not** whether it handles real-world indirect injections. Treat gains here as an upper bound.
+
+### Results (cleaned labels, thresholds frozen from val; CIs bootstrap 95%, delta paired)
+| model | plain F1 | +aug F1 | delta F1 [CI] | plain recall | +aug recall | plain FPR | +aug FPR |
+|---|---|---|---|---|---|---|---|
+| length_lr | 0.667 | 0.667 | +0.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| word_tfidf | 0.246 [0.152, 0.338] | 0.750 [0.671, 0.814] | +0.504 [+0.396, +0.597] | 0.140 | 0.632 | 0.000 | 0.053 |
+| wordchar | 0.146 [0.068, 0.234] | 0.526 [0.421, 0.621] | +0.379 [+0.277, +0.475] | 0.079 | 0.360 | 0.000 | 0.009 |
+| minilm_emb | 0.217 [0.124, 0.316] | 0.506 [0.410, 0.592] | +0.289 [+0.196, +0.389] | 0.123 | 0.386 | 0.009 | 0.140 |
+
+(length_lr flags every row: all passages are long, so the floor model predicts "attack" for the whole set. Ignore it.)
+
+What this says:
+- **Without augmentation, all three content models miss ~86-92% of these indirect attacks** (recall 0.08-0.14) while flagging almost no benign rows. The weakness is real, not a tricky-set artefact.
+- **Augmentation helps a lot here** (paired delta F1 +0.29 to +0.50, CIs well above 0), but recall stays 0.36-0.63, and the false-positive cost differs: MiniLM flags 14% of benign indirect rows, word_tfidf 5%, wordchar under 1%.
+- **Combined with Day 1.6:** big gain on a set built like the training data, no gain on the hand-written tricky set (0-1 of 5). The augmentation taught the construction pattern more than a general skill. Whether fine-tuned transformers do better on the tricky rows is the real open question.
+- **Shortcut check (annotation):** attacks caught bare vs annotated: word_tfidf+aug 45/68 vs 27/46 (66% vs 59%), wordchar+aug 21/68 vs 20/46, MiniLM+aug 31/68 vs 13/46. Benign flagged bare vs annotated: 4/68 vs 2/46, 0/68 vs 1/46, 10/68 vs 6/46. Annotated rows are not favoured on either side, so there is no sign that bracket/comment formatting is a cue; with n this small I wouldn't claim more.
+- Test-set effects from the regenerated augmentation are in Day 1.6.
+
+### Reproduce
+`python ml/data/load_datasets.py --augment-indirect` writes `train_augmented.parquet`, `augmented_indirect.parquet` and `indirect_eval.parquet`; `python ml/train_baseline.py` evaluates all variants on it. The Colab notebook uploads it (8 files) and evaluates every model on it too.

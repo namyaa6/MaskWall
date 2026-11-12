@@ -193,6 +193,18 @@ def evaluate_split(df, scores, thr, thr_fpr):
     return out
 
 
+def evaluate_indirect(df, scores, thr, thr_fpr):
+    """Held-out indirect-injection set: split metrics + recall/FPR by whether the insertion was annotated
+    (comment/bracket) or bare, so a formatting shortcut would show up as a gap."""
+    out = evaluate_split(df, scores, thr, thr_fpr)
+    pred = scores >= thr
+    by = {}
+    for (lab, wr), g in df.assign(pred=pred).groupby(["label", "wrapped"]):
+        by[f"label{lab}_{'annotated' if wr else 'bare'}"] = {"n": len(g), "flagged": int(g["pred"].sum()), "rate": float(g["pred"].mean())}
+    out["by_annotation"] = by
+    return out
+
+
 def evaluate_tricky(df, scores, thr):
     pred = scores >= thr
     out = {}
@@ -246,6 +258,7 @@ def run_model(name, variant, data, errors_md):
         "val": {**rates(val["label"].to_numpy(), val_scores >= thr), "pr_auc": float(average_precision_score(val["label"], val_scores))},
         "test": evaluate_split(data["test"], score(data["test"]["text"]), thr, thr_fpr),
         "tricky": evaluate_tricky(data["tricky"], score(data["tricky"]["text"]), thr),
+        "indirect_eval": evaluate_indirect(data["indirect_eval"], score(data["indirect_eval"]["text"]), thr, thr_fpr),
     }
     xs = data["xstest_safe"]
     xs_scores = score(xs["text"])
@@ -268,6 +281,7 @@ def run_model(name, variant, data, errors_md):
             errors_md.append("")
 
     PREDS[(variant, name)] = score(data["test"]["text"]) >= thr
+    PREDS[(variant, name, "ie")] = score(data["indirect_eval"]["text"]) >= thr
     if name == "wordchar" and variant in ("cleaned", "cleaned_aug"):  # candidate browser pre-check model (Step 5)
         MODELS_DIR.mkdir(exist_ok=True)
         suffix = "" if variant == "cleaned" else "_aug"
@@ -289,6 +303,15 @@ def paired_effect(test, models):
                 "delta_f1_ci95": ci95(f_b - f_a),
                 "delta_fpr": float(rates(y, PREDS[(f"{label_version}_aug", name)])["fpr"] - rates(y, PREDS[(label_version, name)])["fpr"]),
                 "delta_fpr_ci95": ci95(r_b - r_a),
+            }
+    ie_y = INDIRECT_Y
+    for label_version in ["cleaned", "original_labels"]:
+        for name in models:
+            (f_a, r_a), (f_b, r_b) = bootstrap_metrics(ie_y, [PREDS[(label_version, name, "ie")], PREDS[(f"{label_version}_aug", name, "ie")]])
+            a, b = rates(ie_y, PREDS[(label_version, name, "ie")]), rates(ie_y, PREDS[(f"{label_version}_aug", name, "ie")])
+            out.setdefault("indirect_eval_" + label_version, {})[name] = {
+                "delta_f1": float(b["f1"] - a["f1"]), "delta_f1_ci95": ci95(f_b - f_a),
+                "delta_fpr": float(b["fpr"] - a["fpr"]), "delta_fpr_ci95": ci95(r_b - r_a),
             }
     return out
 
@@ -326,6 +349,23 @@ def write_comparison(baselines, effect, tricky, models):
                 cells.append(f"{a['correct']}/{a['total']} -> {b['correct']}/{b['total']}")
             L.append(f"| {c} | {int(lab[c])} | " + " | ".join(cells) + " |")
         L.append("")
+        L += [f"## Held-out indirect eval (indirect_eval.parquet), {title}\n",
+              "Built the same way as the augmentation (partly in-distribution), from val/test attack strings, fresh passages and fresh wordings. "
+              "Annotated = insertion wrapped in a comment/bracket style; bare = plain sentence. CIs are bootstrap 95%.\n",
+              "| model | train | F1 [CI] | FPR [CI] | recall | precision | attacks caught: bare / annotated | benign flagged: bare / annotated |",
+              "|---|---|---|---|---|---|---|---|"]
+        for name in models:
+            for suf, tag in [("", "plain"), ("_aug", "+aug")]:
+                t = baselines[lv + suf][name]["indirect_eval"]
+                b = t["by_annotation"]
+                L.append(f"| {name} | {tag} | {t['f1']:.3f} [{t['ci95']['f1'][0]:.3f}, {t['ci95']['f1'][1]:.3f}] | "
+                         f"{t['fpr']:.3f} [{t['ci95']['fpr'][0]:.3f}, {t['ci95']['fpr'][1]:.3f}] | {t['recall']:.3f} | {t['precision']:.3f} | "
+                         f"{b['label1_bare']['flagged']}/{b['label1_bare']['n']} / {b['label1_annotated']['flagged']}/{b['label1_annotated']['n']} | "
+                         f"{b['label0_bare']['flagged']}/{b['label0_bare']['n']} / {b['label0_annotated']['flagged']}/{b['label0_annotated']['n']} |")
+            e = effect["indirect_eval_" + lv][name]
+            L.append(f"| {name} | **delta** | {e['delta_f1']:+.3f} [{e['delta_f1_ci95'][0]:+.3f}, {e['delta_f1_ci95'][1]:+.3f}] | "
+                     f"{e['delta_fpr']:+.3f} [{e['delta_fpr_ci95'][0]:+.3f}, {e['delta_fpr_ci95'][1]:+.3f}] | | | | |")
+        L.append("")
     (RESULTS / "augmentation_comparison.md").write_text("\n".join(L), encoding="utf-8")
 
 
@@ -335,7 +375,8 @@ VARIANTS = {
     "original_labels": ("label_original", "train"),
     "original_labels_aug": ("label_original", "train_augmented"),
 }
-PREDS = {}  # (variant, model) -> test predictions, for the paired bootstrap
+PREDS = {}  # (variant, model[, "ie"]) -> test / indirect_eval predictions, for the paired bootstrap
+INDIRECT_Y = None  # labels of indirect_eval (same for both label versions), set in main
 
 
 def main():
@@ -344,7 +385,10 @@ def main():
     args = ap.parse_args()
 
     proc = DATA / "processed"
-    raw = {s: pd.read_parquet(proc / f"{s}.parquet") for s in ["train", "train_augmented", "val", "test", "xstest_safe"]}
+    raw = {s: pd.read_parquet(proc / f"{s}.parquet")
+           for s in ["train", "train_augmented", "val", "test", "xstest_safe", "indirect_eval"]}
+    global INDIRECT_Y
+    INDIRECT_Y = raw["indirect_eval"]["label"].to_numpy()
     tricky = pd.read_csv(DATA / "tricky.csv")
     RESULTS.mkdir(exist_ok=True)
     metrics_path = RESULTS / "metrics.json"
@@ -377,7 +421,7 @@ def main():
     for variant, (col, train_file) in VARIANTS.items():
         data = {"train": raw[train_file].assign(label=raw[train_file][col]),
                 **{s: raw[s].assign(label=raw[s][col]) for s in ["val", "test"]}}
-        data["tricky"], data["xstest_safe"] = tricky, raw["xstest_safe"]
+        data["tricky"], data["xstest_safe"], data["indirect_eval"] = tricky, raw["xstest_safe"], raw["indirect_eval"]
         for name in args.models:
             print(f"[{variant}] training {name} ...", flush=True)
             baselines.setdefault(variant, {})[name] = run_model(name, variant, data, errors_md)

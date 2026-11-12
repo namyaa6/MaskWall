@@ -24,7 +24,8 @@ Usage:
 
 --augment-indirect additionally writes train_augmented.parquet (train + synthetic indirect-injection
 rows, see ml/data/augment_indirect.py) and augmented_indirect.parquet (the synthetic rows with metadata).
-val, test, xstest and train.parquet are unchanged by the flag.
+val, test, xstest and train.parquet are unchanged by the flag. It also writes indirect_eval.parquet, a held-out
+evaluation-only set built from val/test attack strings and fresh passages/wordings (ml/data/indirect_eval.py).
 """
 
 import argparse
@@ -346,13 +347,23 @@ def main() -> None:
 
         import augment_indirect as ai
 
-        aug, summary = ai.build(train, val, test, xstest, pd.read_csv(Path(__file__).parent / "tricky.csv"),
-                                load_dolly_contexts(), is_english, n_each=args.augment_n, seed=args.seed)
+        tricky_df = pd.read_csv(Path(__file__).parent / "tricky.csv")
+        dolly_ctx = load_dolly_contexts()
+        aug, summary = ai.build(train, val, test, xstest, tricky_df, dolly_ctx, is_english, n_each=args.augment_n, seed=args.seed)
         aug.to_parquet(args.out_dir / "augmented_indirect.parquet", index=False)
-        pd.concat([train[cols], aug[cols]], ignore_index=True).to_parquet(args.out_dir / "train_augmented.parquet", index=False)
+        train_aug = pd.concat([train[cols], aug[cols]], ignore_index=True)
+        train_aug.to_parquet(args.out_dir / "train_augmented.parquet", index=False)
         print("\n=== indirect-injection augmentation (train only) ===")
         print(json.dumps(summary, indent=2, default=str))
         print(f"train_augmented: {len(train)} + {len(aug)} rows; val/test/xstest/tricky untouched")
+
+        import indirect_eval as ie
+
+        ev, ev_summary = ie.build_eval(train, train_aug, val, test, xstest, tricky_df, dolly_ctx, is_english,
+                                       n_aug_each=args.augment_n, seed=args.seed)
+        ev.to_parquet(args.out_dir / "indirect_eval.parquet", index=False)
+        print("\n=== indirect_eval (held-out, evaluation only; attacks from val+test) ===")
+        print(json.dumps(ev_summary, indent=2, default=str))
 
 
 if __name__ == "__main__":

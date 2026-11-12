@@ -103,9 +103,9 @@ saved to D:\Projects2025\MaskWall\ml\data\processed
     "1": 0.4
   },
   "position_label1": {
-    "middle": 255,
-    "start": 77,
-    "end": 68
+    "middle": 267,
+    "start": 73,
+    "end": 60
   },
   "passage_chars_median_mean": {
     "50%": {
@@ -117,7 +117,65 @@ saved to D:\Projects2025\MaskWall\ml\data\processed
       "1": 782.0
     }
   },
-  "max_sim_to_eval": 0.5388140103203475,
+  "max_sim_to_eval": 0.5339896602358365,
+  "newlines_per_row_mean": {
+    "0": 2.58,
+    "1": 2.6
+  },
+  "rows_with_paragraph_break": {
+    "0": 0.675,
+    "1": 0.625
+  },
   "usable_passages": 2967
 }
 train_augmented: 7857 + 800 rows; val/test/xstest/tricky untouched
+
+=== indirect_eval (held-out, evaluation only; attacks from val+test) ===
+{
+  "n": {
+    "label1": 114,
+    "label0": 114
+  },
+  "n_requested_per_class": 150,
+  "attack_source_quota": {
+    "deepset": 26,
+    "gandalf": 57,
+    "jackhhao": 18,
+    "trustairlab_jailbreak": 13
+  },
+  "attack_source_available": {
+    "deepset": 26,
+    "gandalf": 197,
+    "jackhhao": 18,
+    "trustairlab_jailbreak": 13
+  },
+  "attack_from_split": {
+    "val": 59,
+    "test": 55
+  },
+  "wrapped_frac": {
+    "0": 0.404,
+    "1": 0.404
+  },
+  "position_label1": {
+    "middle": 76,
+    "start": 19,
+    "end": 19
+  },
+  "passage_chars_median": {
+    "0": 700.0,
+    "1": 720.5
+  },
+  "newlines_per_row_mean": {
+    "0": 2.76,
+    "1": 2.85
+  },
+  "rows_with_paragraph_break": {
+    "0": 0.702,
+    "1": 0.728
+  },
+  "max_sim_to_train_and_aug": 0.7341889365792438,
+  "passages_shared_with_augmentation": 0,
+  "unused_passages": 2167,
+  "unused_passages_dropped_as_near_dup_of_training_text": 8
+}
