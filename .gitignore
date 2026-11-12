@@ -8,3 +8,8 @@ ml/data/processed/
 docs/interview_notes.md
 models/*.joblib
 ml/cache/
+colab_upload
+models/ckpt/
+models/onnx/
+models/*.onnx
+models/*.safetensors

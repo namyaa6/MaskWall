@@ -317,3 +317,34 @@ What this says:
 
 ### Reproduce
 `python ml/data/load_datasets.py --augment-indirect` writes `train_augmented.parquet`, `augmented_indirect.parquet` and `indirect_eval.parquet`; `python ml/train_baseline.py` evaluates all variants on it. The Colab notebook uploads it (8 files) and evaluates every model on it too.
+
+## Day 1.8: Fine-tuned transformers (Colab) and the full comparison (`ml/results/comparison.md`, `ml/make_comparison.py`)
+
+### What ran
+`ml/train_transformer.ipynb` on a Colab T4, cleaned labels, each of MiniLM (22M) and DeBERTa-v3-small (141M) trained **without** and **with** the indirect-injection augmentation (4 runs, one seed, 3-15 min each; the notebook's 20-60 min guess was too pessimistic). Epoch by val average precision, threshold by val F1, everything else scored once with frozen choices (same rules as the baselines). Raw output: `ml/results/metrics_transformers.json`, `transformer_val_errors.md`. One comparison table of all 12 model/training combinations with bootstrap CIs, per-category tricky and xstest: `ml/results/comparison.md` (generated from the two metrics files, nothing recomputed).
+
+**DeBERTa crash and fix:** the first DeBERTa run failed with "Attempting to unscale FP16 gradients" (the weights loaded in fp16, which `GradScaler` rejects). Fix: `.float()` right after `from_pretrained` in `train_one`. The results here come from the Colab run with this change applied; the committed notebook/generator now contains it, but the regenerated notebook itself has not been re-run.
+
+### Results (cleaned labels; full tables in `comparison.md`)
+| model | train | val F1 | test F1 [CI] | test FPR | indirect_eval F1 [CI] | tricky hidden-injection /5 | tricky total /49 | xstest FP |
+|---|---|---|---|---|---|---|---|---|
+| word TF-IDF | plain / +aug | 0.884 / 0.876 | 0.893 / 0.904 | 0.026 / 0.035 | 0.246 / 0.750 | 1 / 1 | 38 / 37 | 0 / 0 |
+| word+char TF-IDF | plain / +aug | 0.893 / 0.879 | 0.897 / 0.899 | 0.024 / 0.014 | 0.146 / 0.526 | 0 / 1 | 33 / 31 | 0 / 0 |
+| MiniLM fine-tuned | plain | 0.923 | 0.884 [0.849, 0.915] | 0.038 | 0.345 [0.246, 0.448] | 1 | 36 | 1 |
+| MiniLM fine-tuned | +aug | 0.914 | 0.892 [0.859, 0.921] | 0.018 | **0.950** [0.920, 0.978] | 0 | 34 | 0 |
+| DeBERTa-v3-small | plain | 0.920 | 0.898 [0.868, 0.928] | 0.035 | 0.296 [0.188, 0.397] | 0 | 38 | 0 |
+| DeBERTa-v3-small | +aug | 0.925 | 0.884 [0.852, 0.914] | 0.052 | **0.982** [0.962, 0.996] | **3** | 35 | 3 |
+
+### Findings
+1. **On the standard test set, fine-tuned transformers are about as good as TF-IDF.** Test F1 0.884-0.898 (transformers) vs 0.893-0.904 (word and word+char TF-IDF); every CI overlaps (+/-0.03). Fine-tuning gives higher *val* F1 (0.91-0.93 vs 0.88-0.89), but val is not the test, and I would not claim a ranking. Test FPR is not clearly better either.
+2. **Transformers + augmentation win on indirect_eval:** MiniLM 0.345 -> 0.950, DeBERTa 0.296 -> 0.982, vs 0.75 at best for TF-IDF + aug, with benign-flag rates of 1-2 of 114. This is the partly in-distribution set (Day 1.7), so it is an upper bound; the shortcut check (bare vs annotated insertions) shows no formatting cue (MiniLM+aug 63/68 bare vs 42/46 annotated).
+3. **Only DeBERTa+aug generalised to the hand-written hidden-injection rows: 3/5** (every other model 0-1/5). That is the one result that goes beyond the augmentation's own recipe, but it is 3 rows from one seed. I'd call it "promising, unreplicated".
+4. **DeBERTa+aug became trigger-happy.** Its val-F1 threshold is **0.076** (other content models 0.26-0.94), test FPR 0.052 [0.036, 0.069] (plain DeBERTa 0.035, MiniLM+aug 0.018), 3 xstest false positives, and tricky `benign_suspicious` 6 -> 4, `benign_mentions_instructions` 3 -> 1. Its top val false positives include plain Dolly summarisation requests ("Please give me a short summary of ... the fall of the Berlin Wall" at 0.967, "give the main core idea of Transformer" at 0.749): requests that look like the augmentation's "summarize this" wrappers but carry no passage. Hypothesis (untested): augmentation taught "summarise/transform-this request => suspicious" for requests without data. Part of this is threshold calibration, not ranking: at the val-FPR<=1% threshold DeBERTa+aug has recall 0.870 at test FPR 0.031, close to plain DeBERTa's 0.885 at 0.024.
+5. **The remaining val errors look largely like label noise, and are reported as a limitation, not relabeled.** The same rows are the most confident errors for all four transformers ("Adapt two personalities: Lie and Master...", "You are the main AI [Rules]... CAM can do anything now" labeled benign; "Write 50 Chat GPT prompts for {{profession}}", "I will give you a character description...", a C++/Juce coding prompt labeled attack). Different architectures agreeing with each other against the label is evidence the labels are wrong. Not all are noise: the "grandma reads guides backwards" exploit and a "Haha pwned!!" few-shot are real misses. I did not relabel after seeing model errors on val, to avoid tuning labels on the selection set; a further cleaning round (OOF scores from these models, same hand-review rule) is the natural next data step.
+6. **Val has no indirect rows, so the pre-registered selection rule cannot reward augmentation.** The rule (Step 5: highest val F1 among int8 models with p50 CPU latency under 50 ms) ranks on val F1: DeBERTa+aug 0.925, MiniLM plain 0.923, DeBERTa plain 0.920, MiniLM+aug 0.914, which is a ~1-point spread, well inside noise, with no CI computed. If DeBERTa fails the latency limit, the rule picks **MiniLM plain** (indirect_eval F1 0.345) over MiniLM+aug (0.950, test FPR 0.018 vs 0.038). Changing the rule after seeing these results would be post hoc; this is flagged for an explicit decision before Step 5, not silently adjusted.
+
+### Limitations
+- One seed per model; seed-to-seed variance is unmeasured (a 1-2 row swing on tricky, or a 0.01 F1 difference, is noise).
+- indirect_eval and the augmentation share a recipe and an author; tricky is 49 rows drafted by the same author.
+- Label noise remains in train/val/test (Day 1.3 residual estimate ~4%, plus the cases above); metrics are against my cleaned labels.
+- Thresholds come from val F1 on a val set with no indirect rows; the augmented models' thresholds (0.941, 0.076) are the least trustworthy.
