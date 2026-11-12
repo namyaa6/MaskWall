@@ -133,3 +133,4 @@ maskwall/
 - **Be honest about metrics.** Never tune on the test set; report false positives; don't call it "production-grade".
 - **Keep it simple.** Prefer working and well-explained over clever. Flag anything likely to take longer than planned before starting it.
 - **Suggest a git commit** after each working step with a clear message.
+- After each completed step, append to docs/interview_notes.md.

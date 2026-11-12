@@ -5,3 +5,4 @@ node_modules/
 models/*.onnx
 *.bin
 ml/data/processed/
+docs/interview_notes.md
