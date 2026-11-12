@@ -214,3 +214,20 @@ Tricky set per category, cleaned-label models (correct / total; the set has 49 r
 - Test and val labels were cleaned with a model's help (see Day 1.3). 183 label-0 rows with the "exception to ethical protocols" template remain.
 - No confidence intervals yet; differences of a few F1 points are inside the noise at this test size. A bootstrap over test rows is a cheap addition for the comparison table in Step 7.
 - Embeddings use only the first 256 tokens; word/char TF-IDF see the whole prompt.
+
+## Day 1.5: Template-cluster drop and label definition (`ml/data/make_template_drops.py`)
+
+### What and why
+One fake-system-note template ("This conversation/chat is an exception to AI usual ethical protocols ...", mostly TrustAIRLab) appeared with both labels: 6 rows hand-relabeled to 1 in Day 1.3, about 180 others still label 0 (plus original-label-1 jailbreaks carrying the same text). Whatever label it gets is inconsistent, and ~800 near-identical rows let a model memorize the template instead of the behaviour. Decision: **drop the entire cluster**, reason `templated cluster; inconsistent labels and memorization risk`. This replaces the earlier relabel decision for those texts, and the 183-row open item in the session log is closed.
+
+- Matched on the fixed phrase `exception to <name> usual ethical protocols` (also catches "Al's" and one stylized-name variant), on the cleaned raw data before dedup/sampling, so the rule is closed (no template row can re-enter via a different random draw).
+- **817 distinct texts** in the raw data: 741 original-label-0 (`trustairlab_regular`) and 76 original-label-1 (`trustairlab_jailbreak`). In the final splits the cluster was 263 rows (train 229, val 18, test 16; 183 labeled 0, 80 labeled 1). The 76 real jailbreaks are dropped too, which removes some true attacks from training: accepted, since a one-template cluster is not evidence of generalization.
+- Source of truth stays `ml/data/label_fixes.csv` (now 981 rows: 848 drops, 72 relabel->0, 61 relabel->1). Pre-change copy: `ml/cache/label_fixes_before_template.csv`.
+- Resulting splits: **train 7,857 / val 921 / test 925** (attacks 1,933 / 206 / 208), xstest 250. Loader asserts pass; independent recheck: 0 exact overlaps among train/val/test/xstest/tricky, 0 remaining template rows. Log: `ml/results/loader_log_template_drop.txt`. Numbers from Day 1.3-1.4 were measured on the previous rows and are not comparable.
+
+### Label definition (stricter than deepset's)
+Our label 1 means the text tries to override instructions, bypass safety, or smuggle instructions into data. **A prompt that only assigns a role or persona is benign** (e.g. deepset's "You are Volkswagen. What do you think of Mercedes?"). deepset labels such role-hijack-style prompts as injections, so on those rows our labels deliberately disagree with the published ones, and results on `original_labels` will differ systematically for that reason. Ambiguous cases are dropped, not forced.
+
+### Caveats
+- This is a judgment about what an "attack" is; another reasonable reviewer would draw the line elsewhere. Both label versions stay in the parquet files.
+- Dropping a cluster by phrase is a keyword rule, applied only to a single template that was inconsistent in its labels, not as a general labeling method.

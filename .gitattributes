@@ -1,0 +1,10 @@
+# Normalize line endings: LF in the repo, no CRLF conversion surprises on Windows
+* text=auto eol=lf
+
+# Binary / generated
+*.parquet binary
+*.joblib binary
+*.onnx binary
+*.png binary
+*.gif binary
+*.ipynb text eol=lf
