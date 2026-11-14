@@ -51,11 +51,11 @@ BENIGN_NOTES = [
 ]
 
 
-def build_eval(train, train_aug, val, test, xstest, tricky, passages, is_english, n_aug_each=400, n_each=150, seed=42):
-    rng = np.random.default_rng(seed + 2)
-    assert not set(REQUESTS) & set(ai.REQUESTS), "request wording reused from the augmentation"
-    assert not set(BENIGN_NOTES) & set(ai.BENIGN_NOTES), "benign note reused from the augmentation"
-
+def fresh_passage_pool(train, train_aug, val, test, xstest, tricky, passages, is_english, n_aug_each=400, seed=42):
+    """Dolly passages never used for training, in the seeded order shared with the augmentation: the augmentation takes the
+    first 2*n_aug_each of the pool, evaluation sets take passages after those. Near-copies of ANY train / train_augmented
+    text are dropped (Dolly contains near-duplicate passages, e.g. two versions of the same Wikipedia paragraph).
+    Returns (fresh passages, tfidf vectorizer, train+aug matrix, set of train+aug normalised texts, n dropped as near-dups, tail)."""
     eval_texts = pd.concat([val["text"], test["text"], xstest["text"], tricky["text"]]).tolist()
     pool, _, _, _ = ai.passage_pool(eval_texts, passages, is_english, seed)  # same seeded order as the augmentation
     used = pool[: 2 * n_aug_each]
@@ -67,11 +67,18 @@ def build_eval(train, train_aug, val, test, xstest, tricky, passages, is_english
     ref_norm = set(ref["norm"])
     vec = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=1).fit(ref["text"].tolist() + tail)
     R = vec.transform(ref["text"].tolist())
-    # Dolly has near-duplicate passages (e.g. two versions of the same Wikipedia paragraph), so "not used by the
-    # augmentation" is not enough: drop passages that are near-copies of ANY train / train_augmented text.
     psim = ai.max_sim(vec, R, tail)
     fresh_all = [t for t, sm in zip(tail, psim) if sm <= ai.SIM_THRESHOLD]
-    n_passages_near_dup = len(tail) - len(fresh_all)
+    return fresh_all, vec, R, ref_norm, len(tail) - len(fresh_all), tail
+
+
+def build_eval(train, train_aug, val, test, xstest, tricky, passages, is_english, n_aug_each=400, n_each=150, seed=42):
+    rng = np.random.default_rng(seed + 2)
+    assert not set(REQUESTS) & set(ai.REQUESTS), "request wording reused from the augmentation"
+    assert not set(BENIGN_NOTES) & set(ai.BENIGN_NOTES), "benign note reused from the augmentation"
+
+    fresh_all, vec, R, ref_norm, n_passages_near_dup, tail = fresh_passage_pool(
+        train, train_aug, val, test, xstest, tricky, passages, is_english, n_aug_each, seed)
     assert len(fresh_all) >= 2 * n_each, f"only {len(fresh_all)} fresh passages"
 
     # attack strings: val+test label 1, short, not equal/near-equal to any training text, source cap
