@@ -164,3 +164,12 @@ export TEMP="D:\Projects2025\MaskWall\ml\cache\tmp" TMP="D:\Projects2025\MaskWal
 
 ## Update (2026-11-14): Step 5 finished on the cleaned_aug checkpoints
 Checkpoints arrived as a Drive zip (extra folder nesting; moved to `models/ckpt/cleaned_aug/`, zip left in `models/` and now gitignored). Export, benchmark and selection ran for the two `cleaned_aug` models with TEMP on D:. Results, picks and the max-input-length recommendation: `docs/decisions.md` Day 1.11, `ml/results/selection.md`, `benchmark.json`, `window_eval.json`. Server pick per the amended rule: DeBERTa-v3-small int8 (with caveats, MiniLM int8 is the practical alternative); browser pick: MiniLM int8 (23.1 MB). Plain variants skipped on the owner's instruction (inference, not measurement; noted in decisions.md). Step 6 skipped on the owner's instruction.
+
+# Session log: Day 2 firewall API (unattended), 2026-11-14 (night)
+
+Nothing is pushed. `.env` is never edited; API keys are read from it by the app/smoke script only, and are never printed or logged. Nothing is deleted outside `ml/cache/`, `ml/results/` and `models/onnx/`. One commit per completed step, with tests passing before each commit.
+
+## Decisions made while you were away
+
+1. **Default server model = MiniLM int8** behind `MASKWALL_SERVER_MODEL` (your instruction); logged in `docs/decisions.md` Day 2.0.
+2. **Environment checked without exposing secrets:** `.env` contains `GROQ_API_KEY` and `GEMINI_API_KEY` (names only were inspected, never values). **Docker is not installed on this machine**, so the Dockerfile can be written but not built or run here; it is untested.

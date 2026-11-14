@@ -465,3 +465,7 @@ Facts measured on this CPU (2 threads, int8, batch 1):
 - Latency is one laptop CPU (Intel Tiger Lake, 8 cores limited to 2 threads); run-to-run noise is about +/-20% (MiniLM natural p50 ranged 7.7-11.9 ms, DeBERTa 42.8-50.9 ms across runs). The deployment target must be measured before trusting any p50 against 50 ms.
 - One seed per model; 1-2 row swings on tricky and sub-0.03 F1 differences are noise.
 - The window experiment varies the window at inference only (no retraining at that window).
+
+## Day 2.0: Server model default for the API (owner's decision, 2026-11-14)
+
+The firewall API develops against **MiniLM int8 (`cleaned_aug/minilm`) as the default server model**, selected with the environment variable **`MASKWALL_SERVER_MODEL`** (`minilm` | `deberta`). This departs from the amended selection rule's pick (DeBERTa-v3-small int8, Day 1.11) on purpose and for a stated reason: the 50 ms gate for DeBERTa was within noise on the development laptop (42.8 / 44.8 / 50.9 ms across runs) and will probably fail on a free 2-vCPU Hugging Face Space, while MiniLM has 5-10x headroom and was cheaper to iterate against. **The rule is not abandoned, only deferred:** on Day 4 both models will be benchmarked on the real Space and the 50 ms rule (plus the indirect gate) applied there, and the default switched if the rule says so. Until then, DeBERTa is a supported, tested alternative, not the default.
