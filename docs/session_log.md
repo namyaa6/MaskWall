@@ -161,3 +161,6 @@ export TEMP="D:\Projects2025\MaskWall\ml\cache\tmp" TMP="D:\Projects2025\MaskWal
 2. **DeBERTa's latency margin is thin** (42.8 vs 50 ms) on this machine; on a 2-vCPU Hugging Face Space it will probably be slower. Decide whether the 50 ms gate should be re-measured on the target hardware before deployment.
 3. Server design implication: a 512-token prompt costs 289 ms (MiniLM int8) to 785 ms (DeBERTa int8), so the server needs an input-length cap or rate limit regardless of the model.
 4. C: drive nearly full.
+
+## Update (2026-11-14): Step 5 finished on the cleaned_aug checkpoints
+Checkpoints arrived as a Drive zip (extra folder nesting; moved to `models/ckpt/cleaned_aug/`, zip left in `models/` and now gitignored). Export, benchmark and selection ran for the two `cleaned_aug` models with TEMP on D:. Results, picks and the max-input-length recommendation: `docs/decisions.md` Day 1.11, `ml/results/selection.md`, `benchmark.json`, `window_eval.json`. Server pick per the amended rule: DeBERTa-v3-small int8 (with caveats, MiniLM int8 is the practical alternative); browser pick: MiniLM int8 (23.1 MB). Plain variants skipped on the owner's instruction (inference, not measurement; noted in decisions.md). Step 6 skipped on the owner's instruction.

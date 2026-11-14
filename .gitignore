@@ -13,3 +13,4 @@ models/ckpt/
 models/onnx/
 models/*.onnx
 models/*.safetensors
+models/*.zip

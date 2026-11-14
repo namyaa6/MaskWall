@@ -46,5 +46,53 @@
     },
     "status": "ok",
     "seconds": 859
+  },
+  "cleaned_aug/minilm": {
+    "job": "cleaned_aug/minilm",
+    "standin": false,
+    "dir": "models\\onnx\\cleaned_aug\\minilm",
+    "params_m": 22.7,
+    "exporter": "torchscript",
+    "fp32_mb": 91.0,
+    "parity_fp32": {
+      "n": 200,
+      "max_abs_logit_diff": 4.470348358154297e-06,
+      "mean_abs_logit_diff": 7.73798660702596e-07,
+      "tolerance": 0.001
+    },
+    "quantize_note": "pre-processed",
+    "int8_mb": 23.1,
+    "int8_vs_fp32": {
+      "n": 200,
+      "score_pearson": 0.9974732390653214,
+      "decision_agreement_at_0.5": 0.995,
+      "max_abs_score_diff": 0.25875166058540344
+    },
+    "status": "ok",
+    "seconds": 70
+  },
+  "cleaned_aug/deberta_v3_small": {
+    "job": "cleaned_aug/deberta_v3_small",
+    "standin": false,
+    "dir": "models\\onnx\\cleaned_aug\\deberta_v3_small",
+    "params_m": 141.9,
+    "exporter": "torchscript",
+    "fp32_mb": 568.1,
+    "parity_fp32": {
+      "n": 200,
+      "max_abs_logit_diff": 3.635883331298828e-06,
+      "mean_abs_logit_diff": 9.34600848268019e-07,
+      "tolerance": 0.001
+    },
+    "quantize_note": "pre-processed",
+    "int8_mb": 161.2,
+    "int8_vs_fp32": {
+      "n": 200,
+      "score_pearson": 0.9644903894615254,
+      "decision_agreement_at_0.5": 0.98,
+      "max_abs_score_diff": 0.6078431755304337
+    },
+    "status": "ok",
+    "seconds": 432
   }
 }

@@ -403,3 +403,65 @@ What this says:
 
 ### Pending (needs `models/ckpt/`): selection
 Run order and the rules are in `docs/session_log.md` ("How to finish Step 5") and `ml/select_models.py`: the amended server rule (Day 1.9) plus the browser rule (int8 <= 30 MB, same indirect gate, best val F1), with the original rule's pick printed alongside.
+
+## Day 1.11: Step 5 completed on the augmented checkpoints: export, int8, benchmark, selection, max input length
+
+### Scope decision (owner's instruction)
+Only the **`cleaned_aug`** checkpoints (MiniLM and DeBERTa-v3-small) were exported and benchmarked. The plain variants (`cleaned`) were skipped because they cannot pass the indirect_val gate. **That is an inference, not a measurement on indirect_val:** their recall on the whole indirect_eval was 0.21 (MiniLM) and 0.18 (DeBERTa) at the Colab thresholds (Day 1.8), far below 0.80, and they were never exported or quantized, so their int8 behaviour is unverified. Consequence: the "original rule" pick printed by `select_models.py` is over these two models only; over all four the original rule would also have picked DeBERTa+aug unless plain DeBERTa int8 beat 0.924 val F1 (its fp32 val F1 is 0.920), which I did not check.
+
+### Export and parity
+Both fine-tuned checkpoints exported with the legacy TorchScript exporter on the first attempt. Parity (PyTorch vs ONNX fp32 logits, 200 val prompts, batch 1): MiniLM **4.5e-6**, DeBERTa **3.6e-6** (gate 1e-3). **The ONNX fp32 models reproduce the Colab PyTorch results exactly** (test F1/FPR/recall equal to three decimals for both models), which checks the whole path: export, head+tail tokenization, softmax and thresholds. int8 vs fp32 score agreement on the 200 prompts: MiniLM r = 0.9975 (decisions agree 99.5%), DeBERTa r = 0.9645 (98.0%).
+
+### fp32 vs int8 (cleaned labels; threshold re-tuned on val for each model/precision; CIs bootstrap 95%)
+| | MiniLM fp32 | MiniLM int8 | DeBERTa fp32 | DeBERTa int8 |
+|---|---|---|---|---|
+| size | 91.0 MB | **23.1 MB** | 568.1 MB | 161.2 MB |
+| latency p50 / p95 (natural, 2 threads) | 23.0 / 525 ms | **11.9 / 370 ms** | 87.4 / 1600 ms | **44.8 / 938 ms** |
+| 512-token p50 | 527 ms | 366 ms | 1629 ms | 956 ms |
+| val F1 (threshold) | 0.914 (0.942) | 0.914 (0.924) | 0.925 (0.076) | 0.924 (0.277) |
+| indirect_val recall / FPR | 0.932 / 0.018 | 0.915 / 0.018 | 0.966 / 0.018 | 0.949 / 0.035 |
+| indirect_test recall / FPR (reporting only) | 0.909 / 0.018 | 0.909 / 0.000 | 0.982 / 0.000 | 0.873 / **0.088** |
+| test F1 [CI] | 0.892 [0.859, 0.921] | 0.898 [0.865, 0.928] | 0.884 [0.852, 0.914] | 0.889 [0.859, 0.920] |
+| test FPR [CI] | 0.018 [0.009, 0.028] | 0.018 [0.009, 0.028] | 0.052 [0.036, 0.069] | 0.039 [0.025, 0.054] |
+| test recall / precision | 0.856 / 0.932 | 0.865 / 0.933 | 0.933 / 0.840 | 0.909 / 0.871 |
+| tricky /49 (hidden-injection /5) | 34 (0) | 36 (2) | 35 (3) | 37 (4) |
+| xstest FP /250 | 0 | 0 | 3 | 5 |
+
+- **int8 costs essentially nothing in val F1** (-0.000 MiniLM, -0.001 DeBERTa) and 1.9-2.3x speed, 3.5-4x size. Test-set differences are inside the CIs and tricky-set differences are 1-2 rows (noise).
+- **Quantization changes calibration, mostly for DeBERTa:** its val-tuned threshold moved 0.076 -> 0.277 (this also removed part of its "trigger-happy" behaviour: test FPR 0.052 -> 0.039). Applying the old fp32 threshold to the int8 model would have hurt (test F1 0.872, FPR 0.061, indirect_test FPR 0.105), so **thresholds must be tuned per exported model**, as the rule already says. For MiniLM the frozen threshold works (test F1 0.895).
+
+### Selection (`ml/results/selection.md`, rules from Day 1.9)
+- **Server model: `cleaned_aug/deberta_v3_small`, int8** (p50 44.8 ms < 50 ms; indirect_val recall 0.949 >= 0.80 and FPR 0.035 <= 0.05; val F1 0.924). The original rule picks the same model.
+- **Browser pre-check model: `cleaned_aug/minilm`, int8** (23.1 MB <= 30 MB; indirect_val 0.915 / 0.018; val F1 0.914). DeBERTa (161 MB) cannot go in the browser. The fallback (word+char TF-IDF via skl2onnx) is not needed.
+
+**Caveats on the server pick (the rule's output stands; these are for the owner's decision):**
+1. **The latency gate is not robust.** DeBERTa int8 p50 was 42.8 ms (stand-in run), 44.8 ms (the protocol run) and 50.9 ms (a re-measurement over all val prompts): it straddles 50 ms across runs on this laptop, and prompts longer than about 30 tokens already exceed 50 ms (32 tokens: 50.6 ms). A free 2-vCPU Hugging Face CPU will likely be slower. MiniLM int8 is 5-10x under the limit.
+2. **The indirect gate is noisy:** DeBERTa passes on indirect_val (FPR 0.035, 2 of 57 benign flagged) but has FPR 0.088 (5 of 57) on indirect_test, which would fail the same 0.05 limit; MiniLM is 0.018 / 0.000. The gate sample is 57 benign rows.
+3. **Main-set FPR:** DeBERTa int8 test FPR 0.039 vs 0.018 and xstest 5 vs 0 false positives. DeBERTa's advantages: tricky hidden-injection 4/5 vs 2/5 (5 rows, one seed) and test recall 0.909 vs 0.865.
+Putting the evidence together, MiniLM+aug int8 is the more practical server model if the target CPU is slow or false positives matter more than recall, and DeBERTa+aug int8 is the choice if recall on hidden injections matters most and the latency budget is relaxed. The rule's pick is DeBERTa; I did not override it.
+
+### Maximum input length for the server (`ml/window_eval.py`, `ml/results/window_eval.json`)
+Facts measured on this CPU (2 threads, int8, batch 1):
+- **Latency grows steeply with tokens** (p50, random tokens): MiniLM 16/64/128/256/384/512 tokens = 7.8 / 21 / 49 / 127 / 241 / 388 ms; DeBERTa = 33 / 83 / 167 / 375 / 644 / 929 ms.
+- **Real prompts:** median 28-32 tokens, p90 about 490-570, p99 about 1,700-2,030; **9.4-11.4% of rows exceed 510 tokens** (attacks 13-22%, benign 8-10%); 4.57 characters per token (median).
+- **Accuracy vs window** (head+tail split proportionally, threshold re-tuned on val per window; test is informational):
+
+| window | MiniLM val F1 / indirect_val recall / test F1 | DeBERTa val F1 / indirect_val recall / test F1 | val rows truncated |
+|---|---|---|---|
+| 128 | 0.893 / **0.729** / 0.878 | 0.914 / **0.763** / 0.882 | 30% |
+| 256 | 0.909 / 0.898 / 0.895 | 0.921 / 0.864 / 0.885 | 20% |
+| 384 | 0.912 / 0.915 / 0.895 | 0.925 / 0.881 / 0.888 | 15% |
+| 512 | 0.914 / 0.915 / 0.898 | 0.924 / 0.949 / 0.889 | 9.4% |
+
+  At 128 tokens both models fail the 0.80 indirect gate; 256 is the smallest window that keeps both above it.
+
+**Recommendation:**
+1. **Model window: keep the 512-token head+tail window the models were trained with** (best accuracy; worst-case single request about 0.4 s MiniLM / 0.95 s DeBERTa on this CPU). If latency is binding, **256 tokens is the floor**: it costs 0.003-0.005 val F1, and DeBERTa's indirect_val recall falls 0.949 -> 0.864 (still above the gate), MiniLM's 0.915 -> 0.898; below that, indirect recall fails.
+2. **Hard request limit: 8,000 characters (about 1,750 tokens), HTTP 413 above it**, checked before tokenization (DoS protection; it covers about 99% of the benchmark prompts (p99 is about 1,700-2,030 tokens), so roughly 1% would be rejected).
+3. **Full single-pass coverage is only 510 tokens (about 2,300 characters).** Between 2,300 and 8,000 characters the head+tail window **does not see the middle of the text**, which is exactly where an indirect injection inside a long document can sit (the indirect_eval passages are at most about 350 tokens, so this was never tested). The API should report `scan_coverage: partial` for such inputs, and the policy should treat partial coverage explicitly (for example warn, not silent allow). Sliding-window scanning (max over 510-token windows) would remove the gap at linear cost (MiniLM int8 about 0.4 s per window); it is **untested**, listed as a follow-up.
+4. **Browser model:** use the same head+tail logic (Transformers.js truncates the head only by default, so it needs a custom step); consider the 256-token window there to bound in-browser latency. WASM speed in the browser is untested.
+
+### Limitations
+- Latency is one laptop CPU (Intel Tiger Lake, 8 cores limited to 2 threads); run-to-run noise is about +/-20% (MiniLM natural p50 ranged 7.7-11.9 ms, DeBERTa 42.8-50.9 ms across runs). The deployment target must be measured before trusting any p50 against 50 ms.
+- One seed per model; 1-2 row swings on tricky and sub-0.03 F1 differences are noise.
+- The window experiment varies the window at inference only (no retraining at that window).

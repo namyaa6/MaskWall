@@ -1,0 +1,110 @@
+{
+  "cleaned_aug/minilm": [
+    {
+      "W": 128,
+      "thr": 0.147,
+      "val_f1": 0.893,
+      "iv_recall": 0.729,
+      "iv_fpr": 0.0,
+      "test_f1": 0.878,
+      "test_fpr": 0.036,
+      "val_truncated": 0.3,
+      "lat_p50": 11.7,
+      "lat_p95": 56.8,
+      "lat_mean": 22.3
+    },
+    {
+      "W": 256,
+      "thr": 0.942,
+      "val_f1": 0.909,
+      "iv_recall": 0.898,
+      "iv_fpr": 0.018,
+      "test_f1": 0.895,
+      "test_fpr": 0.018,
+      "val_truncated": 0.199,
+      "lat_p50": 11.1,
+      "lat_p95": 136.7,
+      "lat_mean": 41.1
+    },
+    {
+      "W": 384,
+      "thr": 0.911,
+      "val_f1": 0.912,
+      "iv_recall": 0.915,
+      "iv_fpr": 0.018,
+      "test_f1": 0.895,
+      "test_fpr": 0.018,
+      "val_truncated": 0.148,
+      "lat_p50": 11.7,
+      "lat_p95": 248.9,
+      "lat_mean": 59.9
+    },
+    {
+      "W": 512,
+      "thr": 0.924,
+      "val_f1": 0.914,
+      "iv_recall": 0.915,
+      "iv_fpr": 0.018,
+      "test_f1": 0.898,
+      "test_fpr": 0.018,
+      "val_truncated": 0.094,
+      "lat_p50": 7.7,
+      "lat_p95": 213.9,
+      "lat_mean": 44.3
+    }
+  ],
+  "cleaned_aug/deberta_v3_small": [
+    {
+      "W": 128,
+      "thr": 0.411,
+      "val_f1": 0.914,
+      "iv_recall": 0.763,
+      "iv_fpr": 0.035,
+      "test_f1": 0.882,
+      "test_fpr": 0.039,
+      "val_truncated": 0.296,
+      "lat_p50": 21.5,
+      "lat_p95": 131.3,
+      "lat_mean": 35.6
+    },
+    {
+      "W": 256,
+      "thr": 0.362,
+      "val_f1": 0.921,
+      "iv_recall": 0.864,
+      "iv_fpr": 0.035,
+      "test_f1": 0.885,
+      "test_fpr": 0.04,
+      "val_truncated": 0.193,
+      "lat_p50": 42.3,
+      "lat_p95": 344.0,
+      "lat_mean": 113.0
+    },
+    {
+      "W": 384,
+      "thr": 0.382,
+      "val_f1": 0.925,
+      "iv_recall": 0.881,
+      "iv_fpr": 0.035,
+      "test_f1": 0.888,
+      "test_fpr": 0.036,
+      "val_truncated": 0.14,
+      "lat_p50": 49.6,
+      "lat_p95": 726.1,
+      "lat_mean": 188.8
+    },
+    {
+      "W": 512,
+      "thr": 0.277,
+      "val_f1": 0.924,
+      "iv_recall": 0.949,
+      "iv_fpr": 0.035,
+      "test_f1": 0.889,
+      "test_fpr": 0.039,
+      "val_truncated": 0.093,
+      "lat_p50": 50.9,
+      "lat_p95": 955.0,
+      "lat_mean": 212.3
+    }
+  ]
+}
