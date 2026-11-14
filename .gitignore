@@ -14,3 +14,5 @@ models/onnx/
 models/*.onnx
 models/*.safetensors
 models/*.zip
+backend/model/
+backend/data/
