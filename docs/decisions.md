@@ -672,3 +672,50 @@ If any criterion fails, the result is reported as negative. Additional rules: re
 **Risks and what limits the conclusions.** AI-drafted E2/E3 (and the Groq training text) may share artefacts; the sets are small (a 5-row difference on E1 is within noise); Hindi-only attacks may need more than 300 examples; hard negatives can trade recall for precision, which criteria 3 and 4 measure; Hinglish-TOP commands are narrow in topic. **Cost:** about 2 to 3 hours to build and review the data, then cheap runs.
 
 **Questions for the owner:** (1) approve T3 (Hinglish-TOP train split as negatives)? (2) should the baseline be re-trained with 3 seeds before arms A and B, or compared against the existing single checkpoint?
+
+## Day 2.7: Step 6: Meta's Llama Prompt Guard 2 as an external reference (`ml/prompt_guard_eval.py`, `ml/results/prompt_guard_reference.md`)
+
+**Reference only: nothing here selects, tunes or trains anything.** Prompt Guard 2 (22M and 86M) came from the Hugging Face Hub with the owner's token (read from `.env` at run time, never printed), was exported to ONNX fp32 and dynamic int8 with the same code and parity gate as our models (parity 7.3e-6 and 8.2e-5, tolerance 1e-3), and was scored at batch 1 with head+tail (sliding windows on the long documents for 22M only; for 86M it would take about 2 hours of CPU and adds little). Score = P(class 1 = malicious), orientation checked on an obvious attack. Thresholds: as shipped (0.5), the F1-optimal threshold on **our** val set, and the lowest threshold with val FPR <= 1% on our val set (val only, like every model here). Accuracy is on the fp32 export (what Meta ships); int8 is for size, latency and an agreement check.
+
+**Caveats written before the numbers** (they matter for reading everything below): (1) **different label definition**: Prompt Guard calls a prompt malicious only if it "explicitly attempts to override prior instructions" and ignores harmfulness, ours also counts jailbreak personas, instructions smuggled into data, etc.; systematic disagreement is expected; (2) **its training data is undisclosed** (open-source benign and injection/jailbreak sets plus Meta's own synthetic data), so overlap with our public sources cannot be excluded, which could flatter it on our test set; (3) it is designed as a first-line filter with a very low false-positive target; (4) it was not trained on our data, ours was, so on our test set the comparison favours our models by construction; the Hinglish and indirect sets are the more informative comparisons. Licence: Llama 4 Community License, evaluation use only; the weights stay in gitignored folders and are not redistributed.
+
+### Size and latency (same machine, 2 threads, batch 1, same ONNX int8 pipeline)
+| model | fp32 MB | int8 MB | int8 p50 / p95 ms | 512-token p50 |
+|---|---|---|---|---|
+| Prompt Guard 2 22M | 284 | 90.7 | 18.8 / 372 | 366 ms |
+| Prompt Guard 2 86M ("86M" is the backbone; the 251k-token embeddings make the file 1.1 GB) | 1,116 | 338.9 | 62.0 / 1,015 | 929 ms |
+| MiniLM (ours) | 91.0 | **23.1** | **11.9** / 370 | 366 ms |
+| DeBERTa-v3-small (ours) | 568 | 161.2 | 44.8 / 939 | 956 ms |
+An earlier run of the 22M model on the same machine measured 45.9 ms p50 (this one 18.8 ms): latency noise here is large, so read the ordering loosely. Our MiniLM is 4x smaller than Prompt Guard 22M and 15x smaller than the 86M (which would also fail the 50 ms gate).
+
+### Our test set, tricky set, xstest and indirect_test (Prompt Guard fp32; ours int8 at the served block threshold)
+| model | operating point | test F1 [CI] | test FPR | test recall | indirect_test R / FPR | xstest FP | tricky /49 (hidden /5) |
+|---|---|---|---|---|---|---|---|
+| PG2 22M (AUC 0.904) | as shipped (0.5) | 0.679 [0.627, 0.729] | 0.049 | 0.601 | 0.164 / 0.000 | 0 | 27 (0) |
+| PG2 22M | val F1-opt (0.23) | 0.698 | 0.095 | 0.712 | 0.255 / 0.000 | 0 | 27 (0) |
+| PG2 86M (AUC 0.919) | as shipped (0.5) | 0.696 [0.652, 0.737] | **0.191** | 0.885 | 0.673 / 0.000 | 0 | 34 (1) |
+| PG2 86M | val F1-opt (0.962) | 0.715 | 0.159 | 0.861 | 0.600 / 0.000 | 0 | 31 (0) |
+| PG2 86M | val FPR<=1% (1.000) | 0.239 | 0.018 | 0.144 | 0.000 / 0.000 | 0 | 28 (0) |
+| MiniLM int8 (ours, AUC 0.987) | served block | **0.898** [0.865, 0.928] | 0.018 | 0.865 | **0.909** / 0.000 | 0 | 36 (2) |
+| DeBERTa int8 (ours, AUC 0.980) | served block | 0.878 [0.843, 0.910] | 0.031 | 0.865 | 0.855 / 0.070 | 5 | 37 (4) |
+
+### Hinglish and prompt-talk sets (Prompt Guard at the val F1-optimal threshold; ours at served block)
+| model | human Hinglish benign FP (104) | English originals FP | AI Hinglish attacks caught (24) | hindi-only caught (8) | prompt-talk benign FP (100) | English / Hinglish |
+|---|---|---|---|---|---|---|
+| PG2 22M | **0/104** | 4/104 | 6/24 | 0/8 | **2/100** | 1/50 / 1/50 |
+| PG2 86M | **0/104** | 2/104 | 7/24 | 0/8 | **3/100** | 2/50 / 1/50 |
+| MiniLM int8 (ours) | 10/104 | 9/104 | **19/24** | 3/8 | 28/100 | 4/50 / 24/50 |
+| DeBERTa int8 (ours) | 45/104 | 25/104 | 13/24 | 0/8 | 43/100 | 14/50 / 29/50 |
+The owner's 7 prompts: both Prompt Guard models pass all 4 benign prompts (including #6, the Hinglish system-prompt question that our models block) and flag #1; they miss the Hinglish attack #4 (Hindi words only) and PG22 also misses #3; PG86 catches #3. Our MiniLM gets all 7 except #6.
+
+### Long documents (114 + 114) and int8
+At its val F1-optimal threshold PG22 flags 79 of 114 benign long documents with head+tail (and all 114 with sliding), because that threshold (0.23) is low for a model whose scores are close to 0 or 1; PG86 head+tail catches 0/38 middle injections with 0/114 benign false alarms (a missing middle, as for ours). Long-document numbers depend heavily on the single val-tuned threshold and should be read as "not a drop-in on long inputs". **int8 quantization hurts the 86M model** (score correlation with fp32 0.85, test AUC 0.907 vs 0.919, decision agreement 0.917) but not the 22M (correlation 0.996, AUC 0.905 vs 0.904).
+
+### What it shows (an external reference with the caveats above, not a ranking)
+1. **Prompt Guard is not a drop-in replacement on our task and labels:** test F1 0.68 to 0.72 against 0.90 for our MiniLM, indirect_test recall 0.16 to 0.67 against 0.91, hidden-injection tricky rows 0 to 1 of 5. Part of this is the different definition (it flags explicit overrides, and at 0.5 the 86M model flags 19% of our benign test prompts, probably persona prompts that our labels call benign) and part is that our models are trained on this distribution while it is zero-shot. The 0.987 vs 0.90 to 0.92 AUC gap measures that in-distribution advantage, not general superiority.
+2. **It is far more conservative on the failure cases that motivated this round:** 0/104 false positives on human Hinglish assistant commands and 2 to 3 of 100 on prompt-talk benign prompts (our MiniLM: 10/104 and 28/100), and no false positive on the manual Hinglish system-prompt question. Its price is recall: 6 to 7 of 24 AI-drafted Hinglish attacks and 0 of 8 Hindi-only ones, even though its model card lists Hindi among the evaluated languages (my Hinglish is romanised, not Devanagari, which may matter).
+3. **Complementary, but untested:** where our model raises false alarms, Prompt Guard stays silent, and where Prompt Guard misses attacks (indirect, role-play), ours catches them. A combination was not evaluated and would need its own design (and the 86M model's size and latency are a cost).
+4. **For our deployment budget MiniLM remains the better fit:** 23 MB and about 12 ms against 91 MB / 19 ms (22M) or 339 MB / 62 ms (86M).
+5. **Contamination:** Prompt Guard does not look flattered on our test set (it scores below our in-distribution models), which is weak evidence against heavy overlap but not a test of it.
+
+Not done: sliding windows for 86M on the long documents; evaluation on Devanagari Hindi; any combination with our models.

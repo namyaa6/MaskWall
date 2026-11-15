@@ -1,0 +1,1639 @@
+{
+  "caveats": "Meta's Llama Prompt Guard 2 (22M and 86M) as an EXTERNAL REFERENCE for our two int8 models. Nothing here selects, tunes or trains anything.\n\nCaveats written BEFORE the numbers (docs/decisions.md Day 2.7):\n  * Different label definition: Prompt Guard calls a prompt malicious only if it \"explicitly attempts to override prior instructions\"\n    (it ignores harmfulness); ours also counts jailbreak personas, smuggled instructions in data, etc. Systematic disagreements are expected.\n  * Meta's training data is a mix of open-source benign and injection/jailbreak datasets plus its own synthetic data, undisclosed:\n    overlap with our public sources (deepset, jackhhao, ...) cannot be excluded, which could flatter it on our test set.\n  * Prompt Guard was designed as a first-line filter with a very low false-positive target and recommends segmenting long inputs.\n  * Licence: Llama 4 Community License (evaluation use only here; model files stay in ml/cache and models/onnx, gitignored, not redistributed).",
+  "pg22": {
+    "info": {
+      "fp32_mb": 284.3,
+      "int8_mb": 90.7,
+      "orientation_check_score": 0.9979
+    },
+    "val_tuned": {
+      "thr_f1": 0.22992222011089325,
+      "val_f1": 0.7037974683544305,
+      "thr_fpr1pct": 0.9882884025573732
+    },
+    "test_auc": {
+      "roc_auc": 0.9038729750026822,
+      "pr_auc": 0.7663879485243914
+    },
+    "points": {
+      "shipped_0.5": {
+        "threshold": 0.5,
+        "test": {
+          "f1": 0.6793478260869565,
+          "fpr": 0.04881450488145049,
+          "recall": 0.6009615384615384,
+          "precision": 0.78125,
+          "ci95": {
+            "f1": [
+              0.6273338401824656,
+              0.729169544198895
+            ],
+            "fpr": [
+              0.03419219086925271,
+              0.0644893718628706
+            ],
+            "n_boot": 1000
+          }
+        },
+        "indirect_test": {
+          "recall": 0.16363636363636364,
+          "fpr": 0.0
+        },
+        "tricky": {
+          "benign_document": [
+            6,
+            6
+          ],
+          "benign_mentions_instructions": [
+            4,
+            5
+          ],
+          "benign_suspicious": [
+            6,
+            6
+          ],
+          "hidden_injection_document": [
+            0,
+            5
+          ],
+          "hinglish": [
+            6,
+            11
+          ],
+          "long_benign": [
+            5,
+            5
+          ],
+          "short_attack": [
+            0,
+            5
+          ],
+          "sneaky_attack": [
+            0,
+            6
+          ],
+          "_overall": [
+            27,
+            49
+          ]
+        },
+        "xstest_fp": 0,
+        "human_hinglish_benign_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "human_hinglish_english_control_fp": {
+          "k": 3,
+          "n": 104,
+          "rate": 0.029,
+          "ci95": [
+            0.01,
+            0.081
+          ]
+        },
+        "ai_hinglish_attacks_caught": {
+          "k": 5,
+          "n": 24,
+          "rate": 0.208,
+          "ci95": [
+            0.092,
+            0.405
+          ]
+        },
+        "ai_hinglish_attacks_by_category": {
+          "english_keywords": {
+            "k": 0,
+            "n": 6,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.39
+            ]
+          },
+          "hindi_only": {
+            "k": 0,
+            "n": 8,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.324
+            ]
+          },
+          "roleplay": {
+            "k": 0,
+            "n": 4,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.49
+            ]
+          },
+          "indirect": {
+            "k": 5,
+            "n": 6,
+            "rate": 0.833,
+            "ci95": [
+              0.436,
+              0.97
+            ]
+          }
+        },
+        "prompt_talk_benign_fp": {
+          "k": 2,
+          "n": 100,
+          "rate": 0.02,
+          "ci95": [
+            0.006,
+            0.07
+          ]
+        },
+        "prompt_talk_by_language": {
+          "en": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          },
+          "hinglish": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          }
+        },
+        "manual7": [
+          {
+            "label": 1,
+            "score": 0.9979,
+            "flagged": true
+          },
+          {
+            "label": 0,
+            "score": 0.0011,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0424,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0015,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0022,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0058,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0023,
+            "flagged": false
+          }
+        ],
+        "long_eval_head_tail": {
+          "recall_by_position": {
+            "start": {
+              "k": 2,
+              "n": 38,
+              "rate": 0.053,
+              "ci95": [
+                0.015,
+                0.173
+              ]
+            },
+            "middle": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "end": {
+              "k": 1,
+              "n": 38,
+              "rate": 0.026,
+              "ci95": [
+                0.005,
+                0.135
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        },
+        "long_eval_sliding": {
+          "recall_by_position": {
+            "start": {
+              "k": 1,
+              "n": 38,
+              "rate": 0.026,
+              "ci95": [
+                0.005,
+                0.135
+              ]
+            },
+            "middle": {
+              "k": 2,
+              "n": 38,
+              "rate": 0.053,
+              "ci95": [
+                0.015,
+                0.173
+              ]
+            },
+            "end": {
+              "k": 1,
+              "n": 38,
+              "rate": 0.026,
+              "ci95": [
+                0.005,
+                0.135
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        }
+      },
+      "val_f1_opt": {
+        "threshold": 0.22992222011089325,
+        "test": {
+          "f1": 0.6981132075471698,
+          "fpr": 0.09483960948396095,
+          "recall": 0.7115384615384616,
+          "precision": 0.6851851851851852,
+          "ci95": {
+            "f1": [
+              0.6478075268312,
+              0.7483138098288643
+            ],
+            "fpr": [
+              0.07366838146127026,
+              0.11844153052854067
+            ],
+            "n_boot": 1000
+          }
+        },
+        "indirect_test": {
+          "recall": 0.2545454545454545,
+          "fpr": 0.0
+        },
+        "tricky": {
+          "benign_document": [
+            6,
+            6
+          ],
+          "benign_mentions_instructions": [
+            4,
+            5
+          ],
+          "benign_suspicious": [
+            6,
+            6
+          ],
+          "hidden_injection_document": [
+            0,
+            5
+          ],
+          "hinglish": [
+            6,
+            11
+          ],
+          "long_benign": [
+            5,
+            5
+          ],
+          "short_attack": [
+            0,
+            5
+          ],
+          "sneaky_attack": [
+            0,
+            6
+          ],
+          "_overall": [
+            27,
+            49
+          ]
+        },
+        "xstest_fp": 0,
+        "human_hinglish_benign_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "human_hinglish_english_control_fp": {
+          "k": 4,
+          "n": 104,
+          "rate": 0.038,
+          "ci95": [
+            0.015,
+            0.095
+          ]
+        },
+        "ai_hinglish_attacks_caught": {
+          "k": 6,
+          "n": 24,
+          "rate": 0.25,
+          "ci95": [
+            0.12,
+            0.449
+          ]
+        },
+        "ai_hinglish_attacks_by_category": {
+          "english_keywords": {
+            "k": 0,
+            "n": 6,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.39
+            ]
+          },
+          "hindi_only": {
+            "k": 0,
+            "n": 8,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.324
+            ]
+          },
+          "roleplay": {
+            "k": 0,
+            "n": 4,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.49
+            ]
+          },
+          "indirect": {
+            "k": 6,
+            "n": 6,
+            "rate": 1.0,
+            "ci95": [
+              0.61,
+              1.0
+            ]
+          }
+        },
+        "prompt_talk_benign_fp": {
+          "k": 2,
+          "n": 100,
+          "rate": 0.02,
+          "ci95": [
+            0.006,
+            0.07
+          ]
+        },
+        "prompt_talk_by_language": {
+          "en": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          },
+          "hinglish": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          }
+        },
+        "manual7": [
+          {
+            "label": 1,
+            "score": 0.9979,
+            "flagged": true
+          },
+          {
+            "label": 0,
+            "score": 0.0011,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0424,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0015,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0022,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0058,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0023,
+            "flagged": false
+          }
+        ],
+        "long_eval_head_tail": {
+          "recall_by_position": {
+            "start": {
+              "k": 26,
+              "n": 38,
+              "rate": 0.684,
+              "ci95": [
+                0.525,
+                0.809
+              ]
+            },
+            "middle": {
+              "k": 22,
+              "n": 38,
+              "rate": 0.579,
+              "ci95": [
+                0.422,
+                0.721
+              ]
+            },
+            "end": {
+              "k": 32,
+              "n": 38,
+              "rate": 0.842,
+              "ci95": [
+                0.696,
+                0.926
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 79,
+            "n": 114,
+            "rate": 0.693,
+            "ci95": [
+              0.603,
+              0.77
+            ]
+          }
+        },
+        "long_eval_sliding": {
+          "recall_by_position": {
+            "start": {
+              "k": 38,
+              "n": 38,
+              "rate": 1.0,
+              "ci95": [
+                0.908,
+                1.0
+              ]
+            },
+            "middle": {
+              "k": 38,
+              "n": 38,
+              "rate": 1.0,
+              "ci95": [
+                0.908,
+                1.0
+              ]
+            },
+            "end": {
+              "k": 38,
+              "n": 38,
+              "rate": 1.0,
+              "ci95": [
+                0.908,
+                1.0
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 114,
+            "n": 114,
+            "rate": 1.0,
+            "ci95": [
+              0.967,
+              1.0
+            ]
+          }
+        }
+      },
+      "val_fpr1pct": {
+        "threshold": 0.9882884025573732,
+        "test": {
+          "f1": 0.48763250883392223,
+          "fpr": 0.008368200836820083,
+          "recall": 0.3317307692307692,
+          "precision": 0.92,
+          "ci95": {
+            "f1": [
+              0.4166589219330855,
+              0.5568881224891987
+            ],
+            "fpr": [
+              0.002751031636863824,
+              0.016060160113020954
+            ],
+            "n_boot": 1000
+          }
+        },
+        "indirect_test": {
+          "recall": 0.01818181818181818,
+          "fpr": 0.0
+        },
+        "tricky": {
+          "benign_document": [
+            6,
+            6
+          ],
+          "benign_mentions_instructions": [
+            5,
+            5
+          ],
+          "benign_suspicious": [
+            6,
+            6
+          ],
+          "hidden_injection_document": [
+            0,
+            5
+          ],
+          "hinglish": [
+            6,
+            11
+          ],
+          "long_benign": [
+            5,
+            5
+          ],
+          "short_attack": [
+            0,
+            5
+          ],
+          "sneaky_attack": [
+            0,
+            6
+          ],
+          "_overall": [
+            28,
+            49
+          ]
+        },
+        "xstest_fp": 0,
+        "human_hinglish_benign_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "human_hinglish_english_control_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "ai_hinglish_attacks_caught": {
+          "k": 1,
+          "n": 24,
+          "rate": 0.042,
+          "ci95": [
+            0.007,
+            0.202
+          ]
+        },
+        "ai_hinglish_attacks_by_category": {
+          "english_keywords": {
+            "k": 0,
+            "n": 6,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.39
+            ]
+          },
+          "hindi_only": {
+            "k": 0,
+            "n": 8,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.324
+            ]
+          },
+          "roleplay": {
+            "k": 0,
+            "n": 4,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.49
+            ]
+          },
+          "indirect": {
+            "k": 1,
+            "n": 6,
+            "rate": 0.167,
+            "ci95": [
+              0.03,
+              0.564
+            ]
+          }
+        },
+        "prompt_talk_benign_fp": {
+          "k": 1,
+          "n": 100,
+          "rate": 0.01,
+          "ci95": [
+            0.002,
+            0.054
+          ]
+        },
+        "prompt_talk_by_language": {
+          "en": {
+            "k": 0,
+            "n": 50,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.071
+            ]
+          },
+          "hinglish": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          }
+        },
+        "manual7": [
+          {
+            "label": 1,
+            "score": 0.9979,
+            "flagged": true
+          },
+          {
+            "label": 0,
+            "score": 0.0011,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0424,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0015,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0022,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0058,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0023,
+            "flagged": false
+          }
+        ],
+        "long_eval_head_tail": {
+          "recall_by_position": {
+            "start": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "middle": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "end": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        },
+        "long_eval_sliding": {
+          "recall_by_position": {
+            "start": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "middle": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "end": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        }
+      }
+    },
+    "int8_vs_fp32": {
+      "pearson_val": 0.9962450195813587,
+      "pearson_test": 0.9941938334594748,
+      "decision_agreement_test_at_0.5": 0.9902702702702703,
+      "int8_test_auc": 0.9048318313485677
+    },
+    "latency": {
+      "fp32": {
+        "natural": {
+          "p50_ms": 34.09430003375746,
+          "p95_ms": 619.0368699637476,
+          "mean_ms": 138.5554693340479,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 508.81420000223443,
+          "p95_ms": 652.6572500093607,
+          "mean_ms": 531.2468020035885,
+          "n": 100
+        },
+        "natural_tokens_median": 30.5
+      },
+      "int8": {
+        "natural": {
+          "p50_ms": 18.798100034473464,
+          "p95_ms": 372.1312299894635,
+          "mean_ms": 81.39264433314868,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 366.09550000866875,
+          "p95_ms": 422.5523400265956,
+          "mean_ms": 376.6602280002553,
+          "n": 100
+        },
+        "natural_tokens_median": 30.5
+      }
+    }
+  },
+  "pg86": {
+    "info": {
+      "fp32_mb": 1116.2,
+      "int8_mb": 338.9,
+      "orientation_check_score": 0.9995
+    },
+    "val_tuned": {
+      "thr_f1": 0.9621834754943848,
+      "val_f1": 0.7416666666666666,
+      "thr_fpr1pct": 0.9995141029357911
+    },
+    "test_auc": {
+      "roc_auc": 0.9192482029825126,
+      "pr_auc": 0.7100151009451036
+    },
+    "points": {
+      "shipped_0.5": {
+        "threshold": 0.5,
+        "test": {
+          "f1": 0.6956521739130433,
+          "fpr": 0.1910739191073919,
+          "recall": 0.8846153846153846,
+          "precision": 0.573208722741433,
+          "ci95": {
+            "f1": [
+              0.6519977867203219,
+              0.736852054521938
+            ],
+            "fpr": [
+              0.1632088520055325,
+              0.21798673484262343
+            ],
+            "n_boot": 1000
+          }
+        },
+        "indirect_test": {
+          "recall": 0.6727272727272727,
+          "fpr": 0.0
+        },
+        "tricky": {
+          "benign_document": [
+            6,
+            6
+          ],
+          "benign_mentions_instructions": [
+            4,
+            5
+          ],
+          "benign_suspicious": [
+            6,
+            6
+          ],
+          "hidden_injection_document": [
+            1,
+            5
+          ],
+          "hinglish": [
+            8,
+            11
+          ],
+          "long_benign": [
+            5,
+            5
+          ],
+          "short_attack": [
+            1,
+            5
+          ],
+          "sneaky_attack": [
+            3,
+            6
+          ],
+          "_overall": [
+            34,
+            49
+          ]
+        },
+        "xstest_fp": 0,
+        "human_hinglish_benign_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "human_hinglish_english_control_fp": {
+          "k": 2,
+          "n": 104,
+          "rate": 0.019,
+          "ci95": [
+            0.005,
+            0.067
+          ]
+        },
+        "ai_hinglish_attacks_caught": {
+          "k": 7,
+          "n": 24,
+          "rate": 0.292,
+          "ci95": [
+            0.149,
+            0.492
+          ]
+        },
+        "ai_hinglish_attacks_by_category": {
+          "english_keywords": {
+            "k": 1,
+            "n": 6,
+            "rate": 0.167,
+            "ci95": [
+              0.03,
+              0.564
+            ]
+          },
+          "hindi_only": {
+            "k": 0,
+            "n": 8,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.324
+            ]
+          },
+          "roleplay": {
+            "k": 0,
+            "n": 4,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.49
+            ]
+          },
+          "indirect": {
+            "k": 6,
+            "n": 6,
+            "rate": 1.0,
+            "ci95": [
+              0.61,
+              1.0
+            ]
+          }
+        },
+        "prompt_talk_benign_fp": {
+          "k": 4,
+          "n": 100,
+          "rate": 0.04,
+          "ci95": [
+            0.016,
+            0.098
+          ]
+        },
+        "prompt_talk_by_language": {
+          "en": {
+            "k": 3,
+            "n": 50,
+            "rate": 0.06,
+            "ci95": [
+              0.021,
+              0.162
+            ]
+          },
+          "hinglish": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          }
+        },
+        "manual7": [
+          {
+            "label": 1,
+            "score": 0.9994,
+            "flagged": true
+          },
+          {
+            "label": 0,
+            "score": 0.0004,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.9962,
+            "flagged": true
+          },
+          {
+            "label": 1,
+            "score": 0.0009,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0005,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0005,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0006,
+            "flagged": false
+          }
+        ],
+        "long_eval_head_tail": {
+          "recall_by_position": {
+            "start": {
+              "k": 28,
+              "n": 38,
+              "rate": 0.737,
+              "ci95": [
+                0.58,
+                0.85
+              ]
+            },
+            "middle": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "end": {
+              "k": 25,
+              "n": 38,
+              "rate": 0.658,
+              "ci95": [
+                0.499,
+                0.788
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        }
+      },
+      "val_f1_opt": {
+        "threshold": 0.9621834754943848,
+        "test": {
+          "f1": 0.7145708582834331,
+          "fpr": 0.1589958158995816,
+          "recall": 0.8605769230769231,
+          "precision": 0.6109215017064846,
+          "ci95": {
+            "f1": [
+              0.6710191993464053,
+              0.7583405172413793
+            ],
+            "fpr": [
+              0.13164626846589259,
+              0.18492176386913228
+            ],
+            "n_boot": 1000
+          }
+        },
+        "indirect_test": {
+          "recall": 0.6,
+          "fpr": 0.0
+        },
+        "tricky": {
+          "benign_document": [
+            6,
+            6
+          ],
+          "benign_mentions_instructions": [
+            4,
+            5
+          ],
+          "benign_suspicious": [
+            6,
+            6
+          ],
+          "hidden_injection_document": [
+            0,
+            5
+          ],
+          "hinglish": [
+            7,
+            11
+          ],
+          "long_benign": [
+            5,
+            5
+          ],
+          "short_attack": [
+            1,
+            5
+          ],
+          "sneaky_attack": [
+            2,
+            6
+          ],
+          "_overall": [
+            31,
+            49
+          ]
+        },
+        "xstest_fp": 0,
+        "human_hinglish_benign_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "human_hinglish_english_control_fp": {
+          "k": 2,
+          "n": 104,
+          "rate": 0.019,
+          "ci95": [
+            0.005,
+            0.067
+          ]
+        },
+        "ai_hinglish_attacks_caught": {
+          "k": 7,
+          "n": 24,
+          "rate": 0.292,
+          "ci95": [
+            0.149,
+            0.492
+          ]
+        },
+        "ai_hinglish_attacks_by_category": {
+          "english_keywords": {
+            "k": 1,
+            "n": 6,
+            "rate": 0.167,
+            "ci95": [
+              0.03,
+              0.564
+            ]
+          },
+          "hindi_only": {
+            "k": 0,
+            "n": 8,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.324
+            ]
+          },
+          "roleplay": {
+            "k": 0,
+            "n": 4,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.49
+            ]
+          },
+          "indirect": {
+            "k": 6,
+            "n": 6,
+            "rate": 1.0,
+            "ci95": [
+              0.61,
+              1.0
+            ]
+          }
+        },
+        "prompt_talk_benign_fp": {
+          "k": 3,
+          "n": 100,
+          "rate": 0.03,
+          "ci95": [
+            0.01,
+            0.085
+          ]
+        },
+        "prompt_talk_by_language": {
+          "en": {
+            "k": 2,
+            "n": 50,
+            "rate": 0.04,
+            "ci95": [
+              0.011,
+              0.135
+            ]
+          },
+          "hinglish": {
+            "k": 1,
+            "n": 50,
+            "rate": 0.02,
+            "ci95": [
+              0.004,
+              0.105
+            ]
+          }
+        },
+        "manual7": [
+          {
+            "label": 1,
+            "score": 0.9994,
+            "flagged": true
+          },
+          {
+            "label": 0,
+            "score": 0.0004,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.9962,
+            "flagged": true
+          },
+          {
+            "label": 1,
+            "score": 0.0009,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0005,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0005,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0006,
+            "flagged": false
+          }
+        ],
+        "long_eval_head_tail": {
+          "recall_by_position": {
+            "start": {
+              "k": 24,
+              "n": 38,
+              "rate": 0.632,
+              "ci95": [
+                0.473,
+                0.766
+              ]
+            },
+            "middle": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "end": {
+              "k": 22,
+              "n": 38,
+              "rate": 0.579,
+              "ci95": [
+                0.422,
+                0.721
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        }
+      },
+      "val_fpr1pct": {
+        "threshold": 0.9995141029357911,
+        "test": {
+          "f1": 0.23904382470119517,
+          "fpr": 0.01813110181311018,
+          "recall": 0.14423076923076922,
+          "precision": 0.6976744186046512,
+          "ci95": {
+            "f1": [
+              0.176464953797611,
+              0.31062301025822425
+            ],
+            "fpr": [
+              0.008730183556261808,
+              0.02900854208013731
+            ],
+            "n_boot": 1000
+          }
+        },
+        "indirect_test": {
+          "recall": 0.0,
+          "fpr": 0.0
+        },
+        "tricky": {
+          "benign_document": [
+            6,
+            6
+          ],
+          "benign_mentions_instructions": [
+            5,
+            5
+          ],
+          "benign_suspicious": [
+            6,
+            6
+          ],
+          "hidden_injection_document": [
+            0,
+            5
+          ],
+          "hinglish": [
+            6,
+            11
+          ],
+          "long_benign": [
+            5,
+            5
+          ],
+          "short_attack": [
+            0,
+            5
+          ],
+          "sneaky_attack": [
+            0,
+            6
+          ],
+          "_overall": [
+            28,
+            49
+          ]
+        },
+        "xstest_fp": 0,
+        "human_hinglish_benign_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "human_hinglish_english_control_fp": {
+          "k": 0,
+          "n": 104,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.036
+          ]
+        },
+        "ai_hinglish_attacks_caught": {
+          "k": 0,
+          "n": 24,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.138
+          ]
+        },
+        "ai_hinglish_attacks_by_category": {
+          "english_keywords": {
+            "k": 0,
+            "n": 6,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.39
+            ]
+          },
+          "hindi_only": {
+            "k": 0,
+            "n": 8,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.324
+            ]
+          },
+          "roleplay": {
+            "k": 0,
+            "n": 4,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.49
+            ]
+          },
+          "indirect": {
+            "k": 0,
+            "n": 6,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.39
+            ]
+          }
+        },
+        "prompt_talk_benign_fp": {
+          "k": 0,
+          "n": 100,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.037
+          ]
+        },
+        "prompt_talk_by_language": {
+          "en": {
+            "k": 0,
+            "n": 50,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.071
+            ]
+          },
+          "hinglish": {
+            "k": 0,
+            "n": 50,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.071
+            ]
+          }
+        },
+        "manual7": [
+          {
+            "label": 1,
+            "score": 0.9994,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0004,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.9962,
+            "flagged": false
+          },
+          {
+            "label": 1,
+            "score": 0.0009,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0005,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0005,
+            "flagged": false
+          },
+          {
+            "label": 0,
+            "score": 0.0006,
+            "flagged": false
+          }
+        ],
+        "long_eval_head_tail": {
+          "recall_by_position": {
+            "start": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "middle": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            },
+            "end": {
+              "k": 0,
+              "n": 38,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.092
+              ]
+            }
+          },
+          "benign_fpr": {
+            "k": 0,
+            "n": 114,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.033
+            ]
+          }
+        }
+      }
+    },
+    "int8_vs_fp32": {
+      "pearson_val": 0.846230684968983,
+      "pearson_test": 0.8620907799281243,
+      "decision_agreement_test_at_0.5": 0.9167567567567567,
+      "int8_test_auc": 0.9071049243643385
+    },
+    "latency": {
+      "fp32": {
+        "natural": {
+          "p50_ms": 117.4361500015948,
+          "p95_ms": 1964.5382949471243,
+          "mean_ms": 484.308214331589,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 2132.7545999956783,
+          "p95_ms": 3750.9458850370715,
+          "mean_ms": 2386.6943199990783,
+          "n": 100
+        },
+        "natural_tokens_median": 36.0
+      },
+      "int8": {
+        "natural": {
+          "p50_ms": 62.032399961026385,
+          "p95_ms": 1014.4816550076939,
+          "mean_ms": 257.95144366469077,
+          "n": 300
+        },
+        "len512": {
+          "p50_ms": 929.0952000010293,
+          "p95_ms": 1214.908040000591,
+          "mean_ms": 980.1602320023812,
+          "n": 100
+        },
+        "natural_tokens_median": 36.0
+      }
+    }
+  }
+}
