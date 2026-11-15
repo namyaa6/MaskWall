@@ -242,3 +242,8 @@ then open http://127.0.0.1:8000/docs and use "Try it out" on `/chat` (try `Ignor
 
 ### Not done
 Step 6 (skipped, as instructed), the frontend, CI, Hugging Face / Vercel deployment, multi-turn history, a long-document validation set for window-aware thresholds, a Docker build.
+
+## Update (2026-11-15, after your manual testing)
+- Added the manual-testing findings (7 hand-picked prompts, one Hinglish false positive) to `docs/decisions.md` Day 2.3 with a check against the training data: 0 of 7,857 training rows are Hinglish (crude detector) and "system prompt" appears in only 11 rows (5 benign, 6 attack). Treated as clues, not measurements.
+- Fixed the truncated-reply bug (Day 2.4 in decisions.md): default 2,048 output tokens (reasoning models spend hidden tokens against the limit), `finish_reason` read from Groq and Gemini, `truncated` flag in `/chat`, log migration; verified live on both providers; 269 tests.
+- `docs/interview_notes.md` (gitignored) restructured: one five-part entry per Day 2 step plus the manual-testing entry and a top-10 question list; the previous version is backed up in `ml/cache/interview_notes.backup_2026-11-15.md`.
