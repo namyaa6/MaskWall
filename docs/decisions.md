@@ -481,3 +481,19 @@ Problem: the models see at most 510 content tokens. Head+tail (first 256 + last 
 2. **FPR on benign long documents at the block threshold stays <= 0.05** (the same budget as the indirect gate), **and**
 3. the per-request worst case within the cap stays acceptable (MiniLM int8: about 0.4 s per 510-token window, so a cap of 6 windows is about 2.4 s).
 Otherwise keep head+tail and report every input over 510 tokens as partial coverage (warn). The window cap default is 6 (510 + 5 x 255 = 1,785 tokens, about 8,100 characters at 4.6 characters per token, i.e. the API's hard character limit); "partial scan -> warn" then applies only to inputs that exceed the cap.
+
+### Day 2.1 outcome (MiniLM int8; `ml/results/long_eval_compare.md`, `long_eval_compare.json`)
+Set: 114 attack documents (38 per position) + 114 benign documents, 3,192-7,119 characters (668-1,536 tokens, median 1,025). Verified geometry: injections at the start and end were fully visible to the head+tail window in 100% of cases, middle injections in 0%. Thresholds from the model's val tuning: block 0.924, warn 0.779. Rates are k/n with Wilson 95% intervals.
+
+| mode | recall start | recall middle | recall end | all | benign FPR at block | benign FPR at warn+ | F1 | windows/doc | per-document inference p50 / p95 |
+|---|---|---|---|---|---|---|---|---|---|
+| head_tail | 34/38 | **0/38** [0.00, 0.09] | 31/38 | 65/114 | 6/114 = 0.053 [0.02, 0.11] | 7/114 | 0.703 | 1.0 | 358 / 412 ms |
+| sliding (cap 6) | 35/38 | **34/38** [0.76, 0.96] | 31/38 | 100/114 | 8/114 = 0.070 [0.04, 0.13] | 13/114 | 0.901 | 3.6 | 1,153 / 1,894 ms |
+
+**Against the criteria written beforehand:** (1) middle recall +0.895, **met**. (2) benign long-document FPR at the block threshold <= 0.05: sliding 0.070, **not met** (head+tail's own 0.053 also exceeds it). (3) worst case within the cap: max 2.0 s per document, acceptable.
+
+**Decision: the rule's outcome is followed. The default scan mode is `head_tail`; `sliding` is fully implemented, tested and selectable with `MASKWALL_SCAN_MODE=sliding`.** With head+tail, every input over 510 tokens is reported as partial coverage and the policy warns (about 10% of benchmark-like prompts).
+
+**Honest assessment, for the owner to overrule:** I think criterion 2 was badly specified. It is an absolute budget that the baseline also fails on this set, so it cannot discriminate between the modes; the actual difference is 2 additional false positives on 114 benign documents (7 vs 5.3%, intervals overlapping almost entirely) against a recall on middle injections going from 0/38 to 34/38. By the evidence, sliding is the better scanner, at about 3x the latency per long document. I did not reverse the rule after seeing the numbers because that would be the post-hoc move the written criteria were meant to prevent. Flipping the default is a one-line change (`scan_mode` in `backend/app/config.py`, or the environment variable); if flipped, "partial scan -> warn" then applies only to inputs beyond the window cap, as originally requested.
+
+Caveats: the benign long documents are concatenated Dolly passages with summarization requests (synthetic, a type DeBERTa also over-flagged), so their FPR is higher than the 0.018 measured on the main test set; the attack strings are the same 114 as indirect_eval (so this tests position and length, not new wording); one seed, 38 documents per position. The threshold used for sliding was tuned for single windows; a long-document validation set could tune a window-count-dependent threshold (not done).

@@ -49,7 +49,7 @@ class ConfigError(ValueError):
 class Settings:
     server_model: str = "minilm"
     model_dir: Path = BACKEND_DIR / "model"
-    scan_mode: str = "sliding"
+    scan_mode: str = "head_tail"   # sliding is implemented and tested but not the default: see docs/decisions.md Day 2.1
     max_windows: int = 6
     max_chars: int = 8000
     block_threshold: float | None = None

@@ -12,7 +12,7 @@ def env(**kw):
 def test_defaults_server_model_is_minilm():
     s = Settings.from_env(env={}, dotenv_path=None)
     assert s.server_model == "minilm"
-    assert s.scan_mode == "sliding" and s.max_chars == 8000 and s.llm_order == ("groq", "gemini")
+    assert s.scan_mode == "head_tail" and s.max_chars == 8000 and s.llm_order == ("groq", "gemini")
     assert s.model_path.name == "minilm"
 
 
