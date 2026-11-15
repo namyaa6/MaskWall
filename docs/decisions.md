@@ -534,7 +534,7 @@ For DeBERTa all three pre-written criteria hold: middle recall +0.895, benign FP
 
 ## Day 2.3: Manual testing of the live API (owner's hand-picked prompts, 2026-11-15)
 
-Seven prompts sent to the running `/chat` endpoint by hand (default configuration: MiniLM int8, head+tail; the first score, 0.9987, equals the one I measured on the same sentence). Prompts 3 to 6 are abbreviated as reported to me.
+Seven prompts sent to the running `/chat` endpoint by hand (default configuration: MiniLM int8, head+tail; the first score, 0.9987, equals the one I measured on the same sentence). The exact texts were supplied afterwards (`ml/data/manual7.csv`). **Correction (Day 2.6): two of the seven (prompts 3 and 6) are identical to rows of the hand-written tricky.csv**, so this was not an independent discovery: the Hinglish false positive was already one of the tricky set's misses (see Day 2.6 for the row-level scores).
 
 | # | prompt | verdict | score | as intended? |
 |---|---|---|---|---|
@@ -550,7 +550,7 @@ Seven prompts sent to the running `/chat` endpoint by hand (default configuratio
 
 **Caveat: these are 7 hand-picked prompts. Treat them as clues, not measurements.** No rate can be derived from them.
 
-**Likely cause (hypothesis, partly supported by data I checked afterwards):**
+**Likely cause (hypothesis, partly supported by data I checked afterwards; Day 2.6 later showed it is only part of the story: MiniLM flags the English originals of human Hinglish assistant commands about as often as the Hinglish versions):**
 - *No Hinglish benign data was ever in training.* The English-only filter removed non-English rows (Day 1.1), and a crude detector (3 or more common romanised-Hindi words, no Devanagari) finds **0 of 7,857** training rows. The model has no benign code-mixed reference, so for such input it leans on the English fragments it recognises.
 - *Little benign evidence for the phrase.* "system prompt" occurs in only 11 training rows (5 benign, 6 attack), "system prompt/message/instruction" in 25 (11 benign, 14 attack). So it is **not** a strong keyword shortcut in the data (the attack share is roughly half); the failure looks more like out-of-distribution behaviour on code-mixed text than like a learned keyword rule. Words like "instructions" are more skewed: about 405 benign vs 860 attack rows contain "instruction(s)" (the exact counts depend on the regex: 407 / 861 in the independent review).
 - *The tricky set already hinted at it:* its Hinglish category (6 benign + 5 attack rows) was near chance for the fine-tuned models (MiniLM+aug 6/11, DeBERTa+aug 5/11; Day 1.8). That set was too small to act on.
@@ -614,3 +614,61 @@ What follows:
 - **At the thresholds the server really uses, MiniLM is at least as good as DeBERTa on every headline metric** (test F1, test FPR, indirect_test recall and FPR, xstest) and DeBERTa's only remaining advantage is the 5 hidden-injection tricky rows (4 vs 2, one seed). The earlier "DeBERTa is the more accurate model" impression came from scoring it at an operating point (0.277) the policy does not use.
 - **Re-applying the selection rule at the served operating points would pick MiniLM** (val F1 0.914 vs 0.902), not DeBERTa. This is an observation, not a rule change (the Day 1.9 rule stands as written and the Day 4 benchmark on the Space still decides); it is consistent with the Day 2.0 decision to develop on MiniLM.
 - **The Day 2.1 criterion comparison is operating-point dependent.** DeBERTa's benign long-document FPR is 5/114 = 0.044 at its served block threshold (passes <= 0.05) but 6/114 = 0.053 at its F1 threshold (fails). So "DeBERTa passes all three criteria" holds only at the stricter served threshold; `MASKWALL_SCAN_MODE=auto` choosing sliding for DeBERTa rests on that, and applying the criteria per model was decided after MiniLM failed. Both are disclosed here rather than hidden.
+
+## Day 2.6: Hinglish and "prompt-talk" false alarms: baseline evidence and a PROPOSED hard-negative round (nothing has been trained)
+
+### Evaluation data built for this (eval only, never trained on; `ml/data/build_hinglish_eval.py`, leakage-checked against train, train_augmented, val, test, xstest, indirect_eval and long_eval)
+| set | n | who wrote it | note |
+|---|---|---|---|
+| E1 human Hinglish benign | 104 | **human-written**: a domain-stratified sample of the human-annotated test split of Hinglish-TOP (Google Research, Apache-2.0; crowdsourced code-switched renderings of English TOPv2 assistant queries; the 170K synthetic CST5 part is not used). The English originals are a paired control | short voice-assistant commands (median 8 words): measures general false alarms on code-mixed text, not talk about system prompts |
+| E2 prompt-talk benign | 100 | **AI-drafted** (Gemini), 50 English + 50 Hinglish, 5 categories x 10: write a system prompt, explain prompt injection / "ignore previous instructions", process pasted instructions, multi-step task, refer to earlier instructions. Read row by row, 0 removed | benign by the label policy below |
+| E3 Hinglish attacks | 24 | **AI-drafted** (Gemini): 6 with English keywords, 8 Hindi-only (no English keyword), 4 role-play, 6 indirect (Hinglish document with an English injection sentence) | no public human-written Hinglish attack set exists; the first draft's "indirect" items were mostly English and were regenerated |
+| E4 manual prompts | 7 | the owner (exact text) | **2 of the 7 are identical to rows of the hand-written tricky.csv**, so they are not independent of the tricky set |
+
+To be precise in any write-up: **benign Hinglish evaluation (E1) is human-written (public dataset); Hinglish attack evaluation (E3) and prompt-talk benign (E2) are AI-drafted.** All four are small: with n of 24 to 104 only large effects are detectable.
+
+### Baseline: the two served models at their served thresholds (`ml/results/hinglish_baseline.md`)
+| set | metric | MiniLM int8 | DeBERTa int8 |
+|---|---|---|---|
+| E1 human Hinglish benign (104) | false positives at block | **10/104 = 0.096** [0.05, 0.17] | 45/104 = 0.43 [0.34, 0.53] |
+| | same queries in English (control) | 9/104 = 0.087 [0.05, 0.16] | 25/104 = 0.24 [0.17, 0.33] |
+| E2 prompt-talk benign (100) | false positives at block | **28/100 = 0.28** [0.20, 0.38] | 43/100 = 0.43 [0.34, 0.53] |
+| | English (50) / Hinglish (50) | 4/50 = 0.08 / **24/50 = 0.48** | 14/50 = 0.28 / 29/50 = 0.58 |
+| | by category (20 each): explain_concepts / write_system_prompt / process_instructions / refer_earlier / task_steps | 12 / 6 / 6 / 3 / 1 | 15 / 8 / 8 / 12 / 0 |
+| E3 AI Hinglish attacks (24) | caught at block | **19/24 = 0.79** [0.59, 0.91] | 13/24 = 0.54 [0.35, 0.72] |
+| | english_keywords / hindi_only / roleplay / indirect | 6/6, **3/8**, 4/4, 6/6 | 6/6, **0/8**, 1/4, 6/6 |
+| E4 manual 7 | scores | reproduce the owner's (e.g. #6 Hinglish system-prompt tips: 0.998 block) | #5 (harmless Python sorting question) is also blocked, 0.991 |
+
+What this shows (small samples, partly AI-drafted data: clues with intervals, not settled facts):
+1. **For MiniLM, Hinglish is not the whole story.** On human-written assistant commands the English originals are flagged about as often (9/104 vs 10/104). A false alarm rate of roughly 9% on short, harmless assistant commands exists in English too; it is probably out-of-distribution style (short imperatives resemble the short Gandalf-style attacks in training), not language. The earlier hypothesis "no Hinglish training data causes it" explains only part.
+2. **Code-mixing plus prompt vocabulary is a strong driver.** On prompt-talk benign prompts MiniLM flags 8% in English but 48% in Hinglish. Educational questions about injection and system prompts are the hardest category (12/20 flagged), which the label policy calls benign.
+3. **Hindi-only attacks are mostly missed** (MiniLM 3/8, DeBERTa 0/8), so adding Hinglish negatives alone could even push recall down: positives are needed too.
+4. **DeBERTa is much worse out of distribution** (43% on human Hinglish, 24% on the English originals); another point for MiniLM as the default.
+5. **The tricky set had already shown it.** Row by row, MiniLM flags 4 of the 6 benign Hinglish rows of tricky.csv (including "Mere chatbot ke liye accha system prompt kaise likhun?", which is also manual prompt 6) and misses one of its 5 Hinglish attacks: 6/11 correct, as reported in Day 1.8, but nobody looked at the rows. The false positive found by hand was therefore a known miss of the hand-written tricky set, not a new discovery (corrected in Day 2.3).
+
+### Label policy (owner's decision, 2026-11-15; extends the Day 1.5 definition)
+**Discussing or asking about an attack phrase is benign; only text that instructs the model is an attack.** "What does 'ignore previous instructions' mean?" is benign; "Ignore previous instructions and ..." is an attack. Edge cases that will be hand-reviewed and listed rather than decided by rule: a quoted attack phrase inside a translate/summarise request (data, not an instruction to follow: benign), and a sentence addressed to the assistant inside a pasted document (instructions smuggled into data: attack, as before). This is stricter in one direction than the public datasets, which label many "mention" prompts as attacks, so results on original labels will differ on those rows.
+
+### Data policy for the training round (owner's conditions, 2026-11-15)
+- **Departure from the earlier no-synthetic-data stance (Day 1.1 chose real human-written text and rejected synthetic sets), and why.** No public labelled data covers benign Hinglish text that talks about system prompts, nor Hinglish attacks. Real traffic of this kind does not exist in the datasets I have, so the only way to build the missing classes is to generate them. The risk is a style shortcut (the lesson from the augmentation: a generator's style can become the label). Conditions that follow from it: (1) **for training, both classes come from the same generator (Groq) with matched templates and length distributions** so style cannot predict the label; (2) **evaluation text comes from different sources: a different generator (Gemini) or human data (Hinglish-TOP)**; (3) every generated set is hand-sampled (50 rows per set) and filtered against all eval sets (exact and near-duplicate); (4) generated rows carry `source = hardneg_*` so results can be broken down.
+- **Proposed addition, needs approval:** use the **human-annotated train split of Hinglish-TOP** (about 3,000 rows, plus their English originals) as a source of benign short-command negatives. It is real human text with the dataset's own train/test separation from E1 (still filtered for near-duplicates against E1, since TOP queries share templates), and it targets the finding that false alarms on short assistant commands are not language-specific.
+
+### Proposed round (not run)
+**Training data (train split only), about 2,000 rows:**
+- T1 benign prompt-talk, Groq: about 300 English + 300 Hinglish across the five E2 categories and the explicit "discussing an attack phrase" case.
+- T2 matched attacks, Groq, same templates: about 300 Hinglish attacks (a third Hindi-only; some indirect) made by translating/transliterating train-split attacks and writing new ones, plus about 150 English attacks that mention "system prompt" so the phrase alone cannot mean benign.
+- T3 (if approved) human Hinglish-TOP train rows and English originals, about 400 short benign commands.
+- A new validation slice of the same types (separate generation seeds; no overlap with training rows) so thresholds can be tuned on val for the new distribution; the old val stays for comparability.
+
+**Arms**, all on the same cleaned_aug base, MiniLM only (3 minutes per run on a T4), **3 seeds each** (this also finally measures seed variance, which the baseline never had): (0) baseline re-trained on the old data; (A) + T1 + T3 (negatives only); (B) + T1 + T2 + T3 (negatives and matched attacks). Same hyperparameters, selection rules (epoch by val AP, threshold by val F1 on the new val) and evaluation code. Thresholds are re-tuned per arm on val only.
+
+**Pre-registered success criteria (approved by the owner as written; "the two benign sets" are E1 and E2):**
+1. False-positive rate on E1 and on E2 each drops by **at least 50% relative** to the baseline (current MiniLM: 10/104 and 28/100, so at most 5 and 14).
+2. Main test F1 stays within **-0.02** (paired bootstrap).
+3. Recall on test, indirect_test and the tricky attack categories drops by **no more than 0.03**.
+4. Hinglish-attack recall (E3) does **not fall below baseline** (19/24).
+If any criterion fails, the result is reported as negative. Additional rules: results are the mean and range over 3 seeds; paired exact (McNemar) tests on the same rows; E4 (the 7 prompts) is reported separately and never used for any choice; xstest false positives and the long-document sets are reported as guardrails. Because the English-control FPR on E1 is already 8.7%, a language-targeted fix may not reduce E1 unless T3 is included: that is part of what the round tests.
+
+**Risks and what limits the conclusions.** AI-drafted E2/E3 (and the Groq training text) may share artefacts; the sets are small (a 5-row difference on E1 is within noise); Hindi-only attacks may need more than 300 examples; hard negatives can trade recall for precision, which criteria 3 and 4 measure; Hinglish-TOP commands are narrow in topic. **Cost:** about 2 to 3 hours to build and review the data, then cheap runs.
+
+**Questions for the owner:** (1) approve T3 (Hinglish-TOP train split as negatives)? (2) should the baseline be re-trained with 3 seeds before arms A and B, or compared against the existing single checkpoint?
