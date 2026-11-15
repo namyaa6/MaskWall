@@ -20,6 +20,8 @@ Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_LLM_ORDER           comma list of providers in failover order, e.g. "groq,gemini"
   MASKWALL_LLM_TIMEOUT_S       per-provider timeout
   MASKWALL_MAX_CONCURRENT_SCANS  simultaneous ONNX inferences (default 1: the host has few cores)
+  MASKWALL_MAX_OUTPUT_TOKENS   reply token limit (default 2048). Reasoning models count hidden reasoning tokens against it, so a
+                               small value truncates answers; /chat reports `truncated: true` when the limit was hit
   GROQ_MODEL / GEMINI_MODEL    model ids for the two providers
 """
 from __future__ import annotations
@@ -69,7 +71,7 @@ class Settings:
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     llm_order: tuple[str, ...] = ("groq", "gemini")
     llm_timeout_s: float = 20.0
-    max_output_tokens: int = 512
+    max_output_tokens: int = 2048
     ort_threads: int = 2
     max_concurrent_scans: int = 1
     groq_model: str = "openai/gpt-oss-20b"            # chosen from the live model list 2026-11-15; the first guesses were retired
@@ -85,8 +87,8 @@ class Settings:
             raise ConfigError(f"MASKWALL_SCAN_MODE must be one of {SCAN_MODES}, got {self.scan_mode!r}")
         if not self.llm_order or any(p not in PROVIDERS for p in self.llm_order):
             raise ConfigError(f"MASKWALL_LLM_ORDER must be a non-empty list drawn from {PROVIDERS}, got {self.llm_order!r}")
-        if self.max_windows < 1 or self.max_chars < 1 or self.max_concurrent_scans < 1 or self.ort_threads < 1:
-            raise ConfigError("max_windows, max_chars, max_concurrent_scans and ort_threads must be >= 1")
+        if min(self.max_windows, self.max_chars, self.max_concurrent_scans, self.ort_threads, self.max_output_tokens) < 1:
+            raise ConfigError("max_windows, max_chars, max_concurrent_scans, ort_threads and max_output_tokens must be >= 1")
         for name in ("block_threshold", "warn_threshold"):
             v = getattr(self, name)
             if v is not None and not 0.0 <= v <= 1.0:
@@ -151,6 +153,7 @@ class Settings:
         kw["max_chars"] = num("MASKWALL_MAX_CHARS", cls.max_chars, int)
         kw["max_concurrent_scans"] = num("MASKWALL_MAX_CONCURRENT_SCANS", cls.max_concurrent_scans, int)
         kw["ort_threads"] = num("MASKWALL_ORT_THREADS", cls.ort_threads, int)
+        kw["max_output_tokens"] = num("MASKWALL_MAX_OUTPUT_TOKENS", cls.max_output_tokens, int)
         kw["llm_timeout_s"] = num("MASKWALL_LLM_TIMEOUT_S", cls.llm_timeout_s, float)
         kw["block_threshold"] = num("MASKWALL_BLOCK_THRESHOLD", None, float)
         kw["warn_threshold"] = num("MASKWALL_WARN_THRESHOLD", None, float)

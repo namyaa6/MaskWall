@@ -20,7 +20,7 @@ COLUMNS = {
     "request_id": "TEXT", "endpoint": "TEXT", "action": "TEXT", "reasons": "TEXT", "injection_score": "REAL", "coverage": "TEXT",
     "scan_mode": "TEXT", "n_tokens": "INTEGER", "n_windows": "INTEGER", "input_chars": "INTEGER", "input_fingerprint": "TEXT",
     "pii": "TEXT", "output_flagged": "INTEGER", "output_kinds": "TEXT", "provider": "TEXT", "model": "TEXT", "failed_over": "INTEGER",
-    "http_status": "INTEGER", "latency_ms": "TEXT", "window_ms": "TEXT",
+    "http_status": "INTEGER", "latency_ms": "TEXT", "window_ms": "TEXT", "truncated": "INTEGER",
 }
 JSON_COLUMNS = {"reasons", "pii", "output_kinds", "latency_ms", "window_ms"}
 LAYERS = ("pii_ms", "tokenize_ms", "inference_ms", "llm_ms", "output_ms", "total_ms")
@@ -49,6 +49,10 @@ class EventLog:
             self._db.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)")
             cols = ", ".join(f"{k} {v}" for k, v in COLUMNS.items())
             self._db.execute(f"CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, {cols})")
+            have = {r["name"] for r in self._db.execute("PRAGMA table_info(events)")}
+            for name, typ in COLUMNS.items():          # migrate databases created before a column existed
+                if name not in have:
+                    self._db.execute(f"ALTER TABLE events ADD COLUMN {name} {typ}")
             self._db.execute("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts)")
             row = self._db.execute("SELECT value FROM meta WHERE key='salt'").fetchone()
             if row is None:
@@ -81,6 +85,7 @@ class EventLog:
             providers = {r["provider"]: r["n"] for r in q("SELECT provider, COUNT(*) AS n FROM events WHERE provider IS NOT NULL GROUP BY provider")}
             failovers = q("SELECT COUNT(*) FROM events WHERE failed_over = 1").fetchone()[0]
             out_flagged = q("SELECT COUNT(*) FROM events WHERE output_flagged = 1").fetchone()[0]
+            truncated = q("SELECT COUNT(*) FROM events WHERE truncated = 1").fetchone()[0]
             pii_rows = [json.loads(r["pii"]) for r in q("SELECT pii FROM events WHERE pii IS NOT NULL AND pii != '{}'")]
             lat_rows = [json.loads(r["latency_ms"]) for r in q("SELECT latency_ms FROM events WHERE latency_ms IS NOT NULL ORDER BY id DESC LIMIT ?", (latency_sample,))]
             scores = [r["injection_score"] for r in q("SELECT injection_score FROM events WHERE injection_score IS NOT NULL")]
@@ -107,7 +112,7 @@ class EventLog:
             "warnings": by_action.get("warn", 0),
             "by_action": by_action, "by_endpoint": by_endpoint,
             "pii_caught_server_side": pii, "pii_total": sum(pii.values()),
-            "output_flagged": out_flagged,
+            "output_flagged": out_flagged, "truncated_replies": truncated,
             "llm": {"providers": providers, "failovers": failovers},
             "latency_ms": latency,
             "injection_score_histogram": {"bins": [f"{i / 10:.1f}-{(i + 1) / 10:.1f}" for i in range(10)], "counts": bins},

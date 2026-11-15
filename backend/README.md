@@ -10,7 +10,7 @@ message ─► PII backup mask ─► injection scan (int8 ONNX) ─► policy �
 
 | endpoint | purpose |
 |---|---|
-| `POST /chat` | the full pipeline; `{"message": "..."}` -> `action` (allow, warn, block, output_blocked), `response`, the scan details, per-layer latency |
+| `POST /chat` | the full pipeline; `{"message": "..."}` -> `action` (allow, warn, block, output_blocked), `response`, `truncated` (reply hit the token limit), the scan details, per-layer latency |
 | `POST /scan` | input half only (verdict, score, per-window detail, thresholds); used by the Attack Playground |
 | `GET /stats` | aggregate numbers for the dashboard (blocked attacks, PII caught, latency per layer, score histogram); no prompt text |
 | `GET /health` | status, model, scan mode, thresholds, configured providers (names only) |
@@ -68,6 +68,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 | `MASKWALL_MAX_CHARS` | `8000` | hard request limit (HTTP 413) |
 | `MASKWALL_BLOCK_THRESHOLD` / `_WARN_THRESHOLD` | from the model | override the thresholds tuned on validation data |
 | `MASKWALL_STRICT` | `0` | `1`: treat warnings as blocks |
+| `MASKWALL_MAX_OUTPUT_TOKENS` | `2048` | reply token limit; reasoning models spend hidden reasoning tokens against it. `/chat` returns `truncated: true` (and `llm.finish_reason`) when a reply hit the limit |
 | `MASKWALL_RATE_LIMIT` | `30/minute` | per client, shared by `/chat` and `/scan` |
 | `MASKWALL_TRUST_PROXY` | `0` | `1` behind exactly one trusted proxy (rate-limit key = last `X-Forwarded-For` entry) |
 | `MASKWALL_CORS_ORIGINS` | Vite dev server | comma list of allowed browser origins |
@@ -79,7 +80,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q            # 247 tests; no network, no keys; the real-model tests skip if backend\model is absent
+..\.venv\Scripts\python.exe -m pytest -q            # 269 tests; no network, no keys; the real-model tests skip if backend\model is absent
 ..\.venv\Scripts\python.exe scripts\smoke_llm.py    # optional: one real /chat call through Groq and one through Gemini (needs keys + network)
 ```
 

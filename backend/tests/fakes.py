@@ -36,17 +36,21 @@ class FakeScanner:
 class StubLLM:
     """Scripted LLM: returns `text` (or raises `fail`). Records the messages it was sent."""
 
-    def __init__(self, text="Here is a helpful answer.", provider="groq", failed_over=False, fail: LLMFailure | None = None):
+    def __init__(self, text="Here is a helpful answer.", provider="groq", failed_over=False, fail: LLMFailure | None = None,
+                 truncated=False, finish_reason="stop"):
         self.text, self.provider, self.failed_over, self.fail = text, provider, failed_over, fail
+        self.truncated, self.finish_reason = truncated, ("length" if truncated and finish_reason == "stop" else finish_reason)
         self.calls: list[list[dict]] = []
+        self.max_tokens_seen: list[int] = []
 
     async def complete(self, messages, *, max_tokens=512, temperature=0.2):
         self.calls.append(messages)
+        self.max_tokens_seen.append(max_tokens)
         if self.fail:
             raise self.fail
         attempts = [Attempt("groq", False, 3.0, "timeout")] if self.failed_over else []
         attempts.append(Attempt(self.provider, True, 5.0))
-        return LLMResult(self.text, self.provider, "stub-model", 8.0, attempts)
+        return LLMResult(self.text, self.provider, "stub-model", 8.0, attempts, self.finish_reason, self.truncated)
 
     async def aclose(self):
         pass

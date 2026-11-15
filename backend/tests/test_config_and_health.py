@@ -69,3 +69,11 @@ def test_health_lists_only_configured_providers(tmp_path):
     s = Settings(db_path=tmp_path / "e.sqlite", model_dir=tmp_path / "no_model", groq_api_key=None, gemini_api_key="x")
     with TestClient(create_app(s)) as c:
         assert c.get("/health").json()["llm_providers"] == ["gemini"]
+
+
+def test_max_output_tokens_default_env_and_validation():
+    assert Settings.from_env(env={}, dotenv_path=None).max_output_tokens == 2048
+    assert Settings.from_env(env=env(MASKWALL_MAX_OUTPUT_TOKENS="4096"), dotenv_path=None).max_output_tokens == 4096
+    for bad in ("0", "-5", "lots"):
+        with pytest.raises(ConfigError):
+            Settings.from_env(env=env(MASKWALL_MAX_OUTPUT_TOKENS=bad), dotenv_path=None)

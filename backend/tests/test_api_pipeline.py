@@ -267,3 +267,37 @@ def test_inference_concurrency_is_bounded_by_the_semaphore(tmp_path):
 
     asyncio.run(go2())
     assert 1 < scanner2.max_active <= 3
+
+
+# ------------------------------------------------------------------ truncated replies and the token limit
+def test_truncated_reply_is_flagged_and_counted(tmp_path):
+    app, _, llm, db = make(tmp_path, llm=StubLLM(text="A system prompt template: You are a helpful assistant who", truncated=True))
+    b = post_chat(app, "write a system prompt template").json()
+    assert b["action"] == "allow" and b["truncated"] is True and b["llm"]["finish_reason"] == "length"
+    assert db.stats()["truncated_replies"] == 1
+
+
+def test_complete_reply_is_not_flagged(tmp_path):
+    app, _, _, db = make(tmp_path)
+    b = post_chat(app, "hello there").json()
+    assert b["truncated"] is False and b["llm"]["finish_reason"] == "stop" and db.stats()["truncated_replies"] == 0
+
+
+def test_blocked_input_has_a_truncated_field_too(tmp_path):
+    app, *_ = make(tmp_path, scanner=FakeScanner(score=0.97))
+    assert post_chat(app, "attack text here").json()["truncated"] is False
+
+
+def test_the_configured_token_limit_reaches_the_llm_and_is_reported(tmp_path):
+    app, _, llm, _ = make(tmp_path)
+    b = post_chat(app, "hello there").json()
+    assert llm.max_tokens_seen == [2048] and b["llm"]["max_output_tokens"] == 2048
+    app2, _, llm2, _ = make(tmp_path, max_output_tokens=300)
+    post_chat(app2, "hello there")
+    assert llm2.max_tokens_seen == [300]
+
+
+def test_a_truncated_reply_is_still_output_scanned(tmp_path):
+    app, *_ = make(tmp_path, llm=StubLLM(text=f"the key is {GROQ_KEY[:30]}", truncated=True))
+    b = post_chat(app, "show config").json()
+    assert b["action"] == "output_blocked" and b["truncated"] is True

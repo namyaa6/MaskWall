@@ -133,3 +133,26 @@ def test_in_memory_database_works():
     db.record(ev())
     assert db.stats()["total_requests"] == 1
     db.close()
+
+
+def test_old_databases_are_migrated_with_new_columns(tmp_path):
+    p = tmp_path / "old.sqlite"
+    con = sqlite3.connect(p)
+    con.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO meta VALUES ('salt', '00112233445566778899aabbccddeeff')")
+    con.execute("CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL NOT NULL, request_id TEXT, endpoint TEXT, action TEXT)")
+    con.execute("INSERT INTO events (ts, request_id, endpoint, action) VALUES (1.0, 'old', '/chat', 'allow')")
+    con.commit()
+    con.close()
+    db = EventLog(p)                                    # must add every missing column, keep the old row
+    db.record(ev(truncated=1))
+    s = db.stats()
+    assert s["total_requests"] == 2 and s["truncated_replies"] == 1
+    db.close()
+
+
+def test_truncated_count(log):
+    log.record(ev(truncated=1))
+    log.record(ev(truncated=0))
+    log.record(ev())
+    assert log.stats()["truncated_replies"] == 1

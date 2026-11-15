@@ -44,6 +44,14 @@ class LLMError(Exception):
 
 
 @dataclass(frozen=True)
+class Completion:
+    """What one provider returned: the text and why generation stopped. `truncated` means the reply hit the token limit."""
+    text: str
+    finish_reason: str | None = None
+    truncated: bool = False
+
+
+@dataclass(frozen=True)
 class Attempt:
     provider: str
     ok: bool
@@ -59,6 +67,8 @@ class LLMResult:
     model: str
     latency_ms: float
     attempts: list[Attempt] = field(default_factory=list)
+    finish_reason: str | None = None
+    truncated: bool = False
 
     @property
     def failed_over(self) -> bool:
@@ -77,7 +87,7 @@ class LLMClient(Protocol):
     name: str
     model: str
 
-    async def complete(self, messages: list[dict], *, max_tokens: int, temperature: float) -> str: ...
+    async def complete(self, messages: list[dict], *, max_tokens: int, temperature: float) -> Completion: ...
     async def aclose(self) -> None: ...
 
 
@@ -140,17 +150,22 @@ class GroqClient(_HTTPClient):
     def __init__(self, api_key: str, model: str, **kw):
         super().__init__(api_key, model, base_url=kw.pop("base_url", GROQ_BASE_URL), **kw)
 
-    async def complete(self, messages: list[dict], *, max_tokens: int = 512, temperature: float = 0.2) -> str:
+    async def complete(self, messages: list[dict], *, max_tokens: int = 2048, temperature: float = 0.2) -> Completion:
         resp = await self._post("/chat/completions", {"Authorization": f"Bearer {self._key}"},
                                 {"model": self.model, "messages": messages, "max_tokens": max_tokens, "temperature": temperature})
         _check_status(self.name, resp)
         try:
-            text = resp.json()["choices"][0]["message"]["content"]
+            choice = resp.json()["choices"][0]
+            text = choice["message"]["content"]
         except Exception:
             raise LLMError(self.name, ErrorKind.BAD_RESPONSE, resp.status_code, "unparseable response") from None
+        finish = choice.get("finish_reason")
+        finish = finish if isinstance(finish, str) else None
         if not isinstance(text, str) or not text.strip():
-            raise LLMError(self.name, ErrorKind.BAD_RESPONSE, resp.status_code, "empty response")
-        return text
+            # reasoning models spend max_tokens on hidden reasoning first: "length" with no text = budget gone before any output
+            raise LLMError(self.name, ErrorKind.BAD_RESPONSE, resp.status_code,
+                           "empty response (token limit reached)" if finish == "length" else "empty response")
+        return Completion(text, finish, truncated=finish == "length")
 
 
 class GeminiClient(_HTTPClient):
@@ -165,7 +180,7 @@ class GeminiClient(_HTTPClient):
         contents = [{"role": "model" if m["role"] == "assistant" else "user", "parts": [{"text": m["content"]}]} for m in messages if m["role"] != "system"]
         return system, contents
 
-    async def complete(self, messages: list[dict], *, max_tokens: int = 512, temperature: float = 0.2) -> str:
+    async def complete(self, messages: list[dict], *, max_tokens: int = 2048, temperature: float = 0.2) -> Completion:
         system, contents = self._convert(messages)
         payload: dict = {"contents": contents, "generationConfig": {"maxOutputTokens": max_tokens, "temperature": temperature}}
         if system:
@@ -174,13 +189,16 @@ class GeminiClient(_HTTPClient):
         resp = await self._post(f"/models/{self.model}:generateContent", {"x-goog-api-key": self._key}, payload)
         _check_status(self.name, resp)
         try:
-            parts = resp.json()["candidates"][0]["content"]["parts"]
-            text = "".join(p.get("text", "") for p in parts)
+            cand = resp.json()["candidates"][0]
+            text = "".join(p.get("text", "") for p in cand["content"]["parts"])
         except Exception:
             raise LLMError(self.name, ErrorKind.BAD_RESPONSE, resp.status_code, "no candidate (blocked or empty)") from None
+        finish = cand.get("finishReason")
+        finish = finish if isinstance(finish, str) else None
         if not text.strip():
-            raise LLMError(self.name, ErrorKind.BAD_RESPONSE, resp.status_code, "empty response")
-        return text
+            raise LLMError(self.name, ErrorKind.BAD_RESPONSE, resp.status_code,
+                           "empty response (token limit reached)" if finish == "MAX_TOKENS" else "empty response")
+        return Completion(text, finish, truncated=finish == "MAX_TOKENS")
 
 
 class FailoverLLM:
@@ -195,14 +213,14 @@ class FailoverLLM:
     def providers(self) -> list[str]:
         return [c.name for c in self.clients]
 
-    async def complete(self, messages: list[dict], *, max_tokens: int = 512, temperature: float = 0.2) -> LLMResult:
+    async def complete(self, messages: list[dict], *, max_tokens: int = 2048, temperature: float = 0.2) -> LLMResult:
         attempts: list[Attempt] = []
         t_all = time.perf_counter()
         last: LLMError | None = None
         for client in self.clients:
             t0 = time.perf_counter()
             try:
-                text = await client.complete(messages, max_tokens=max_tokens, temperature=temperature)
+                comp = await client.complete(messages, max_tokens=max_tokens, temperature=temperature)
             except LLMError as e:
                 attempts.append(Attempt(client.name, False, (time.perf_counter() - t0) * 1000, e.kind.value, e.status))
                 last = e
@@ -210,7 +228,8 @@ class FailoverLLM:
                     raise LLMFailure(attempts, True, e) from None
                 continue
             attempts.append(Attempt(client.name, True, (time.perf_counter() - t0) * 1000))
-            return LLMResult(text, client.name, client.model, (time.perf_counter() - t_all) * 1000, attempts)
+            return LLMResult(comp.text, client.name, client.model, (time.perf_counter() - t_all) * 1000, attempts,
+                             comp.finish_reason, comp.truncated)
         assert last is not None
         raise LLMFailure(attempts, False, last)
 

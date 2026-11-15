@@ -226,7 +226,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
                 {**ev, "action": action, "http_status": 200, "latency_ms": dict(lat), **event_extra}
 
         if not decision.allowed_to_reach_llm:
-            body, event = finish("block", BLOCKED_INPUT_MESSAGE, {"output": None, "llm": None})
+            body, event = finish("block", BLOCKED_INPUT_MESSAGE, {"output": None, "llm": None, "truncated": False})
             await record(event, pii.masked_text)
             return body
 
@@ -248,15 +248,18 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         out_decision = decide_output(out.flagged, out.kinds)
         lat["output_ms"] = round((time.perf_counter() - t) * 1000, 2)
         llm_info = {"provider": result.provider, "model": result.model, "failed_over": result.failed_over,
+                    "finish_reason": result.finish_reason, "max_output_tokens": settings.max_output_tokens,
                     "attempts": [{"provider": a.provider, "ok": a.ok, "kind": a.kind, "status": a.status, "ms": round(a.ms, 1)} for a in result.attempts]}
         out_info = out.to_dict()
         common = dict(provider=result.provider, model=result.model, failed_over=int(result.failed_over),
-                      output_flagged=int(out.flagged), output_kinds=out.kinds)
+                      output_flagged=int(out.flagged), output_kinds=out.kinds, truncated=int(result.truncated))
         if out_decision.action is Action.BLOCK:
-            body, event = finish("output_blocked", BLOCKED_OUTPUT_MESSAGE, {"output": out_info, "llm": llm_info}, **common)
+            body, event = finish("output_blocked", BLOCKED_OUTPUT_MESSAGE,
+                                 {"output": out_info, "llm": llm_info, "truncated": result.truncated}, **common)
             event["reasons"] = [*ev["reasons"], *out_decision.reasons]
         else:
-            body, event = finish(decision.action.value, result.text, {"output": out_info, "llm": llm_info}, **common)
+            body, event = finish(decision.action.value, result.text,
+                                 {"output": out_info, "llm": llm_info, "truncated": result.truncated}, **common)
         await record(event, pii.masked_text)
         return body
 

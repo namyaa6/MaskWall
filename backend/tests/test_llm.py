@@ -57,7 +57,7 @@ def gemini(rec, **kw):
 # ------------------------------------------------------------------ Groq client
 def test_groq_request_and_response():
     rec = Recorder(resp(200, groq_ok("hi there")))
-    assert run(groq(rec).complete(MSGS, max_tokens=77, temperature=0.3)) == "hi there"
+    assert run(groq(rec).complete(MSGS, max_tokens=77, temperature=0.3)).text == "hi there"
     req = rec.requests[0]
     assert req.url.path.endswith("/chat/completions") and req.headers["authorization"] == f"Bearer {GROQ_KEY}"
     body = json.loads(req.content)
@@ -112,7 +112,7 @@ def test_errors_never_contain_keys_or_prompt_text_even_if_the_provider_echoes_th
 def test_gemini_request_format_and_key_in_header_not_url():
     rec = Recorder(resp(200, gemini_ok("gem answer")))
     msgs = [*MSGS, {"role": "assistant", "content": "earlier reply"}, {"role": "user", "content": "follow up"}]
-    assert run(gemini(rec).complete(msgs, max_tokens=55, temperature=0.1)) == "gem answer"
+    assert run(gemini(rec).complete(msgs, max_tokens=55, temperature=0.1)).text == "gem answer"
     req = rec.requests[0]
     assert req.url.path.endswith("/models/gemini-model:generateContent")
     assert req.headers["x-goog-api-key"] == GEMINI_KEY and GEMINI_KEY not in str(req.url)
@@ -124,7 +124,7 @@ def test_gemini_request_format_and_key_in_header_not_url():
 
 def test_gemini_joins_parts_and_handles_blocked_or_empty_candidates():
     parts = {"candidates": [{"content": {"parts": [{"text": "a"}, {"text": "b"}]}}]}
-    assert run(gemini(Recorder(resp(200, parts))).complete(MSGS)) == "ab"
+    assert run(gemini(Recorder(resp(200, parts))).complete(MSGS)).text == "ab"
     for body in [{"promptFeedback": {"blockReason": "SAFETY"}}, {"candidates": []}, {"candidates": [{"finishReason": "SAFETY"}]},
                  {"candidates": [{"content": {"parts": [{"text": " "}]}}]}]:
         with pytest.raises(LLMError) as e:
@@ -215,3 +215,57 @@ def test_build_llm_accepts_mock_transports(tmp_path):
     rec = Recorder(resp(200, groq_ok("via mock")))
     s = Settings(db_path=tmp_path / "e", groq_api_key=GROQ_KEY, gemini_api_key=None)
     assert run(build_llm(s, transports={"groq": rec.transport}).complete(MSGS)).text == "via mock"
+
+
+# ------------------------------------------------------------------ finish reasons and truncation
+def groq_body(text, finish):
+    return {"choices": [{"message": {"role": "assistant", "content": text}, "finish_reason": finish}]}
+
+
+def gemini_body(text, finish):
+    return {"candidates": [{"content": {"role": "model", "parts": [{"text": text}]}, "finishReason": finish}]}
+
+
+@pytest.mark.parametrize("finish,truncated", [("stop", False), ("length", True), ("content_filter", False), ("tool_calls", False), (None, False)])
+def test_groq_finish_reason_and_truncation(finish, truncated):
+    c = run(groq(Recorder(resp(200, groq_body("a reply", finish)))).complete(MSGS))
+    assert c.text == "a reply" and c.finish_reason == finish and c.truncated is truncated
+
+
+@pytest.mark.parametrize("finish,truncated", [("STOP", False), ("MAX_TOKENS", True), ("SAFETY", False), ("OTHER", False), (None, False)])
+def test_gemini_finish_reason_and_truncation(finish, truncated):
+    c = run(gemini(Recorder(resp(200, gemini_body("a reply", finish)))).complete(MSGS))
+    assert c.text == "a reply" and c.finish_reason == finish and c.truncated is truncated
+
+
+def test_a_missing_or_non_string_finish_reason_is_treated_as_unknown_not_truncated():
+    body = {"choices": [{"message": {"content": "x"}, "finish_reason": 7}]}
+    c = run(groq(Recorder(resp(200, body))).complete(MSGS))
+    assert c.finish_reason is None and c.truncated is False
+
+
+def test_reasoning_budget_exhausted_before_any_output_is_a_bad_response_that_fails_over():
+    # reasoning models count hidden reasoning against max_tokens: finish_reason "length" with empty content
+    with pytest.raises(LLMError) as e:
+        run(groq(Recorder(resp(200, groq_body("", "length")))).complete(MSGS))
+    assert e.value.kind is ErrorKind.BAD_RESPONSE and "token limit" in e.value.detail and e.value.failover_worthy
+    with pytest.raises(LLMError) as e2:
+        run(gemini(Recorder(resp(200, {"candidates": [{"content": {"parts": []}, "finishReason": "MAX_TOKENS"}]}))).complete(MSGS))
+    assert e2.value.kind is ErrorKind.BAD_RESPONSE and "token limit" in e2.value.detail
+
+
+def test_failover_result_carries_the_serving_providers_finish_reason():
+    g, m = Recorder(httpx.ReadTimeout("slow")), Recorder(resp(200, gemini_body("cut off mid-sent", "MAX_TOKENS")))
+    r = run(FailoverLLM([groq(g), gemini(m)]).complete(MSGS))
+    assert r.provider == "gemini" and r.truncated is True and r.finish_reason == "MAX_TOKENS" and r.failed_over
+    r2 = run(FailoverLLM([groq(Recorder(resp(200, groq_body("full answer", "stop"))))]).complete(MSGS))
+    assert r2.truncated is False and r2.finish_reason == "stop"
+
+
+def test_the_default_token_limit_is_2048_and_is_sent_to_the_provider():
+    rec = Recorder(resp(200, groq_body("ok", "stop")))
+    run(groq(rec).complete(MSGS))
+    assert json.loads(rec.requests[0].content)["max_tokens"] == 2048
+    rec2 = Recorder(resp(200, gemini_body("ok", "STOP")))
+    run(gemini(rec2).complete(MSGS))
+    assert json.loads(rec2.requests[0].content)["generationConfig"]["maxOutputTokens"] == 2048
