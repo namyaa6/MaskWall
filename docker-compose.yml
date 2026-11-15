@@ -1,0 +1,16 @@
+# Local run of the firewall API:  docker compose up --build   (then http://localhost:7860/docs)
+# Keys are read from .env at run time (never baked into the image). Not yet tested: Docker is not installed on the dev machine.
+services:
+  api:
+    build: ./backend
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    environment:
+      MASKWALL_SERVER_MODEL: ${MASKWALL_SERVER_MODEL:-minilm}
+      MASKWALL_CORS_ORIGINS: ${MASKWALL_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+    volumes:
+      - maskwall-data:/home/user/data
+volumes:
+  maskwall-data:
