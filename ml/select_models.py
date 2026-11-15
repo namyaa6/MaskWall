@@ -54,8 +54,14 @@ def main():
     if not R:
         raise SystemExit("no real-checkpoint results in benchmark.json (stand-ins are never used for selection); "
                          "run: python ml/export_quantize.py --all-real && python ml/benchmark.py --all-real")
+    # The 50 ms gate is evaluated on one sample of 300 val prompts; ml/window_eval.py re-measured the same int8 models over ALL val prompts.
+    # If the two disagree about the gate, the gate result is not robust and is reported as INCONCLUSIVE (review finding, 2026-11-15).
+    we_path = RESULTS / "window_eval.json"
+    we = json.loads(we_path.read_text()) if we_path.exists() else {}
     for r in R:
+        r["p50_alt"] = next((x["lat_p50"] for x in we.get(r["job"], []) if x.get("W") == 512), None)
         r["fast"] = r["p50_ms"] < LAT_MS
+        r["latency_inconclusive"] = bool(r["fast"] and r["p50_alt"] is not None and r["p50_alt"] >= LAT_MS)
         r["indirect_ok"] = r["iv_recall"] >= MIN_RECALL and r["iv_fpr"] <= MAX_FPR
         r["small"] = r["int8_mb"] <= SIZE_MB
     best = lambda c: max(c, key=lambda r: r["val_f1"]) if c else None
@@ -78,13 +84,17 @@ def main():
          "indirect_test recall / FPR | test F1 / FPR | tricky /49 (hidden /5) | xstest FP |", "|" + "---|" * 14]
     for r in sorted(R, key=lambda r: -r["val_f1"]):
         L.append(f"| {r['job']} | {r['int8_mb']} | {r['p50_ms']:.1f} ({r['p95_ms']:.1f}) | {r['p50_512_ms']:.1f} | {r['val_f1']:.3f} | {r['thr']:.3f} | "
-                 f"{r['iv_recall']:.3f} / {r['iv_fpr']:.3f} | {'yes' if r['fast'] else 'NO'} | {'pass' if r['indirect_ok'] else 'FAIL'} | "
+                 f"{r['iv_recall']:.3f} / {r['iv_fpr']:.3f} | {('INCONCLUSIVE (%.1f vs %.1f ms)' % (r['p50_ms'], r['p50_alt'])) if r['latency_inconclusive'] else ('yes' if r['fast'] else 'NO')} | {'pass' if r['indirect_ok'] else 'FAIL'} | "
                  f"{'yes' if r['small'] else 'no'} | {r['it_recall']:.3f} / {r['it_fpr']:.3f} | {r['test_f1']:.3f} / {r['test_fpr']:.3f} | "
                  f"{r['tricky']} ({r['hidden']}) | {r['xstest_fp']} |")
     L += ["", f"**Server model: {server['job']}** ({server_note}); val F1 {server['val_f1']:.3f}, p50 {server['p50_ms']:.1f} ms, int8 {server['int8_mb']} MB.",
           f"Original (pre-registered) rule would pick: **{original['job'] if original else 'nobody (no model under the latency limit)'}**."
           + ("  Same model." if original and original['job'] == server['job'] else "  Different from the amended pick."),
           f"**Browser pre-check model: {browser['job'] if browser else 'none -> use the TF-IDF skl2onnx fallback'}** ({browser_note})."]
+    if server and server.get("latency_inconclusive"):
+        L.append(f"\n**Caveat: the server model's latency gate is INCONCLUSIVE.** p50 {server['p50_ms']:.1f} ms on 300 random val prompts, "
+                 f"{server['p50_alt']:.1f} ms when the same model was re-measured on all val prompts (limit {LAT_MS:.0f} ms): the pass depends on the sample. "
+                 "Measure on the deployment hardware before relying on it.")
     (RESULTS / "selection.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     (RESULTS / "selection.json").write_text(json.dumps({"server": server, "server_note": server_note, "original_rule_pick": original,
                                                          "browser": browser, "browser_note": browser_note, "all": R}, indent=2))

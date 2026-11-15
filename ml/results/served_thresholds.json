@@ -1,0 +1,616 @@
+{
+  "minilm": {
+    "thr_f1": 0.9237573146820068,
+    "thr_fpr1pct": 0.778710961341858,
+    "warn": 0.778710961341858,
+    "block": 0.9237573146820068,
+    "at_block": {
+      "threshold": 0.9237573146820068,
+      "val": {
+        "f1": 0.9142857142857143,
+        "fpr": 0.004195804195804196,
+        "recall": 0.8543689320388349,
+        "precision": 0.9832402234636871
+      },
+      "test": {
+        "f1": 0.8977556109725686,
+        "fpr": 0.01813110181311018,
+        "recall": 0.8653846153846154,
+        "precision": 0.9326424870466321,
+        "ci95": {
+          "f1": [
+            0.8652712072288553,
+            0.927620707877913
+          ],
+          "fpr": [
+            0.009397897586336216,
+            0.02821174139053928
+          ],
+          "n_boot": 1000
+        },
+        "confusion_matrix": {
+          "tn": 704,
+          "fp": 13,
+          "fn": 28,
+          "tp": 180
+        }
+      },
+      "indirect_val": {
+        "recall": 0.9152542372881356,
+        "fpr": 0.017543859649122806,
+        "confusion_matrix": {
+          "tn": 56,
+          "fp": 1,
+          "fn": 5,
+          "tp": 54
+        }
+      },
+      "indirect_test": {
+        "recall": 0.9090909090909091,
+        "fpr": 0.0,
+        "confusion_matrix": {
+          "tn": 57,
+          "fp": 0,
+          "fn": 5,
+          "tp": 50
+        }
+      },
+      "tricky": {
+        "benign_document": [
+          5,
+          6
+        ],
+        "benign_mentions_instructions": [
+          2,
+          5
+        ],
+        "benign_suspicious": [
+          6,
+          6
+        ],
+        "hidden_injection_document": [
+          2,
+          5
+        ],
+        "hinglish": [
+          6,
+          11
+        ],
+        "long_benign": [
+          5,
+          5
+        ],
+        "short_attack": [
+          4,
+          5
+        ],
+        "sneaky_attack": [
+          6,
+          6
+        ],
+        "_overall": [
+          36,
+          49
+        ]
+      },
+      "xstest_fp": 0
+    },
+    "at_warn": {
+      "threshold": 0.778710961341858,
+      "val": {
+        "f1": 0.9076923076923077,
+        "fpr": 0.009790209790209791,
+        "recall": 0.8592233009708737,
+        "precision": 0.9619565217391305
+      },
+      "test": {
+        "f1": 0.8878048780487806,
+        "fpr": 0.02789400278940028,
+        "recall": 0.875,
+        "precision": 0.900990099009901,
+        "ci95": {
+          "f1": [
+            0.8521275160996662,
+            0.9197561541533115
+          ],
+          "fpr": [
+            0.016734658298465828,
+            0.04061710049873608
+          ],
+          "n_boot": 1000
+        },
+        "confusion_matrix": {
+          "tn": 697,
+          "fp": 20,
+          "fn": 26,
+          "tp": 182
+        }
+      },
+      "indirect_val": {
+        "recall": 0.9322033898305084,
+        "fpr": 0.017543859649122806,
+        "confusion_matrix": {
+          "tn": 56,
+          "fp": 1,
+          "fn": 4,
+          "tp": 55
+        }
+      },
+      "indirect_test": {
+        "recall": 0.9272727272727272,
+        "fpr": 0.017543859649122806,
+        "confusion_matrix": {
+          "tn": 56,
+          "fp": 1,
+          "fn": 4,
+          "tp": 51
+        }
+      },
+      "tricky": {
+        "benign_document": [
+          5,
+          6
+        ],
+        "benign_mentions_instructions": [
+          2,
+          5
+        ],
+        "benign_suspicious": [
+          5,
+          6
+        ],
+        "hidden_injection_document": [
+          3,
+          5
+        ],
+        "hinglish": [
+          6,
+          11
+        ],
+        "long_benign": [
+          5,
+          5
+        ],
+        "short_attack": [
+          4,
+          5
+        ],
+        "sneaky_attack": [
+          6,
+          6
+        ],
+        "_overall": [
+          36,
+          49
+        ]
+      },
+      "xstest_fp": 0
+    },
+    "at_f1": {
+      "threshold": 0.9237573146820068,
+      "val": {
+        "f1": 0.9142857142857143,
+        "fpr": 0.004195804195804196,
+        "recall": 0.8543689320388349,
+        "precision": 0.9832402234636871
+      },
+      "test": {
+        "f1": 0.8977556109725686,
+        "fpr": 0.01813110181311018,
+        "recall": 0.8653846153846154,
+        "precision": 0.9326424870466321,
+        "ci95": {
+          "f1": [
+            0.8652712072288553,
+            0.927620707877913
+          ],
+          "fpr": [
+            0.009397897586336216,
+            0.02821174139053928
+          ],
+          "n_boot": 1000
+        },
+        "confusion_matrix": {
+          "tn": 704,
+          "fp": 13,
+          "fn": 28,
+          "tp": 180
+        }
+      },
+      "indirect_val": {
+        "recall": 0.9152542372881356,
+        "fpr": 0.017543859649122806,
+        "confusion_matrix": {
+          "tn": 56,
+          "fp": 1,
+          "fn": 5,
+          "tp": 54
+        }
+      },
+      "indirect_test": {
+        "recall": 0.9090909090909091,
+        "fpr": 0.0,
+        "confusion_matrix": {
+          "tn": 57,
+          "fp": 0,
+          "fn": 5,
+          "tp": 50
+        }
+      },
+      "tricky": {
+        "benign_document": [
+          5,
+          6
+        ],
+        "benign_mentions_instructions": [
+          2,
+          5
+        ],
+        "benign_suspicious": [
+          6,
+          6
+        ],
+        "hidden_injection_document": [
+          2,
+          5
+        ],
+        "hinglish": [
+          6,
+          11
+        ],
+        "long_benign": [
+          5,
+          5
+        ],
+        "short_attack": [
+          4,
+          5
+        ],
+        "sneaky_attack": [
+          6,
+          6
+        ],
+        "_overall": [
+          36,
+          49
+        ]
+      },
+      "xstest_fp": 0
+    },
+    "policy_three_way_test": {
+      "benign": {
+        "n": 717,
+        "allow": 0.9721059972105998,
+        "warn": 0.009762900976290097,
+        "block": 0.01813110181311018
+      },
+      "attack": {
+        "n": 208,
+        "allow": 0.125,
+        "warn": 0.009615384615384616,
+        "block": 0.8653846153846154
+      }
+    },
+    "policy_three_way_indirect_test": {
+      "benign": {
+        "n": 57,
+        "allow": 0.9824561403508771,
+        "warn": 0.017543859649122806,
+        "block": 0.0
+      },
+      "attack": {
+        "n": 55,
+        "allow": 0.07272727272727272,
+        "warn": 0.01818181818181818,
+        "block": 0.9090909090909091
+      }
+    }
+  },
+  "deberta": {
+    "thr_f1": 0.2774975895881653,
+    "thr_fpr1pct": 0.5853589177131654,
+    "warn": 0.2774975895881653,
+    "block": 0.5853589177131654,
+    "at_block": {
+      "threshold": 0.5853589177131654,
+      "val": {
+        "f1": 0.902061855670103,
+        "fpr": 0.009790209790209791,
+        "recall": 0.8495145631067961,
+        "precision": 0.9615384615384616
+      },
+      "test": {
+        "f1": 0.878048780487805,
+        "fpr": 0.030683403068340307,
+        "recall": 0.8653846153846154,
+        "precision": 0.8910891089108911,
+        "ci95": {
+          "f1": [
+            0.8434981304528459,
+            0.9095567929738785
+          ],
+          "fpr": [
+            0.018156424581005588,
+            0.043719131866348224
+          ],
+          "n_boot": 1000
+        },
+        "confusion_matrix": {
+          "tn": 695,
+          "fp": 22,
+          "fn": 28,
+          "tp": 180
+        }
+      },
+      "indirect_val": {
+        "recall": 0.864406779661017,
+        "fpr": 0.03508771929824561,
+        "confusion_matrix": {
+          "tn": 55,
+          "fp": 2,
+          "fn": 8,
+          "tp": 51
+        }
+      },
+      "indirect_test": {
+        "recall": 0.8545454545454545,
+        "fpr": 0.07017543859649122,
+        "confusion_matrix": {
+          "tn": 53,
+          "fp": 4,
+          "fn": 8,
+          "tp": 47
+        }
+      },
+      "tricky": {
+        "benign_document": [
+          5,
+          6
+        ],
+        "benign_mentions_instructions": [
+          2,
+          5
+        ],
+        "benign_suspicious": [
+          4,
+          6
+        ],
+        "hidden_injection_document": [
+          4,
+          5
+        ],
+        "hinglish": [
+          6,
+          11
+        ],
+        "long_benign": [
+          5,
+          5
+        ],
+        "short_attack": [
+          5,
+          5
+        ],
+        "sneaky_attack": [
+          6,
+          6
+        ],
+        "_overall": [
+          37,
+          49
+        ]
+      },
+      "xstest_fp": 5
+    },
+    "at_warn": {
+      "threshold": 0.2774975895881653,
+      "val": {
+        "f1": 0.9242053789731051,
+        "fpr": 0.019580419580419582,
+        "recall": 0.9174757281553398,
+        "precision": 0.9310344827586207
+      },
+      "test": {
+        "f1": 0.8894117647058823,
+        "fpr": 0.03905160390516039,
+        "recall": 0.9086538461538461,
+        "precision": 0.8709677419354839,
+        "ci95": {
+          "f1": [
+            0.8592763345027021,
+            0.9201797385620915
+          ],
+          "fpr": [
+            0.025033901251738523,
+            0.053649884016061876
+          ],
+          "n_boot": 1000
+        },
+        "confusion_matrix": {
+          "tn": 689,
+          "fp": 28,
+          "fn": 19,
+          "tp": 189
+        }
+      },
+      "indirect_val": {
+        "recall": 0.9491525423728814,
+        "fpr": 0.03508771929824561,
+        "confusion_matrix": {
+          "tn": 55,
+          "fp": 2,
+          "fn": 3,
+          "tp": 56
+        }
+      },
+      "indirect_test": {
+        "recall": 0.8727272727272727,
+        "fpr": 0.08771929824561403,
+        "confusion_matrix": {
+          "tn": 52,
+          "fp": 5,
+          "fn": 7,
+          "tp": 48
+        }
+      },
+      "tricky": {
+        "benign_document": [
+          5,
+          6
+        ],
+        "benign_mentions_instructions": [
+          2,
+          5
+        ],
+        "benign_suspicious": [
+          4,
+          6
+        ],
+        "hidden_injection_document": [
+          4,
+          5
+        ],
+        "hinglish": [
+          6,
+          11
+        ],
+        "long_benign": [
+          5,
+          5
+        ],
+        "short_attack": [
+          5,
+          5
+        ],
+        "sneaky_attack": [
+          6,
+          6
+        ],
+        "_overall": [
+          37,
+          49
+        ]
+      },
+      "xstest_fp": 5
+    },
+    "at_f1": {
+      "threshold": 0.2774975895881653,
+      "val": {
+        "f1": 0.9242053789731051,
+        "fpr": 0.019580419580419582,
+        "recall": 0.9174757281553398,
+        "precision": 0.9310344827586207
+      },
+      "test": {
+        "f1": 0.8894117647058823,
+        "fpr": 0.03905160390516039,
+        "recall": 0.9086538461538461,
+        "precision": 0.8709677419354839,
+        "ci95": {
+          "f1": [
+            0.8592763345027021,
+            0.9201797385620915
+          ],
+          "fpr": [
+            0.025033901251738523,
+            0.053649884016061876
+          ],
+          "n_boot": 1000
+        },
+        "confusion_matrix": {
+          "tn": 689,
+          "fp": 28,
+          "fn": 19,
+          "tp": 189
+        }
+      },
+      "indirect_val": {
+        "recall": 0.9491525423728814,
+        "fpr": 0.03508771929824561,
+        "confusion_matrix": {
+          "tn": 55,
+          "fp": 2,
+          "fn": 3,
+          "tp": 56
+        }
+      },
+      "indirect_test": {
+        "recall": 0.8727272727272727,
+        "fpr": 0.08771929824561403,
+        "confusion_matrix": {
+          "tn": 52,
+          "fp": 5,
+          "fn": 7,
+          "tp": 48
+        }
+      },
+      "tricky": {
+        "benign_document": [
+          5,
+          6
+        ],
+        "benign_mentions_instructions": [
+          2,
+          5
+        ],
+        "benign_suspicious": [
+          4,
+          6
+        ],
+        "hidden_injection_document": [
+          4,
+          5
+        ],
+        "hinglish": [
+          6,
+          11
+        ],
+        "long_benign": [
+          5,
+          5
+        ],
+        "short_attack": [
+          5,
+          5
+        ],
+        "sneaky_attack": [
+          6,
+          6
+        ],
+        "_overall": [
+          37,
+          49
+        ]
+      },
+      "xstest_fp": 5
+    },
+    "policy_three_way_test": {
+      "benign": {
+        "n": 717,
+        "allow": 0.9609483960948396,
+        "warn": 0.008368200836820083,
+        "block": 0.030683403068340307
+      },
+      "attack": {
+        "n": 208,
+        "allow": 0.09134615384615384,
+        "warn": 0.04326923076923077,
+        "block": 0.8653846153846154
+      }
+    },
+    "policy_three_way_indirect_test": {
+      "benign": {
+        "n": 57,
+        "allow": 0.9122807017543859,
+        "warn": 0.017543859649122806,
+        "block": 0.07017543859649122
+      },
+      "attack": {
+        "n": 55,
+        "allow": 0.12727272727272726,
+        "warn": 0.01818181818181818,
+        "block": 0.8545454545454545
+      }
+    }
+  }
+}

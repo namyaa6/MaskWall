@@ -18,7 +18,9 @@
     "hidden": 4,
     "xstest_fp": 5,
     "fp32_val_f1": 0.9249394673123488,
+    "p50_alt": 50.9,
     "fast": true,
+    "latency_inconclusive": true,
     "indirect_ok": true,
     "small": false
   },
@@ -42,7 +44,9 @@
     "hidden": 4,
     "xstest_fp": 5,
     "fp32_val_f1": 0.9249394673123488,
+    "p50_alt": 50.9,
     "fast": true,
+    "latency_inconclusive": true,
     "indirect_ok": true,
     "small": false
   },
@@ -65,7 +69,9 @@
     "hidden": 2,
     "xstest_fp": 0,
     "fp32_val_f1": 0.9142857142857143,
+    "p50_alt": 7.7,
     "fast": true,
+    "latency_inconclusive": false,
     "indirect_ok": true,
     "small": true
   },
@@ -90,7 +96,9 @@
       "hidden": 2,
       "xstest_fp": 0,
       "fp32_val_f1": 0.9142857142857143,
+      "p50_alt": 7.7,
       "fast": true,
+      "latency_inconclusive": false,
       "indirect_ok": true,
       "small": true
     },
@@ -113,7 +121,9 @@
       "hidden": 4,
       "xstest_fp": 5,
       "fp32_val_f1": 0.9249394673123488,
+      "p50_alt": 50.9,
       "fast": true,
+      "latency_inconclusive": true,
       "indirect_ok": true,
       "small": false
     }

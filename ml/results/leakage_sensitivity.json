@@ -1,0 +1,64 @@
+{
+  "C": 100,
+  "threshold": 0.3627884220497843,
+  "n_test": 925,
+  "prefix_shared_with_train": 93,
+  "test_rows_with_cosine>=0.9_to_a_val_row": 3,
+  "test_rows_with_full_vocab_cosine>=0.9_to_train": 0,
+  "subsets": {
+    "all test rows": {
+      "n": 925,
+      "attacks": 208,
+      "f1": 0.8927,
+      "fpr": 0.0265,
+      "recall": 0.8798
+    },
+    "excluding rows sharing a 40-char prefix with train": {
+      "n": 832,
+      "attacks": 172,
+      "f1": 0.8817,
+      "fpr": 0.0258,
+      "recall": 0.8663
+    },
+    "excluding rows with cosine >= 0.9 to a val row": {
+      "n": 922,
+      "attacks": 207,
+      "f1": 0.8922,
+      "fpr": 0.0266,
+      "recall": 0.8792
+    },
+    "excluding both": {
+      "n": 830,
+      "attacks": 171,
+      "f1": 0.881,
+      "fpr": 0.0258,
+      "recall": 0.8655
+    }
+  },
+  "prefix_shared_by_source": {
+    "deepset": {
+      "n": 39,
+      "prefix_shared": 2
+    },
+    "dolly": {
+      "n": 334,
+      "prefix_shared": 23
+    },
+    "gandalf": {
+      "n": 100,
+      "prefix_shared": 10
+    },
+    "jackhhao": {
+      "n": 108,
+      "prefix_shared": 20
+    },
+    "trustairlab_jailbreak": {
+      "n": 49,
+      "prefix_shared": 7
+    },
+    "trustairlab_regular": {
+      "n": 295,
+      "prefix_shared": 31
+    }
+  }
+}

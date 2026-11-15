@@ -341,13 +341,13 @@ def write_comparison(baselines, effect, tricky, models):
         L.append("")
         L += [f"## Tricky set per category, {title} (correct/total; plain -> +aug)\n",
               "| category | label | " + " | ".join(models) + " |", "|---|---|" + "---|" * len(models)]
-        lab = tricky.groupby("category")["label"].first()
+        lab = tricky.groupby("category")["label"].agg(lambda x: int(x.iloc[0]) if x.nunique() == 1 else "mixed")   # hinglish holds both labels
         for c in cats:
             cells = []
             for name in models:
                 a, b = baselines[lv][name]["tricky"][c], baselines[lv + "_aug"][name]["tricky"][c]
                 cells.append(f"{a['correct']}/{a['total']} -> {b['correct']}/{b['total']}")
-            L.append(f"| {c} | {int(lab[c])} | " + " | ".join(cells) + " |")
+            L.append(f"| {c} | {lab[c]} | " + " | ".join(cells) + " |")
         L.append("")
         L += [f"## Held-out indirect eval (indirect_eval.parquet), {title}\n",
               "Built the same way as the augmentation (partly in-distribution), from val/test attack strings, fresh passages and fresh wordings. "

@@ -4,9 +4,11 @@ int8 models, CPU, batch 1, 2 threads. Gates: p50 natural-length latency < 50 ms;
 
 | model | int8 MB | p50 ms (p95) | 512-tok p50 | val F1 | thr | indirect_val recall / FPR | latency ok | indirect gate | size ok | indirect_test recall / FPR | test F1 / FPR | tricky /49 (hidden /5) | xstest FP |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| cleaned_aug/deberta_v3_small | 161.2 | 44.8 (938.5) | 956.4 | 0.924 | 0.277 | 0.949 / 0.035 | yes | pass | no | 0.873 / 0.088 | 0.889 / 0.039 | 37 (4) | 5 |
+| cleaned_aug/deberta_v3_small | 161.2 | 44.8 (938.5) | 956.4 | 0.924 | 0.277 | 0.949 / 0.035 | INCONCLUSIVE (44.8 vs 50.9 ms) | pass | no | 0.873 / 0.088 | 0.889 / 0.039 | 37 (4) | 5 |
 | cleaned_aug/minilm | 23.1 | 11.9 (370.3) | 366.0 | 0.914 | 0.924 | 0.915 / 0.018 | yes | pass | yes | 0.909 / 0.000 | 0.898 / 0.018 | 36 (2) | 0 |
 
 **Server model: cleaned_aug/deberta_v3_small** (amended rule); val F1 0.924, p50 44.8 ms, int8 161.2 MB.
 Original (pre-registered) rule would pick: **cleaned_aug/deberta_v3_small**.  Same model.
 **Browser pre-check model: cleaned_aug/minilm** (val F1 under the size cap, with the indirect gate).
+
+**Caveat: the server model's latency gate is INCONCLUSIVE.** p50 44.8 ms on 300 random val prompts, 50.9 ms when the same model was re-measured on all val prompts (limit 50 ms): the pass depends on the sample. Measure on the deployment hardware before relying on it.
