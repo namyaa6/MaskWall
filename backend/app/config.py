@@ -12,7 +12,10 @@ Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_BLOCK_THRESHOLD / MASKWALL_WARN_THRESHOLD   override the model's val-tuned thresholds
   MASKWALL_STRICT              1: treat "warn" as "block"
   MASKWALL_DB_PATH             SQLite event log
-  MASKWALL_RATE_LIMIT          slowapi limit string, e.g. "30/minute"
+  MASKWALL_RATE_LIMIT          slowapi limit string shared by /chat and /scan, e.g. "30/minute"
+  MASKWALL_STATS_RATE_LIMIT    limit for /stats (the dashboard polls it), default "120/minute"
+  MASKWALL_TRUST_PROXY         1: rate-limit by the LAST X-Forwarded-For entry (set only behind exactly one trusted proxy)
+  MASKWALL_CORS_ORIGINS        comma list of allowed browser origins (default: the Vite dev server); "*" allows any
   MASKWALL_LLM_ORDER           comma list of providers in failover order, e.g. "groq,gemini"
   MASKWALL_LLM_TIMEOUT_S       per-provider timeout
   MASKWALL_MAX_CONCURRENT_SCANS  simultaneous ONNX inferences (default 1: the host has few cores)
@@ -57,6 +60,9 @@ class Settings:
     strict: bool = False
     db_path: Path = BACKEND_DIR / "data" / "maskwall.sqlite"
     rate_limit: str = "30/minute"
+    stats_rate_limit: str = "120/minute"
+    trust_proxy: bool = False
+    cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     llm_order: tuple[str, ...] = ("groq", "gemini")
     llm_timeout_s: float = 20.0
     max_output_tokens: int = 512
@@ -122,6 +128,11 @@ class Settings:
             kw["db_path"] = Path(get("MASKWALL_DB_PATH"))
         if get("MASKWALL_RATE_LIMIT"):
             kw["rate_limit"] = get("MASKWALL_RATE_LIMIT")
+        if get("MASKWALL_STATS_RATE_LIMIT"):
+            kw["stats_rate_limit"] = get("MASKWALL_STATS_RATE_LIMIT")
+        if get("MASKWALL_CORS_ORIGINS"):
+            kw["cors_origins"] = tuple(o.strip() for o in get("MASKWALL_CORS_ORIGINS").split(",") if o.strip())
+        kw["trust_proxy"] = (get("MASKWALL_TRUST_PROXY", "0") or "0").strip().lower() in ("1", "true", "yes", "on")
         if get("MASKWALL_LLM_ORDER"):
             kw["llm_order"] = tuple(p.strip().lower() for p in get("MASKWALL_LLM_ORDER").split(",") if p.strip())
         if get("GROQ_MODEL"):

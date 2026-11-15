@@ -17,9 +17,12 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from . import __version__
 from .config import Settings
@@ -88,6 +91,26 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
 
     app = FastAPI(title="MaskWall firewall", version=__version__, lifespan=lifespan)
     app.state.settings = settings
+    app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["GET", "POST"], allow_headers=["*"],
+                       allow_credentials=False)
+
+    def client_key(request: Request) -> str:
+        """Rate-limit key. X-Forwarded-For is client-controlled unless a trusted proxy sets it, so it is ignored by default;
+        with MASKWALL_TRUST_PROXY the LAST entry (appended by the one trusted proxy) is used, never the first (forgeable)."""
+        if settings.trust_proxy:
+            xff = request.headers.get("x-forwarded-for")
+            if xff:
+                return xff.split(",")[-1].strip()
+        return request.client.host if request.client else "unknown"
+
+    limiter = Limiter(key_func=client_key, storage_uri="memory://", headers_enabled=True)
+    app.state.limiter = limiter
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limited(request: Request, exc: RateLimitExceeded):
+        await record({"request_id": uuid.uuid4().hex[:12], "endpoint": request.url.path, "action": "rate_limited", "reasons": ["rate_limit"], "http_status": 429})
+        resp = _rate_limit_exceeded_handler(request, exc)           # JSON body + Retry-After / X-RateLimit-* headers
+        return resp
 
     # ------------------------------------------------------------------ helpers
     def thresholds():
@@ -137,6 +160,14 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         return len(text) > settings.max_chars
 
     # ------------------------------------------------------------------ endpoints
+    @app.get("/stats")
+    @limiter.limit(settings.stats_rate_limit)
+    async def stats_endpoint(request: Request, response: Response):
+        db = app.state.db
+        if db is None:
+            raise HTTPException(503, detail={"error": "event_log_not_available"})
+        return await run_in_threadpool(db.stats)
+
     @app.get("/health")
     def health():
         s = app.state
@@ -151,7 +182,8 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         return out
 
     @app.post("/scan")
-    async def scan_endpoint(req: ScanRequest):
+    @limiter.shared_limit(settings.rate_limit, scope="firewall")
+    async def scan_endpoint(request: Request, response: Response, req: ScanRequest):
         t_total, rid = time.perf_counter(), uuid.uuid4().hex[:12]
         if too_long(req.text):
             await record({"request_id": rid, "endpoint": "/scan", "action": "rejected", "reasons": ["input_too_long"],
@@ -169,7 +201,8 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         return {"request_id": rid, "action": decision.action.value, "input": input_section(scan, pii.masked_text, pii, decision, thresholds()), "latency_ms": lat}
 
     @app.post("/chat")
-    async def chat_endpoint(req: ChatRequest):
+    @limiter.shared_limit(settings.rate_limit, scope="firewall")
+    async def chat_endpoint(request: Request, response: Response, req: ChatRequest):
         t_total, rid = time.perf_counter(), uuid.uuid4().hex[:12]
         text = req.message
         if too_long(text):
