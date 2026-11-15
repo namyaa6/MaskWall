@@ -47,9 +47,9 @@ def verhoeff_check_digit(payload: str) -> str:
 # ---------------------------------------------------------------- patterns
 # Aadhaar: not part of a longer digit run (also across single space/hyphen separators, so card numbers are not cut up)
 _AADHAAR = re.compile(r"(?<!\d)(?<!\d[ -])([2-9]\d{3}[ -]?\d{4}[ -]?\d{4})(?![ -]?\d)")
-_PAN = re.compile(r"(?<![A-Za-z0-9])([A-Za-z]{3}[PCHFATBLJGpchfatbljg][A-Za-z]\d{4}[A-Za-z])(?![A-Za-z0-9])")
+_PAN = re.compile(r"(?<![A-Za-z0-9])([A-Za-z]{3}[PCHFATBLJGpchfatbljg][A-Za-z][ -]?\d{4}[ -]?[A-Za-z])(?![A-Za-z0-9])")
 _EMAIL = re.compile(r"(?<![\w.+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w-])")
-_PHONE = re.compile(r"(?<![\d+])(?:(?:\+|00)?91[ -]?)?[6-9]\d{4}[ -]?\d{5}(?!\d)")
+_PHONE = re.compile(r"(?<![\d+])(?:(?:(?:\+|00)?91[ -]?)|0)?[6-9](?:[ -]?\d){9}(?![ -]?\d)")
 
 TYPES = ("AADHAAR", "PAN", "EMAIL", "PHONE")
 
@@ -86,7 +86,7 @@ def _candidates(text: str):
         if len(digits) == 12 and verhoeff_valid(digits):
             yield m.start(1), m.end(1), "AADHAAR", digits
     for m in _PAN.finditer(text):
-        yield m.start(1), m.end(1), "PAN", m.group(1).upper()
+        yield m.start(1), m.end(1), "PAN", re.sub(r"[ -]", "", m.group(1)).upper()
     for m in _EMAIL.finditer(text):
         yield m.start(), m.end(), "EMAIL", m.group().lower()
     for m in _PHONE.finditer(text):

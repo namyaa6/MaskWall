@@ -9,6 +9,7 @@ Thresholds come from the model's own validation tuning (backend/model/<name>/mod
   block = max(thr_f1, thr_fpr1pct)   the more conservative of the F1-optimal and the FPR <= 1% thresholds
   warn  = min(thr_f1, thr_fpr1pct)   between the two the model is suspicious but not validated as precise
 Output side: any leakage finding (canary, system prompt, secrets) -> BLOCK the reply.
+Hidden Unicode smuggling characters (tag block, supplementary variation selectors) make the policy at least WARN.
 Server-side PII masking never changes the action by itself; it is reported as a note (the browser layer should have caught it).
 """
 from __future__ import annotations
@@ -61,7 +62,8 @@ class OutputDecision:
     reasons: tuple[str, ...] = ()
 
 
-def decide_input(score: float, coverage: str, thresholds: Thresholds, *, pii_masked: int = 0, strict: bool = False) -> InputDecision:
+def decide_input(score: float, coverage: str, thresholds: Thresholds, *, pii_masked: int = 0, strict: bool = False,
+                 hidden_unicode: int = 0) -> InputDecision:
     reasons: list[str] = []
     if score >= thresholds.block:
         action = Action.BLOCK
@@ -73,6 +75,10 @@ def decide_input(score: float, coverage: str, thresholds: Thresholds, *, pii_mas
         action = Action.ALLOW
     if coverage != "full":
         reasons.append("partial_scan")
+        if action is Action.ALLOW:
+            action = Action.WARN
+    if hidden_unicode > 0:                       # tag characters / variation selectors have no legitimate use in a prompt
+        reasons.append("hidden_characters")
         if action is Action.ALLOW:
             action = Action.WARN
     if strict and action is Action.WARN:

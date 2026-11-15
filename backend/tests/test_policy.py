@@ -66,3 +66,22 @@ def test_output_decisions():
     d = decide_output(True, ["canary", "secret"])
     assert d.action is Action.BLOCK and d.reasons == ("output_leak:canary", "output_leak:secret")
     assert decide_output(True).reasons == ("output_leak",)
+
+
+# ------------------------------------------------------------------ hidden Unicode smuggling characters
+def test_hidden_characters_make_an_otherwise_clean_input_a_warning():
+    d = decide_input(0.01, "full", T, hidden_unicode=12)
+    assert d.action is Action.WARN and d.reasons == ("hidden_characters",)
+
+
+def test_hidden_characters_never_downgrade_a_block_and_combine_with_other_reasons():
+    assert decide_input(0.95, "full", T, hidden_unicode=3).action is Action.BLOCK
+    assert decide_input(0.95, "full", T, hidden_unicode=3).reasons == ("injection_detected", "hidden_characters")
+    d = decide_input(0.01, "partial", T, hidden_unicode=1)
+    assert d.action is Action.WARN and d.reasons == ("partial_scan", "hidden_characters")
+
+
+def test_strict_mode_blocks_hidden_characters():
+    d = decide_input(0.01, "full", T, hidden_unicode=1, strict=True)
+    assert d.action is Action.BLOCK and d.reasons == ("hidden_characters", "strict_mode")
+    assert decide_input(0.01, "full", T, hidden_unicode=0).action is Action.ALLOW

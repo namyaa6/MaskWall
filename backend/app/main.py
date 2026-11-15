@@ -29,6 +29,7 @@ from .config import Settings
 from .llm import LLMFailure, build_llm
 from .logging_db import EventLog
 from .policy import BLOCKED_INPUT_MESSAGE, BLOCKED_OUTPUT_MESSAGE, Action, decide_input, decide_output, thresholds_from_meta
+from .normalize import normalize_text
 from .scanners import pii_regex
 from .scanners.injection import InjectionScanner
 from .scanners.output import OutputScanner, make_canary
@@ -139,9 +140,11 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
                 log.exception("injection scan failed")
                 raise HTTPException(500, detail={"error": "scan_failed"}) from None
 
-    def input_section(scan, masked, pii, decision, thr) -> dict:
+    def input_section(scan, masked, pii, decision, thr, norm) -> dict:
         return {
-            "score": round(scan.score, 4), "verdict": decision.action.value, "reasons": list(decision.reasons), "notes": list(decision.notes),
+            "score": round(scan.score, 4), "verdict": decision.action.value, "reasons": list(decision.reasons),
+            "notes": [*decision.notes, *(["unicode_normalized"] if norm.changed else [])],
+            "hidden_characters_removed": norm.hidden_total,
             "coverage": scan.coverage, "mode": scan.mode, "n_tokens": scan.n_tokens, "n_windows": scan.n_windows,
             "n_windows_needed": scan.n_windows_needed, "scanned_tokens": scan.scanned_tokens,
             "thresholds": {"warn": thr.warn, "block": thr.block},
@@ -158,6 +161,15 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
 
     def too_long(text: str):
         return len(text) > settings.max_chars
+
+    async def reject_if_empty(rid: str, endpoint: str, text: str):
+        """Normalise; a message that is empty once invisible characters are removed (e.g. only Unicode tag characters) is rejected."""
+        norm = normalize_text(text)
+        if not norm.text.strip():
+            await record({"request_id": rid, "endpoint": endpoint, "action": "rejected", "reasons": ["empty_after_normalization"],
+                          "input_chars": len(text), "http_status": 422})
+            raise HTTPException(422, detail={"error": "empty_after_normalization", "hidden_characters_removed": norm.hidden_total})
+        return norm
 
     # ------------------------------------------------------------------ endpoints
     @app.get("/stats")
@@ -190,15 +202,17 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
                           "input_chars": len(req.text), "http_status": 413})
             raise HTTPException(413, detail={"error": "input_too_long", "max_chars": settings.max_chars})
         t = time.perf_counter()
-        pii = pii_regex.mask(req.text)
+        norm = await reject_if_empty(rid, "/scan", req.text)
+        pii = pii_regex.mask(norm.text)
         pii_ms = (time.perf_counter() - t) * 1000
         scan = await scan_text(pii.masked_text)
-        decision = decide_input(scan.score, scan.coverage, thresholds(), pii_masked=pii.total, strict=settings.strict)
+        decision = decide_input(scan.score, scan.coverage, thresholds(), pii_masked=pii.total, strict=settings.strict,
+                                hidden_unicode=norm.smuggling_chars)
         lat = {"pii_ms": round(pii_ms, 2), "tokenize_ms": round(scan.tokenize_ms, 2), "inference_ms": round(scan.inference_ms, 2),
                "total_ms": round((time.perf_counter() - t_total) * 1000, 2)}
         await record({**base_event(rid, "/scan", req.text, scan, pii), "action": decision.action.value, "reasons": list(decision.reasons),
                       "http_status": 200, "latency_ms": lat}, pii.masked_text)
-        return {"request_id": rid, "action": decision.action.value, "input": input_section(scan, pii.masked_text, pii, decision, thresholds()), "latency_ms": lat}
+        return {"request_id": rid, "action": decision.action.value, "input": input_section(scan, pii.masked_text, pii, decision, thresholds(), norm), "latency_ms": lat}
 
     @app.post("/chat")
     @limiter.shared_limit(settings.rate_limit, scope="firewall")
@@ -211,13 +225,15 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
             raise HTTPException(413, detail={"error": "input_too_long", "max_chars": settings.max_chars})
 
         t = time.perf_counter()
-        pii = pii_regex.mask(text)                                      # backup masking, before anything else sees the text
+        norm = await reject_if_empty(rid, "/chat", text)                # Unicode normalisation first: scanner and LLM see the same text
+        pii = pii_regex.mask(norm.text)                                 # backup masking, before anything else sees the text
         pii_ms = (time.perf_counter() - t) * 1000
         scan = await scan_text(pii.masked_text)
         thr = thresholds()
-        decision = decide_input(scan.score, scan.coverage, thr, pii_masked=pii.total, strict=settings.strict)
+        decision = decide_input(scan.score, scan.coverage, thr, pii_masked=pii.total, strict=settings.strict,
+                                hidden_unicode=norm.smuggling_chars)
         lat = {"pii_ms": round(pii_ms, 2), "tokenize_ms": round(scan.tokenize_ms, 2), "inference_ms": round(scan.inference_ms, 2)}
-        inp = input_section(scan, pii.masked_text, pii, decision, thr)
+        inp = input_section(scan, pii.masked_text, pii, decision, thr, norm)
         ev = {**base_event(rid, "/chat", text, scan, pii), "reasons": list(decision.reasons)}
 
         def finish(action: str, response: str | None, extra: dict | None = None, **event_extra):

@@ -141,3 +141,25 @@ def test_spans_point_at_original_text():
     text = f"x {n} y"
     f = scan(text)[0]
     assert text[f.start:f.end] == n and f.type == "AADHAAR"
+
+
+# ------------------------------------------------------------------ formats found missing by the review
+@pytest.mark.parametrize("phone", ["098765 43210", "09876543210", "9876 543 210", "+91 9876-543-210", "98 76 54 32 10", "0091 98765 43210"])
+def test_more_mobile_formats(phone):
+    r = mask(f"call {phone} tomorrow")
+    assert r.counts == {"PHONE": 1} and r.masked_text == "call [S_PHONE_1] tomorrow", phone
+
+
+@pytest.mark.parametrize("pan", ["ABCPE 1234 F", "abcpe-1234-f", "ABCPE1234F"])
+def test_pan_with_separators(pan):
+    r = mask(f"my pan is {pan}.")
+    assert r.counts == {"PAN": 1} and r.masked_text == "my pan is [S_PAN_1]."
+
+
+def test_same_pan_with_and_without_separators_gets_one_placeholder():
+    assert mask("ABCPE1234F and ABCPE 1234 F").masked_text == "[S_PAN_1] and [S_PAN_1]"
+
+
+@pytest.mark.parametrize("text", ["call 12 3456 7890", "ref 9876 543 21", "year 2024 1234 5", "ABCPE 12345 F", "ABC 1234 F"])
+def test_relaxed_formats_still_ignore_non_pii(text):
+    assert scan(text) == []
