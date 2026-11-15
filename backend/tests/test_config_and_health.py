@@ -60,6 +60,6 @@ def test_health(settings):
 
 
 def test_health_lists_only_configured_providers(tmp_path):
-    s = Settings(db_path=tmp_path / "e.sqlite", groq_api_key=None, gemini_api_key="x")
+    s = Settings(db_path=tmp_path / "e.sqlite", model_dir=tmp_path / "no_model", groq_api_key=None, gemini_api_key="x")
     with TestClient(create_app(s)) as c:
         assert c.get("/health").json()["llm_providers"] == ["gemini"]

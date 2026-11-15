@@ -6,4 +6,5 @@ from app.config import Settings
 
 @pytest.fixture
 def settings(tmp_path):
-    return Settings(db_path=tmp_path / "events.sqlite", groq_api_key="test-groq-key", gemini_api_key="test-gemini-key")
+    # model_dir points at an empty folder: tests must behave the same whether or not the real model is installed locally
+    return Settings(db_path=tmp_path / "events.sqlite", model_dir=tmp_path / "no_model", groq_api_key="test-groq-key", gemini_api_key="test-gemini-key")
