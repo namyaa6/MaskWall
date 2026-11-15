@@ -12,18 +12,18 @@ def env(**kw):
 def test_defaults_server_model_is_minilm():
     s = Settings.from_env(env={}, dotenv_path=None)
     assert s.server_model == "minilm"
-    assert s.scan_mode == "auto" and s.effective_scan_mode == "head_tail" and s.max_chars == 8000 and s.llm_order == ("groq", "gemini")
+    assert s.scan_mode == "auto" and s.effective_scan_mode == "sliding" and s.max_chars == 8000 and s.llm_order == ("groq", "gemini")
     assert s.model_path.name == "minilm"
 
 
 def test_server_model_switch_selects_directory():
     s = Settings.from_env(env=env(MASKWALL_SERVER_MODEL="DeBERTa"), dotenv_path=None)  # case-insensitive
     assert s.server_model == "deberta" and s.model_path.name == "deberta"
-    assert s.effective_scan_mode == "sliding"                          # auto: DeBERTa passed the long-document criteria
+    assert s.effective_scan_mode == "sliding"                          # auto: sliding for both models (Day 2.8)
 
 
 def test_explicit_scan_mode_overrides_auto():
-    assert Settings.from_env(env=env(MASKWALL_SERVER_MODEL="minilm", MASKWALL_SCAN_MODE="sliding"), dotenv_path=None).effective_scan_mode == "sliding"
+    assert Settings.from_env(env=env(MASKWALL_SERVER_MODEL="minilm", MASKWALL_SCAN_MODE="head_tail"), dotenv_path=None).effective_scan_mode == "head_tail"
     assert Settings.from_env(env=env(MASKWALL_SERVER_MODEL="deberta", MASKWALL_SCAN_MODE="head_tail"), dotenv_path=None).effective_scan_mode == "head_tail"
 
 
@@ -90,3 +90,24 @@ def test_new_abuse_and_logging_settings_defaults_env_and_validation():
                 dict(MASKWALL_LOG_RETENTION_DAYS="-1"), dict(MASKWALL_LOG_MAX_ROWS="x")):
         with pytest.raises(ConfigError):
             Settings.from_env(env=env(**bad), dotenv_path=None)
+
+
+def test_REGRESSION_app_loads_the_scanner_in_sliding_mode_by_default(tmp_path, monkeypatch):
+    """The padding bypass (Day 2.5 finding 2) existed because the default was head_tail. This checks the wiring without the real model."""
+    import app.main as main_mod
+    from tests.fakes import FakeScanner, StubLLM
+    seen = {}
+
+    class SpyScanner:
+        @staticmethod
+        def load(path, *, threads, mode, max_windows):
+            seen.update(mode=mode, max_windows=max_windows)
+            return FakeScanner(mode=mode)
+
+    (tmp_path / "minilm").mkdir()
+    (tmp_path / "minilm" / "model_meta.json").write_text("{}")
+    monkeypatch.setattr(main_mod, "InjectionScanner", SpyScanner)
+    s = Settings(db_path=tmp_path / "e.sqlite", model_dir=tmp_path)           # all defaults
+    with TestClient(create_app(s, llm=StubLLM())) as c:
+        assert c.get("/health").json()["scan_mode"] == "sliding"
+    assert seen == {"mode": "sliding", "max_windows": 6}

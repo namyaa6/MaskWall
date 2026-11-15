@@ -6,8 +6,8 @@ Secrets (`GROQ_API_KEY`, `GEMINI_API_KEY`) are never printed: they are excluded 
 Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_SERVER_MODEL        minilm | deberta            which exported injection model to load (default minilm)
   MASKWALL_MODEL_DIR           directory with minilm/ and deberta/ subfolders (default backend/model)
-  MASKWALL_SCAN_MODE           auto | head_tail | sliding  how inputs longer than the model window are scanned (auto: the
-                               per-model outcome of the Day 2.1 criteria: minilm -> head_tail, deberta -> sliding)
+  MASKWALL_SCAN_MODE           auto | head_tail | sliding  how inputs longer than the model window are scanned (auto: sliding for
+                               both models; head_tail leaves the middle of inputs over ~2,300 characters unscanned, Day 2.8)
   MASKWALL_MAX_WINDOWS         cap on windows per input in sliding mode
   MASKWALL_MAX_CHARS           hard request limit in characters (HTTP 413 above)
   MASKWALL_BLOCK_THRESHOLD / MASKWALL_WARN_THRESHOLD   override the model's val-tuned thresholds
@@ -43,9 +43,10 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_DIR.parent
 SERVER_MODELS = ("minilm", "deberta")
 SCAN_MODES = ("auto", "head_tail", "sliding")
-# Outcome of the pre-registered long-document criteria (docs/decisions.md Day 2.1), applied per model:
-# MiniLM fails the benign-FPR budget with sliding windows (0.070 > 0.05), DeBERTa passes all three criteria (0.044).
-AUTO_SCAN_MODE = {"minilm": "head_tail", "deberta": "sliding"}
+# Both models default to sliding windows. DeBERTa passed the pre-registered long-document criteria (docs/decisions.md Day 2.1). MiniLM did NOT
+# (benign long-document FPR 0.070 > 0.05); it was switched to sliding anyway, post hoc, for SECURITY: under head_tail an injection in the
+# middle of a long document is never seen (confirmed bypass, Day 2.5 finding 2; recall on middle injections 0/38 vs 34/38). Day 2.8.
+AUTO_SCAN_MODE = {"minilm": "sliding", "deberta": "sliding"}
 PROVIDERS = ("groq", "gemini")
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -64,7 +65,7 @@ class ConfigError(ValueError):
 class Settings:
     server_model: str = "minilm"
     model_dir: Path = BACKEND_DIR / "model"
-    scan_mode: str = "auto"        # see AUTO_SCAN_MODE and docs/decisions.md Day 2.1
+    scan_mode: str = "auto"        # see AUTO_SCAN_MODE and docs/decisions.md Day 2.1 / 2.8
     max_windows: int = 6
     max_chars: int = 8000
     block_threshold: float | None = None

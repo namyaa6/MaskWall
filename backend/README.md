@@ -63,7 +63,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 | variable | default | meaning |
 |---|---|---|
 | `MASKWALL_SERVER_MODEL` | `minilm` | `minilm` or `deberta` (int8 ONNX; see docs/decisions.md Day 1.11 and Day 2.0) |
-| `MASKWALL_SCAN_MODE` | `auto` | `auto` = per-model outcome of the long-document evaluation (minilm: head_tail, deberta: sliding); or `head_tail` / `sliding` |
+| `MASKWALL_SCAN_MODE` | `auto` | `auto` = `sliding` for both models (post-hoc security decision, docs/decisions.md Day 2.8); or `head_tail` (unscanned middle for inputs over ~2,300 characters) / `sliding` |
 | `MASKWALL_MAX_WINDOWS` | `6` | cap on 510-token windows per input in sliding mode; beyond it coverage is reported as partial |
 | `MASKWALL_MAX_CHARS` | `8000` | hard request limit (HTTP 413) |
 | `MASKWALL_BLOCK_THRESHOLD` / `_WARN_THRESHOLD` | from the model | override the thresholds tuned on validation data |
@@ -94,7 +94,7 @@ cd backend
 - **Long inputs:** the model sees at most 510 tokens per window. `head_tail` never sees the middle of a longer text and reports `coverage: "partial"`
   (the policy then warns); `sliding` scans overlapping windows (max score) up to the cap. Evidence and trade-offs: docs/decisions.md Day 2.1.
 - **Input normalisation:** before PII masking, scanning and the LLM call, text is NFKC-normalised, non-ASCII digits become ASCII, invisible characters are removed and Unicode tag characters (a hiding channel) are stripped and trigger at least a warning; a message that is empty afterwards is rejected (422). The scanner and the LLM always see the same text.
-- **Known gap (see docs/decisions.md Day 2.5):** with the default MiniLM scan mode (`head_tail`), an injection placed in the middle of a document longer than about 2,300 characters is not seen; the request is answered with `action: "warn"` and `coverage: "partial"`, not blocked.
+- **Long-document cost (docs/decisions.md Day 2.8):** the default is `sliding`, so an injection hidden in the middle of a long document is scanned (before this change, `head_tail` answered `warn` with `coverage: "partial"` and the LLM was called). The price: about 3x latency on long documents (about 0.4 s per 510-token window for MiniLM, up to 6 windows) and a benign long-document false-positive rate of 0.070 (8/114, synthetic documents) instead of 0.053. Inputs beyond the 6-window cap are still reported as partial and warned.
 - **Stateless:** each `/chat` call is one message; conversation history is not accepted (scanning client-supplied history is a separate problem).
 - **Limits:** an output scanner cannot catch a paraphrased system prompt or credentials in unknown formats; the injection classifier is a model with
   measured error rates (docs/decisions.md Day 1.8, 1.11), not a guarantee.
