@@ -14,7 +14,7 @@ def make(tmp_path, scanner=None, **kw):
 
 
 # ------------------------------------------------------------------ rate limiting
-def test_limit_applies_and_429_has_retry_after_and_is_logged(tmp_path):
+def test_limit_applies_and_429_has_retry_after_and_is_counted_not_logged(tmp_path):
     app, db = make(tmp_path, rate_limit="3/minute")
     with TestClient(app) as c:
         codes = [c.post("/chat", json={"message": f"hello {i}"}).status_code for i in range(5)]
@@ -23,7 +23,10 @@ def test_limit_applies_and_429_has_retry_after_and_is_logged(tmp_path):
     assert blocked.status_code == 429 and "retry-after" in blocked.headers and float(blocked.headers["retry-after"]) > 0
     assert "rate limit" in blocked.text.lower()
     s = db.stats()
-    assert s["by_action"] == {"allow": 3, "rate_limited": 3}
+    assert s["by_action"] == {"allow": 3}                       # 429s are NOT written to the database (a flood must not grow it)
+    with TestClient(app) as c2:
+        assert c2.get("/stats").json()["since_start"]["rate_limited"] == 3     # the flood is visible in /stats as an in-memory counter
+    assert app.state.counters["rate_limited"] == 3
 
 
 def test_chat_and_scan_share_one_budget(tmp_path):

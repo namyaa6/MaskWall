@@ -77,3 +77,16 @@ def test_max_output_tokens_default_env_and_validation():
     for bad in ("0", "-5", "lots"):
         with pytest.raises(ConfigError):
             Settings.from_env(env=env(MASKWALL_MAX_OUTPUT_TOKENS=bad), dotenv_path=None)
+
+
+def test_new_abuse_and_logging_settings_defaults_env_and_validation():
+    s = Settings.from_env(env={}, dotenv_path=None)
+    assert s.global_rate_limit == "120/minute" and s.log_retention_days == 90.0 and s.log_max_rows == 500_000 and s.fingerprint_secret is None
+    s = Settings.from_env(env=env(MASKWALL_GLOBAL_RATE_LIMIT="5/second", MASKWALL_LOG_RETENTION_DAYS="7", MASKWALL_LOG_MAX_ROWS="1000",
+                                  MASKWALL_FINGERPRINT_SECRET="abc"), dotenv_path=None)
+    assert (s.global_rate_limit, s.log_retention_days, s.log_max_rows, s.fingerprint_secret) == ("5/second", 7.0, 1000, "abc")
+    assert "abc" not in repr(s)                                                   # the fingerprint secret is hidden like the API keys
+    for bad in (dict(MASKWALL_RATE_LIMIT="lots"), dict(MASKWALL_GLOBAL_RATE_LIMIT="30"), dict(MASKWALL_STATS_RATE_LIMIT="1/fortnightly"),
+                dict(MASKWALL_LOG_RETENTION_DAYS="-1"), dict(MASKWALL_LOG_MAX_ROWS="x")):
+        with pytest.raises(ConfigError):
+            Settings.from_env(env=env(**bad), dotenv_path=None)

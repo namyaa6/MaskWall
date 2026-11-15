@@ -70,7 +70,10 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 | `MASKWALL_STRICT` | `0` | `1`: treat warnings as blocks |
 | `MASKWALL_MAX_OUTPUT_TOKENS` | `2048` | reply token limit; reasoning models spend hidden reasoning tokens against it. `/chat` returns `truncated: true` (and `llm.finish_reason`) when a reply hit the limit |
 | `MASKWALL_RATE_LIMIT` | `30/minute` | per client, shared by `/chat` and `/scan` |
-| `MASKWALL_TRUST_PROXY` | `0` | `1` behind exactly one trusted proxy (rate-limit key = last `X-Forwarded-For` entry) |
+| `MASKWALL_TRUST_PROXY` | `0` | `1` ONLY if the app is reachable exclusively through exactly one trusted proxy (rate-limit key = last `X-Forwarded-For` entry); clients that can connect directly could forge the header |
+| `MASKWALL_GLOBAL_RATE_LIMIT` | `120/minute` | per-client limit on EVERY request, including invalid ones; `/health` is exempt. Request bodies over `max_chars x 12 + 4096` bytes get HTTP 413 before parsing |
+| `MASKWALL_FINGERPRINT_SECRET` | unset | key for the event log's input fingerprints. **Set it in production**: without it the key is a salt stored in the database file, so anyone who has the file can test guessed prompts |
+| `MASKWALL_LOG_RETENTION_DAYS` / `MASKWALL_LOG_MAX_ROWS` | `90` / `500000` | events older than this, or beyond the cap, are pruned |
 | `MASKWALL_CORS_ORIGINS` | Vite dev server | comma list of allowed browser origins |
 | `MASKWALL_LLM_ORDER` | `groq,gemini` | failover order |
 | `GROQ_MODEL` / `GEMINI_MODEL` | `openai/gpt-oss-20b` / `gemini-3.1-flash-lite` | model ids (provider catalogues change; run the smoke test) |
@@ -80,16 +83,18 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q            # 269 tests; no network, no keys; the real-model tests skip if backend\model is absent
+..\.venv\Scripts\python.exe -m pytest -q            # 366 tests; no network, no keys; the real-model tests skip if backend\model is absent
 ..\.venv\Scripts\python.exe scripts\smoke_llm.py    # optional: one real /chat call through Groq and one through Gemini (needs keys + network)
 ```
 
 ## Behaviour to know about
 
-- **Privacy:** the event log never stores prompt, reply or placeholder text; only verdicts, scores, counts, latencies and a salted fingerprint.
+- **Privacy:** the event log never stores prompt, reply or placeholder text; only verdicts, scores, counts, latencies and a keyed fingerprint (set `MASKWALL_FINGERPRINT_SECRET`, see above).
   Server-side placeholders look like `[S_EMAIL_1]` so they cannot collide with the browser's `[EMAIL_1]`.
 - **Long inputs:** the model sees at most 510 tokens per window. `head_tail` never sees the middle of a longer text and reports `coverage: "partial"`
   (the policy then warns); `sliding` scans overlapping windows (max score) up to the cap. Evidence and trade-offs: docs/decisions.md Day 2.1.
+- **Input normalisation:** before PII masking, scanning and the LLM call, text is NFKC-normalised, non-ASCII digits become ASCII, invisible characters are removed and Unicode tag characters (a hiding channel) are stripped and trigger at least a warning; a message that is empty afterwards is rejected (422). The scanner and the LLM always see the same text.
+- **Known gap (see docs/decisions.md Day 2.5):** with the default MiniLM scan mode (`head_tail`), an injection placed in the middle of a document longer than about 2,300 characters is not seen; the request is answered with `action: "warn"` and `coverage: "partial"`, not blocked.
 - **Stateless:** each `/chat` call is one message; conversation history is not accepted (scanning client-supplied history is a separate problem).
 - **Limits:** an output scanner cannot catch a paraphrased system prompt or credentials in unknown formats; the injection classifier is a model with
   measured error rates (docs/decisions.md Day 1.8, 1.11), not a guarantee.

@@ -7,3 +7,4 @@ python-dotenv>=1.0
 onnxruntime>=1.18
 tokenizers>=0.19
 numpy>=1.26
+limits>=3.10

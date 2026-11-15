@@ -1,0 +1,14 @@
+# Versions this backend was developed and tested with (2026-11-15, Python 3.13). requirements.txt holds the minimums;
+# `pip install -r backend/requirements.lock.txt` reproduces the tested environment.
+fastapi==0.163.0
+uvicorn==0.54.0
+pydantic==2.14.3
+slowapi==0.1.10
+limits==5.8.0
+httpx==0.28.1
+python-dotenv==1.2.4
+onnxruntime==1.31.1
+tokenizers==0.23.3
+numpy==2.5.4
+starlette==1.10.0
+pytest==9.2.0

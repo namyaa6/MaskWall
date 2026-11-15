@@ -15,7 +15,12 @@ Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_DB_PATH             SQLite event log
   MASKWALL_RATE_LIMIT          slowapi limit string shared by /chat and /scan, e.g. "30/minute"
   MASKWALL_STATS_RATE_LIMIT    limit for /stats (the dashboard polls it), default "120/minute"
-  MASKWALL_TRUST_PROXY         1: rate-limit by the LAST X-Forwarded-For entry (set only behind exactly one trusted proxy)
+  MASKWALL_GLOBAL_RATE_LIMIT   per-client limit on EVERY request, including invalid ones (default "120/minute"; /health exempt)
+  MASKWALL_FINGERPRINT_SECRET  HMAC key for input fingerprints in the event log. Set it: without it the key is a salt stored in the
+                               database file, so anyone holding the file can test guesses against the fingerprints
+  MASKWALL_LOG_RETENTION_DAYS  delete events older than this (default 90); MASKWALL_LOG_MAX_ROWS caps the table (default 500000)
+  MASKWALL_TRUST_PROXY         1: rate-limit by the LAST X-Forwarded-For entry. ONLY safe when the app is reachable exclusively through
+                               exactly one trusted proxy; if clients can connect directly they can forge the header
   MASKWALL_CORS_ORIGINS        comma list of allowed browser origins (default: the Vite dev server); "*" allows any
   MASKWALL_LLM_ORDER           comma list of providers in failover order, e.g. "groq,gemini"
   MASKWALL_LLM_TIMEOUT_S       per-provider timeout
@@ -32,6 +37,7 @@ from pathlib import Path
 from typing import Mapping
 
 from dotenv import dotenv_values
+from limits import parse as _parse_limit
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_DIR.parent
@@ -67,6 +73,9 @@ class Settings:
     db_path: Path = BACKEND_DIR / "data" / "maskwall.sqlite"
     rate_limit: str = "30/minute"
     stats_rate_limit: str = "120/minute"
+    global_rate_limit: str = "120/minute"
+    log_retention_days: float = 90.0
+    log_max_rows: int = 500_000
     trust_proxy: bool = False
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     llm_order: tuple[str, ...] = ("groq", "gemini")
@@ -79,6 +88,7 @@ class Settings:
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
     groq_api_key: str | None = field(default=None, repr=False)
     gemini_api_key: str | None = field(default=None, repr=False)
+    fingerprint_secret: str | None = field(default=None, repr=False)
 
     def __post_init__(self):
         if self.server_model not in SERVER_MODELS:
@@ -89,6 +99,13 @@ class Settings:
             raise ConfigError(f"MASKWALL_LLM_ORDER must be a non-empty list drawn from {PROVIDERS}, got {self.llm_order!r}")
         if min(self.max_windows, self.max_chars, self.max_concurrent_scans, self.ort_threads, self.max_output_tokens) < 1:
             raise ConfigError("max_windows, max_chars, max_concurrent_scans, ort_threads and max_output_tokens must be >= 1")
+        for name in ("rate_limit", "stats_rate_limit", "global_rate_limit"):
+            try:
+                _parse_limit(getattr(self, name))
+            except Exception:
+                raise ConfigError(f"{name} must be a rate limit like '30/minute', got {getattr(self, name)!r}") from None
+        if self.log_retention_days < 0 or self.log_max_rows < 0:
+            raise ConfigError("log_retention_days and log_max_rows must be >= 0 (0 disables)")
         for name in ("block_threshold", "warn_threshold"):
             v = getattr(self, name)
             if v is not None and not 0.0 <= v <= 1.0:
@@ -138,6 +155,11 @@ class Settings:
             kw["db_path"] = Path(get("MASKWALL_DB_PATH"))
         if get("MASKWALL_RATE_LIMIT"):
             kw["rate_limit"] = get("MASKWALL_RATE_LIMIT")
+        if get("MASKWALL_GLOBAL_RATE_LIMIT"):
+            kw["global_rate_limit"] = get("MASKWALL_GLOBAL_RATE_LIMIT")
+        kw["log_retention_days"] = num("MASKWALL_LOG_RETENTION_DAYS", cls.log_retention_days, float)
+        kw["log_max_rows"] = num("MASKWALL_LOG_MAX_ROWS", cls.log_max_rows, int)
+        kw["fingerprint_secret"] = get("MASKWALL_FINGERPRINT_SECRET")
         if get("MASKWALL_STATS_RATE_LIMIT"):
             kw["stats_rate_limit"] = get("MASKWALL_STATS_RATE_LIMIT")
         if get("MASKWALL_CORS_ORIGINS"):
