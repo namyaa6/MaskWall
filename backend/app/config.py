@@ -68,8 +68,8 @@ class Settings:
     max_output_tokens: int = 512
     ort_threads: int = 2
     max_concurrent_scans: int = 1
-    groq_model: str = "llama-3.3-70b-versatile"
-    gemini_model: str = "gemini-2.0-flash"
+    groq_model: str = "openai/gpt-oss-20b"            # chosen from the live model list 2026-11-15; the first guesses were retired
+    gemini_model: str = "gemini-3.1-flash-lite"       # gemini-2.0/2.5-flash are closed to new users; 3.8-flash and flash-latest timed out
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
     groq_api_key: str | None = field(default=None, repr=False)
     gemini_api_key: str | None = field(default=None, repr=False)

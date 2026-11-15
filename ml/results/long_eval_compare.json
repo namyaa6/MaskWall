@@ -265,5 +265,272 @@
       },
       "latency_ms_per_window_mean": 334.2
     }
+  },
+  "deberta": {
+    "head_tail": {
+      "thresholds": {
+        "block": 0.5853589177131654,
+        "warn": 0.2774975895881653,
+        "thr_f1": 0.2774975895881653,
+        "thr_fpr1pct": 0.5853589177131654
+      },
+      "recall_at_block": {
+        "start": {
+          "k": 32,
+          "n": 38,
+          "rate": 0.842,
+          "ci95": [
+            0.696,
+            0.926
+          ]
+        },
+        "middle": {
+          "k": 0,
+          "n": 38,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.092
+          ]
+        },
+        "end": {
+          "k": 34,
+          "n": 38,
+          "rate": 0.895,
+          "ci95": [
+            0.759,
+            0.958
+          ]
+        }
+      },
+      "recall_at_block_all": {
+        "k": 66,
+        "n": 114,
+        "rate": 0.579,
+        "ci95": [
+          0.487,
+          0.666
+        ]
+      },
+      "recall_at_warn_or_block": {
+        "start": {
+          "k": 35,
+          "n": 38,
+          "rate": 0.921,
+          "ci95": [
+            0.792,
+            0.973
+          ]
+        },
+        "middle": {
+          "k": 1,
+          "n": 38,
+          "rate": 0.026,
+          "ci95": [
+            0.005,
+            0.135
+          ]
+        },
+        "end": {
+          "k": 35,
+          "n": 38,
+          "rate": 0.921,
+          "ci95": [
+            0.792,
+            0.973
+          ]
+        }
+      },
+      "fpr_at_block": {
+        "k": 2,
+        "n": 114,
+        "rate": 0.018,
+        "ci95": [
+          0.005,
+          0.062
+        ]
+      },
+      "fpr_at_warn_or_block": {
+        "k": 3,
+        "n": 114,
+        "rate": 0.026,
+        "ci95": [
+          0.009,
+          0.075
+        ]
+      },
+      "f1_at_block": 0.725,
+      "benign_fpr_at_block_by_windows_needed": {
+        "1": {
+          "k": 2,
+          "n": 114,
+          "rate": 0.018,
+          "ci95": [
+            0.005,
+            0.062
+          ]
+        }
+      },
+      "median_score": {
+        "attack": 0.945,
+        "benign": 0.002
+      },
+      "coverage_full": 0,
+      "coverage_partial": 228,
+      "windows_per_doc_mean": 1.0,
+      "latency_ms_per_doc": {
+        "inference_p50": 558.6,
+        "inference_p95": 785.4,
+        "inference_max": 1041.5,
+        "tokenize_p50": 10.33
+      },
+      "latency_ms_per_window_mean": 572.3
+    },
+    "sliding": {
+      "thresholds": {
+        "block": 0.5853589177131654,
+        "warn": 0.2774975895881653,
+        "thr_f1": 0.2774975895881653,
+        "thr_fpr1pct": 0.5853589177131654
+      },
+      "recall_at_block": {
+        "start": {
+          "k": 33,
+          "n": 38,
+          "rate": 0.868,
+          "ci95": [
+            0.727,
+            0.942
+          ]
+        },
+        "middle": {
+          "k": 34,
+          "n": 38,
+          "rate": 0.895,
+          "ci95": [
+            0.759,
+            0.958
+          ]
+        },
+        "end": {
+          "k": 34,
+          "n": 38,
+          "rate": 0.895,
+          "ci95": [
+            0.759,
+            0.958
+          ]
+        }
+      },
+      "recall_at_block_all": {
+        "k": 101,
+        "n": 114,
+        "rate": 0.886,
+        "ci95": [
+          0.815,
+          0.932
+        ]
+      },
+      "recall_at_warn_or_block": {
+        "start": {
+          "k": 35,
+          "n": 38,
+          "rate": 0.921,
+          "ci95": [
+            0.792,
+            0.973
+          ]
+        },
+        "middle": {
+          "k": 37,
+          "n": 38,
+          "rate": 0.974,
+          "ci95": [
+            0.865,
+            0.995
+          ]
+        },
+        "end": {
+          "k": 36,
+          "n": 38,
+          "rate": 0.947,
+          "ci95": [
+            0.827,
+            0.985
+          ]
+        }
+      },
+      "fpr_at_block": {
+        "k": 5,
+        "n": 114,
+        "rate": 0.044,
+        "ci95": [
+          0.019,
+          0.099
+        ]
+      },
+      "fpr_at_warn_or_block": {
+        "k": 6,
+        "n": 114,
+        "rate": 0.053,
+        "ci95": [
+          0.024,
+          0.11
+        ]
+      },
+      "f1_at_block": 0.918,
+      "benign_fpr_at_block_by_windows_needed": {
+        "2": {
+          "k": 1,
+          "n": 17,
+          "rate": 0.059,
+          "ci95": [
+            0.01,
+            0.27
+          ]
+        },
+        "3": {
+          "k": 2,
+          "n": 48,
+          "rate": 0.042,
+          "ci95": [
+            0.012,
+            0.14
+          ]
+        },
+        "4": {
+          "k": 2,
+          "n": 40,
+          "rate": 0.05,
+          "ci95": [
+            0.014,
+            0.165
+          ]
+        },
+        "5": {
+          "k": 0,
+          "n": 9,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.299
+          ]
+        }
+      },
+      "median_score": {
+        "attack": 0.993,
+        "benign": 0.005
+      },
+      "coverage_full": 228,
+      "coverage_partial": 0,
+      "windows_per_doc_mean": 3.46,
+      "latency_ms_per_doc": {
+        "inference_p50": 2308.7,
+        "inference_p95": 5144.4,
+        "inference_max": 12492.7,
+        "tokenize_p50": 21.0
+      },
+      "latency_ms_per_window_mean": 771.4
+    }
   }
 }
