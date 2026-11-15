@@ -12,13 +12,19 @@ def env(**kw):
 def test_defaults_server_model_is_minilm():
     s = Settings.from_env(env={}, dotenv_path=None)
     assert s.server_model == "minilm"
-    assert s.scan_mode == "head_tail" and s.max_chars == 8000 and s.llm_order == ("groq", "gemini")
+    assert s.scan_mode == "auto" and s.effective_scan_mode == "head_tail" and s.max_chars == 8000 and s.llm_order == ("groq", "gemini")
     assert s.model_path.name == "minilm"
 
 
 def test_server_model_switch_selects_directory():
     s = Settings.from_env(env=env(MASKWALL_SERVER_MODEL="DeBERTa"), dotenv_path=None)  # case-insensitive
     assert s.server_model == "deberta" and s.model_path.name == "deberta"
+    assert s.effective_scan_mode == "sliding"                          # auto: DeBERTa passed the long-document criteria
+
+
+def test_explicit_scan_mode_overrides_auto():
+    assert Settings.from_env(env=env(MASKWALL_SERVER_MODEL="minilm", MASKWALL_SCAN_MODE="sliding"), dotenv_path=None).effective_scan_mode == "sliding"
+    assert Settings.from_env(env=env(MASKWALL_SERVER_MODEL="deberta", MASKWALL_SCAN_MODE="head_tail"), dotenv_path=None).effective_scan_mode == "head_tail"
 
 
 @pytest.mark.parametrize("bad", [

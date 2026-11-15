@@ -70,7 +70,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         s.settings = settings
         s.scanner = injected["scanner"]
         if s.scanner is None and (settings.model_path / "model_meta.json").exists():
-            s.scanner = InjectionScanner.load(settings.model_path, threads=settings.ort_threads, mode=settings.scan_mode, max_windows=settings.max_windows)
+            s.scanner = InjectionScanner.load(settings.model_path, threads=settings.ort_threads, mode=settings.effective_scan_mode, max_windows=settings.max_windows)
             s.scanner.scan("warm up")                                  # first inference allocates buffers: do it before serving
         elif s.scanner is None:
             log.warning("no model at %s: /scan and /chat return 503 until `prepare_model.py` has been run", settings.model_path)
@@ -172,7 +172,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
     def health():
         s = app.state
         out = {
-            "status": "ok", "version": __version__, "server_model": settings.server_model, "scan_mode": settings.scan_mode,
+            "status": "ok", "version": __version__, "server_model": settings.server_model, "scan_mode": settings.effective_scan_mode,
             "model_loaded": getattr(s, "scanner", None) is not None, "max_chars": settings.max_chars,
             "llm_providers": [p for p in settings.llm_order if settings.provider_key(p)],
         }
