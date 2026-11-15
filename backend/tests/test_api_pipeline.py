@@ -357,3 +357,82 @@ def test_scan_endpoint_reports_the_same_normalisation(tmp_path):
     with TestClient(app) as c:
         b = c.post("/scan", json={"text": _fullwidth(ATTACK) + _tags("x")}).json()
     assert b["input"]["masked_input"] == ATTACK and b["input"]["hidden_characters_removed"] == 1 and b["action"] == "warn"
+
+
+# ------------------------------------------------------------------ guarantees the review found unprotected (mutation survivors)
+def _fingerprints(db):
+    return [r["input_fingerprint"] for r in db._db.execute("SELECT input_fingerprint FROM events ORDER BY id")]
+
+
+def test_events_fingerprint_the_masked_text_never_the_raw_text_on_every_path(tmp_path):
+    n = aadhaar()
+    raw = f"my aadhaar is {n} please"
+    # blocked path
+    app, scanner, llm, db = make(tmp_path, scanner=FakeScanner(score=0.97))
+    post_chat(app, raw)
+    masked = scanner.calls[0]
+    assert "[S_AADHAAR_1]" in masked and n not in masked
+    assert _fingerprints(db) == [db.fingerprint(masked)] and db.fingerprint(raw) not in _fingerprints(db)
+    # LLM-failure path (502)
+    app2, scanner2, _, db2 = make(tmp_path, llm=StubLLM(fail=llm_failure(ErrorKind.TIMEOUT)))
+    post_chat(app2, raw)
+    assert _fingerprints(db2) == [db2.fingerprint(scanner2.calls[0])] and db2.fingerprint(raw) not in _fingerprints(db2)
+    # normal path and /scan
+    app3, scanner3, _, db3 = make(tmp_path)
+    post_chat(app3, raw)
+    with TestClient(app3) as c:
+        c.post("/scan", json={"text": raw})
+    assert set(_fingerprints(db3)) == {db3.fingerprint(scanner3.calls[0])} and db3.fingerprint(raw) not in _fingerprints(db3)
+
+
+def test_llm_and_event_log_are_closed_on_shutdown_when_the_app_built_them(tmp_path, monkeypatch):
+    import app.main as main_module
+
+    closed = {"llm": False}
+
+    class Closable(StubLLM):
+        async def aclose(self):
+            closed["llm"] = True
+
+    monkeypatch.setattr(main_module, "build_llm", lambda settings: Closable())
+    s = Settings(db_path=tmp_path / "e.sqlite", model_dir=tmp_path / "no_model", groq_api_key="k", gemini_api_key=None)
+    app = create_app(s, scanner=FakeScanner())                       # llm and db are NOT injected: the app owns them
+    with TestClient(app) as c:
+        assert c.get("/health").status_code == 200
+        db = app.state.db
+    assert closed["llm"] is True
+    import sqlite3
+    with pytest.raises(sqlite3.ProgrammingError):
+        db._db.execute("SELECT 1")                                    # the app's own event log was closed
+
+
+def test_injected_components_are_not_closed_by_the_app(tmp_path):
+    closed = {"llm": False}
+
+    class Closable(StubLLM):
+        async def aclose(self):
+            closed["llm"] = True
+
+    app, _, _, db = make(tmp_path, llm=Closable())
+    post_chat(app, "hello there")
+    assert closed["llm"] is False and db.stats()["total_requests"] == 1       # the caller owns what it injected
+
+
+def test_a_cancelled_request_keeps_its_scan_slot_until_the_worker_thread_finishes(tmp_path):
+    scanner = FakeScanner(delay=0.3)
+    app, *_ = make(tmp_path, scanner=scanner, max_concurrent_scans=1)
+
+    async def go():
+        async with app.router.lifespan_context(app):
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+                first = asyncio.ensure_future(c.post("/scan", json={"text": "first request text"}))
+                await asyncio.sleep(0.08)                              # the first scan is running in its thread
+                first.cancel()
+                try:
+                    await first
+                except asyncio.CancelledError:
+                    pass
+                return await c.post("/scan", json={"text": "second request text"})
+
+    r = asyncio.run(go())
+    assert r.status_code == 200 and scanner.max_active == 1 and len(scanner.calls) == 2

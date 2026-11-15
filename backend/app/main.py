@@ -133,12 +133,25 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         sc = app.state.scanner
         if sc is None:
             raise HTTPException(503, detail={"error": "scanner_not_loaded"})
-        async with app.state.scan_sem:
-            try:
-                return await run_in_threadpool(sc.scan, text)
-            except Exception:
-                log.exception("injection scan failed")
-                raise HTTPException(500, detail={"error": "scan_failed"}) from None
+        # The semaphore slot is released when the worker thread FINISHES, not when the request is cancelled: a cancelled request leaves
+        # its thread running, and freeing the slot early would let more inferences run at once than max_concurrent_scans allows.
+        sem = app.state.scan_sem
+        await sem.acquire()
+        task = asyncio.ensure_future(run_in_threadpool(sc.scan, text))
+
+        def _release(t):
+            sem.release()
+            if not t.cancelled():
+                t.exception()                       # mark a late exception as retrieved (no "never retrieved" noise)
+
+        task.add_done_callback(_release)
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("injection scan failed")
+            raise HTTPException(500, detail={"error": "scan_failed"}) from None
 
     def input_section(scan, masked, pii, decision, thr, norm) -> dict:
         return {
@@ -254,6 +267,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
             result = await llm.complete(messages, max_tokens=settings.max_output_tokens)
         except LLMFailure as f:
             attempts = [{"provider": a.provider, "kind": a.kind, "status": a.status} for a in f.attempts if not a.ok]
+            log.warning("llm chain ended without an answer (stopped_early=%s): %s", f.stopped_early, f)       # provider:kind(status) only
             lat["total_ms"] = round((time.perf_counter() - t_total) * 1000, 2)
             await record({**ev, "action": "error", "reasons": [*ev["reasons"], "llm_unavailable"], "http_status": 502, "latency_ms": dict(lat)}, pii.masked_text)
             raise HTTPException(502, detail={"error": "llm_unavailable", "stopped_early": f.stopped_early, "attempts": attempts}) from None

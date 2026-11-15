@@ -269,3 +269,76 @@ def test_the_default_token_limit_is_2048_and_is_sent_to_the_provider():
     rec2 = Recorder(resp(200, gemini_body("ok", "STOP")))
     run(gemini(rec2).complete(MSGS))
     assert json.loads(rec2.requests[0].content)["generationConfig"]["maxOutputTokens"] == 2048
+
+
+# ------------------------------------------------------------------ exceptions the review found escaping failover
+@pytest.mark.parametrize("exc", [
+    httpx.TooManyRedirects("loop"), httpx.DecodingError("bad gzip"), httpx.UnsupportedProtocol("ftp"), httpx.RemoteProtocolError("bad"),
+    httpx.ProxyError("proxy"), httpx.ReadError("r"), httpx.WriteError("w"), httpx.LocalProtocolError("l"),
+])
+def test_any_httpx_request_error_becomes_a_network_error_and_fails_over(exc):
+    with pytest.raises(LLMError) as e:
+        run(groq(Recorder(exc)).complete(MSGS))
+    assert e.value.kind is ErrorKind.NETWORK and e.value.failover_worthy
+    llm, g, m = pair(exc)
+    r = run(llm.complete(MSGS))
+    assert r.provider == "gemini" and r.attempts[0].kind == "network"
+
+
+class ExplodingClient:
+    name, model = "exploding", "m"
+
+    async def complete(self, messages, *, max_tokens, temperature):
+        raise RuntimeError("bug inside a client with SECRET USER QUESTION and " + GROQ_KEY)
+
+    async def aclose(self):
+        pass
+
+
+def test_an_unexpected_exception_from_one_client_moves_on_to_the_next_without_leaking_it():
+    m = Recorder(resp(200, gemini_ok()))
+    r = run(FailoverLLM([ExplodingClient(), gemini(m)]).complete(MSGS))
+    assert r.provider == "gemini" and [(a.provider, a.ok, a.kind) for a in r.attempts] == [("exploding", False, "bad_response"), ("gemini", True, None)]
+    with pytest.raises(LLMFailure) as e:
+        run(FailoverLLM([ExplodingClient()]).complete(MSGS))
+    blob = str(e.value) + repr(e.value.attempts) + repr(e.value.last.__dict__)
+    assert GROQ_KEY not in blob and "SECRET USER QUESTION" not in blob and "bug inside" not in blob       # the exception text is never kept
+
+
+def test_cancellation_is_not_swallowed_by_failover():
+    class Cancelling:
+        name, model = "c", "m"
+
+        async def complete(self, messages, *, max_tokens, temperature):
+            raise asyncio.CancelledError()
+
+        async def aclose(self):
+            pass
+
+    with pytest.raises(asyncio.CancelledError):
+        run(FailoverLLM([Cancelling(), gemini(Recorder(resp(200, gemini_ok())))]).complete(MSGS))
+
+
+# ------------------------------------------------------------------ no key in ANY error, for every kind and both providers (mutation survivor)
+ERROR_SCENARIOS = [
+    httpx.ReadTimeout("t"), httpx.ConnectTimeout("t"), httpx.ConnectError("c"), httpx.TooManyRedirects("r"), httpx.DecodingError("d"),
+    resp(429, {"error": {"type": "rate_limit_exceeded", "message": "key " + GROQ_KEY + " and " + GEMINI_KEY + " SECRET USER QUESTION"}}),
+    resp(500, {"error": {"message": GROQ_KEY}}), resp(503), resp(400, {"error": {"type": "invalid_request_error", "message": GEMINI_KEY}}),
+    resp(401, {"error": {"status": "UNAUTHENTICATED", "message": GROQ_KEY}}), resp(404), resp(200, {"garbage": GROQ_KEY}),
+    resp(200, {"choices": [{"message": {"content": ""}, "finish_reason": "length"}]}),
+]
+
+
+@pytest.mark.parametrize("scenario", ERROR_SCENARIOS, ids=lambda s: type(s).__name__ + (str(getattr(s, "status_code", "")) if hasattr(s, "status_code") else ""))
+@pytest.mark.parametrize("factory", [groq, gemini], ids=["groq", "gemini"])
+def test_no_error_ever_carries_a_key_or_prompt_text(factory, scenario):
+    secrets = (GROQ_KEY, GEMINI_KEY, "SECRET USER QUESTION", "SYSTEM PROMPT TEXT")
+    with pytest.raises(LLMError) as e:
+        run(factory(Recorder(scenario)).complete(MSGS))
+    blob = str(e.value) + repr(e.value.__dict__) + repr(e.value.args)
+    assert not any(s in blob for s in secrets), blob
+    g, m = Recorder(scenario), Recorder(scenario)
+    with pytest.raises(LLMFailure) as f:
+        run(FailoverLLM([groq(g), gemini(m)]).complete(MSGS))
+    blob = str(f.value) + repr(f.value.attempts) + repr(f.value.last.__dict__)
+    assert not any(s in blob for s in secrets), blob

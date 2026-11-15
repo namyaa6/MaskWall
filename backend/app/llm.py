@@ -137,7 +137,7 @@ class _HTTPClient:
             return await self._http.post(url, headers=headers, json=payload)
         except httpx.TimeoutException as e:
             raise LLMError(self.name, ErrorKind.TIMEOUT, detail=type(e).__name__) from None
-        except httpx.TransportError as e:
+        except httpx.RequestError as e:             # transport errors, too many redirects, undecodable bodies, unsupported protocol ...
             raise LLMError(self.name, ErrorKind.NETWORK, detail=type(e).__name__) from None
 
     async def aclose(self) -> None:
@@ -226,6 +226,11 @@ class FailoverLLM:
                 last = e
                 if not e.failover_worthy:
                     raise LLMFailure(attempts, True, e) from None
+                continue
+            except Exception as e:                  # a client bug or an exception type nobody anticipated: treat as a bad response, try the next provider
+                err = LLMError(client.name, ErrorKind.BAD_RESPONSE, detail=type(e).__name__)
+                attempts.append(Attempt(client.name, False, (time.perf_counter() - t0) * 1000, err.kind.value, None))
+                last = err
                 continue
             attempts.append(Attempt(client.name, True, (time.perf_counter() - t0) * 1000))
             return LLMResult(comp.text, client.name, client.model, (time.perf_counter() - t_all) * 1000, attempts,
