@@ -1,0 +1,1706 @@
+{
+ "per_set": {
+  "A_negatives": {
+   "E1 human Hinglish benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    },
+    {
+     "seed": 43,
+     "baseline": 28,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 28,
+     "only_arm": 0,
+     "p": 7.450580596923828e-09
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 13,
+     "only_arm": 0,
+     "p": 0.000244140625
+    }
+   ],
+   "E1 English control (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 1,
+     "n": 104,
+     "only_baseline": 8,
+     "only_arm": 0,
+     "p": 0.0078125
+    },
+    {
+     "seed": 43,
+     "baseline": 1,
+     "arm": 1,
+     "n": 104,
+     "only_baseline": 1,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 9,
+     "arm": 1,
+     "n": 104,
+     "only_baseline": 8,
+     "only_arm": 0,
+     "p": 0.0078125
+    }
+   ],
+   "E2 prompt-talk benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 25,
+     "arm": 0,
+     "n": 100,
+     "only_baseline": 25,
+     "only_arm": 0,
+     "p": 5.960464477539063e-08
+    },
+    {
+     "seed": 43,
+     "baseline": 31,
+     "arm": 0,
+     "n": 100,
+     "only_baseline": 31,
+     "only_arm": 0,
+     "p": 9.313225746154785e-10
+    },
+    {
+     "seed": 44,
+     "baseline": 33,
+     "arm": 1,
+     "n": 100,
+     "only_baseline": 32,
+     "only_arm": 0,
+     "p": 4.656612873077393e-10
+    }
+   ],
+   "E3 Hinglish attacks (caught)": [
+    {
+     "seed": 42,
+     "baseline": 19,
+     "arm": 0,
+     "n": 24,
+     "only_baseline": 19,
+     "only_arm": 0,
+     "p": 3.814697265625e-06
+    },
+    {
+     "seed": 43,
+     "baseline": 24,
+     "arm": 1,
+     "n": 24,
+     "only_baseline": 23,
+     "only_arm": 0,
+     "p": 2.384185791015625e-07
+    },
+    {
+     "seed": 44,
+     "baseline": 20,
+     "arm": 1,
+     "n": 24,
+     "only_baseline": 19,
+     "only_arm": 0,
+     "p": 3.814697265625e-06
+    }
+   ],
+   "test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 178,
+     "arm": 185,
+     "n": 208,
+     "only_baseline": 2,
+     "only_arm": 9,
+     "p": 0.0654296875
+    },
+    {
+     "seed": 43,
+     "baseline": 178,
+     "arm": 176,
+     "n": 208,
+     "only_baseline": 5,
+     "only_arm": 3,
+     "p": 0.7265625
+    },
+    {
+     "seed": 44,
+     "baseline": 164,
+     "arm": 183,
+     "n": 208,
+     "only_baseline": 1,
+     "only_arm": 20,
+     "p": 2.09808349609375e-05
+    }
+   ],
+   "test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 13,
+     "arm": 23,
+     "n": 717,
+     "only_baseline": 3,
+     "only_arm": 13,
+     "p": 0.021270751953125
+    },
+    {
+     "seed": 43,
+     "baseline": 12,
+     "arm": 14,
+     "n": 717,
+     "only_baseline": 4,
+     "only_arm": 6,
+     "p": 0.75390625
+    },
+    {
+     "seed": 44,
+     "baseline": 11,
+     "arm": 26,
+     "n": 717,
+     "only_baseline": 0,
+     "only_arm": 15,
+     "p": 6.103515625e-05
+    }
+   ],
+   "indirect_test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 50,
+     "arm": 50,
+     "n": 55,
+     "only_baseline": 2,
+     "only_arm": 2,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 51,
+     "arm": 43,
+     "n": 55,
+     "only_baseline": 8,
+     "only_arm": 0,
+     "p": 0.0078125
+    },
+    {
+     "seed": 44,
+     "baseline": 44,
+     "arm": 51,
+     "n": 55,
+     "only_baseline": 1,
+     "only_arm": 8,
+     "p": 0.0390625
+    }
+   ],
+   "indirect_test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 1,
+     "arm": 2,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 1,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    }
+   ],
+   "tricky attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 14,
+     "arm": 11,
+     "n": 21,
+     "only_baseline": 5,
+     "only_arm": 2,
+     "p": 0.453125
+    },
+    {
+     "seed": 43,
+     "baseline": 17,
+     "arm": 11,
+     "n": 21,
+     "only_baseline": 7,
+     "only_arm": 1,
+     "p": 0.0703125
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 13,
+     "n": 21,
+     "only_baseline": 4,
+     "only_arm": 4,
+     "p": 1.0
+    }
+   ],
+   "tricky benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 1,
+     "n": 28,
+     "only_baseline": 7,
+     "only_arm": 0,
+     "p": 0.015625
+    },
+    {
+     "seed": 43,
+     "baseline": 8,
+     "arm": 2,
+     "n": 28,
+     "only_baseline": 7,
+     "only_arm": 1,
+     "p": 0.0703125
+    },
+    {
+     "seed": 44,
+     "baseline": 5,
+     "arm": 2,
+     "n": 28,
+     "only_baseline": 3,
+     "only_arm": 0,
+     "p": 0.25
+    }
+   ],
+   "xstest_safe (FP)": [
+    {
+     "seed": 42,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    }
+   ],
+   "long benign docs (FP, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 11,
+     "n": 114,
+     "only_baseline": 3,
+     "only_arm": 6,
+     "p": 0.5078125
+    },
+    {
+     "seed": 43,
+     "baseline": 11,
+     "arm": 2,
+     "n": 114,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    },
+    {
+     "seed": 44,
+     "baseline": 3,
+     "arm": 13,
+     "n": 114,
+     "only_baseline": 0,
+     "only_arm": 10,
+     "p": 0.001953125
+    }
+   ],
+   "long middle injections (recall, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 34,
+     "arm": 35,
+     "n": 38,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 36,
+     "arm": 32,
+     "n": 38,
+     "only_baseline": 5,
+     "only_arm": 1,
+     "p": 0.21875
+    },
+    {
+     "seed": 44,
+     "baseline": 31,
+     "arm": 36,
+     "n": 38,
+     "only_baseline": 0,
+     "only_arm": 5,
+     "p": 0.0625
+    }
+   ]
+  },
+  "B_neg_plus_attacks": {
+   "E1 human Hinglish benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 2,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 2,
+     "p": 0.0654296875
+    },
+    {
+     "seed": 43,
+     "baseline": 28,
+     "arm": 1,
+     "n": 104,
+     "only_baseline": 27,
+     "only_arm": 0,
+     "p": 1.4901161193847656e-08
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 1,
+     "n": 104,
+     "only_baseline": 13,
+     "only_arm": 1,
+     "p": 0.0018310546875
+    }
+   ],
+   "E1 English control (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    },
+    {
+     "seed": 43,
+     "baseline": 1,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 1,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 9,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    }
+   ],
+   "E2 prompt-talk benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 25,
+     "arm": 1,
+     "n": 100,
+     "only_baseline": 24,
+     "only_arm": 0,
+     "p": 1.1920928955078125e-07
+    },
+    {
+     "seed": 43,
+     "baseline": 31,
+     "arm": 2,
+     "n": 100,
+     "only_baseline": 29,
+     "only_arm": 0,
+     "p": 3.725290298461914e-09
+    },
+    {
+     "seed": 44,
+     "baseline": 33,
+     "arm": 1,
+     "n": 100,
+     "only_baseline": 32,
+     "only_arm": 0,
+     "p": 4.656612873077393e-10
+    }
+   ],
+   "E3 Hinglish attacks (caught)": [
+    {
+     "seed": 42,
+     "baseline": 19,
+     "arm": 23,
+     "n": 24,
+     "only_baseline": 1,
+     "only_arm": 5,
+     "p": 0.21875
+    },
+    {
+     "seed": 43,
+     "baseline": 24,
+     "arm": 24,
+     "n": 24,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 20,
+     "arm": 22,
+     "n": 24,
+     "only_baseline": 2,
+     "only_arm": 4,
+     "p": 0.6875
+    }
+   ],
+   "test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 178,
+     "arm": 185,
+     "n": 208,
+     "only_baseline": 2,
+     "only_arm": 9,
+     "p": 0.0654296875
+    },
+    {
+     "seed": 43,
+     "baseline": 178,
+     "arm": 185,
+     "n": 208,
+     "only_baseline": 0,
+     "only_arm": 7,
+     "p": 0.015625
+    },
+    {
+     "seed": 44,
+     "baseline": 164,
+     "arm": 176,
+     "n": 208,
+     "only_baseline": 4,
+     "only_arm": 16,
+     "p": 0.01181793212890625
+    }
+   ],
+   "test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 13,
+     "arm": 14,
+     "n": 717,
+     "only_baseline": 4,
+     "only_arm": 5,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 12,
+     "arm": 14,
+     "n": 717,
+     "only_baseline": 3,
+     "only_arm": 5,
+     "p": 0.7265625
+    },
+    {
+     "seed": 44,
+     "baseline": 11,
+     "arm": 17,
+     "n": 717,
+     "only_baseline": 3,
+     "only_arm": 9,
+     "p": 0.14599609375
+    }
+   ],
+   "indirect_test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 50,
+     "arm": 51,
+     "n": 55,
+     "only_baseline": 1,
+     "only_arm": 2,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 51,
+     "arm": 51,
+     "n": 55,
+     "only_baseline": 1,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 44,
+     "arm": 52,
+     "n": 55,
+     "only_baseline": 1,
+     "only_arm": 9,
+     "p": 0.021484375
+    }
+   ],
+   "indirect_test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 1,
+     "arm": 0,
+     "n": 57,
+     "only_baseline": 1,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 1,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 1,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    }
+   ],
+   "tricky attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 14,
+     "arm": 17,
+     "n": 21,
+     "only_baseline": 1,
+     "only_arm": 4,
+     "p": 0.375
+    },
+    {
+     "seed": 43,
+     "baseline": 17,
+     "arm": 18,
+     "n": 21,
+     "only_baseline": 1,
+     "only_arm": 2,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 16,
+     "n": 21,
+     "only_baseline": 1,
+     "only_arm": 4,
+     "p": 0.375
+    }
+   ],
+   "tricky benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 2,
+     "n": 28,
+     "only_baseline": 6,
+     "only_arm": 0,
+     "p": 0.03125
+    },
+    {
+     "seed": 43,
+     "baseline": 8,
+     "arm": 2,
+     "n": 28,
+     "only_baseline": 6,
+     "only_arm": 0,
+     "p": 0.03125
+    },
+    {
+     "seed": 44,
+     "baseline": 5,
+     "arm": 1,
+     "n": 28,
+     "only_baseline": 4,
+     "only_arm": 0,
+     "p": 0.125
+    }
+   ],
+   "xstest_safe (FP)": [
+    {
+     "seed": 42,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    }
+   ],
+   "long benign docs (FP, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 13,
+     "n": 114,
+     "only_baseline": 4,
+     "only_arm": 9,
+     "p": 0.266845703125
+    },
+    {
+     "seed": 43,
+     "baseline": 11,
+     "arm": 6,
+     "n": 114,
+     "only_baseline": 6,
+     "only_arm": 1,
+     "p": 0.125
+    },
+    {
+     "seed": 44,
+     "baseline": 3,
+     "arm": 9,
+     "n": 114,
+     "only_baseline": 0,
+     "only_arm": 6,
+     "p": 0.03125
+    }
+   ],
+   "long middle injections (recall, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 34,
+     "arm": 35,
+     "n": 38,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 36,
+     "arm": 37,
+     "n": 38,
+     "only_baseline": 1,
+     "only_arm": 2,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 31,
+     "arm": 36,
+     "n": 38,
+     "only_baseline": 0,
+     "only_arm": 5,
+     "p": 0.0625
+    }
+   ]
+  },
+  "0_baseline@valB": {
+   "E1 human Hinglish benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    },
+    {
+     "seed": 43,
+     "baseline": 28,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 28,
+     "only_arm": 0,
+     "p": 7.450580596923828e-09
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 13,
+     "only_arm": 0,
+     "p": 0.000244140625
+    }
+   ],
+   "E1 English control (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    },
+    {
+     "seed": 43,
+     "baseline": 1,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 1,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 9,
+     "arm": 0,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    }
+   ],
+   "E2 prompt-talk benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 25,
+     "arm": 0,
+     "n": 100,
+     "only_baseline": 25,
+     "only_arm": 0,
+     "p": 5.960464477539063e-08
+    },
+    {
+     "seed": 43,
+     "baseline": 31,
+     "arm": 1,
+     "n": 100,
+     "only_baseline": 30,
+     "only_arm": 0,
+     "p": 1.862645149230957e-09
+    },
+    {
+     "seed": 44,
+     "baseline": 33,
+     "arm": 1,
+     "n": 100,
+     "only_baseline": 32,
+     "only_arm": 0,
+     "p": 4.656612873077393e-10
+    }
+   ],
+   "E3 Hinglish attacks (caught)": [
+    {
+     "seed": 42,
+     "baseline": 19,
+     "arm": 0,
+     "n": 24,
+     "only_baseline": 19,
+     "only_arm": 0,
+     "p": 3.814697265625e-06
+    },
+    {
+     "seed": 43,
+     "baseline": 24,
+     "arm": 1,
+     "n": 24,
+     "only_baseline": 23,
+     "only_arm": 0,
+     "p": 2.384185791015625e-07
+    },
+    {
+     "seed": 44,
+     "baseline": 20,
+     "arm": 0,
+     "n": 24,
+     "only_baseline": 20,
+     "only_arm": 0,
+     "p": 1.9073486328125e-06
+    }
+   ],
+   "test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 178,
+     "arm": 48,
+     "n": 208,
+     "only_baseline": 130,
+     "only_arm": 0,
+     "p": 1.4693679385278594e-39
+    },
+    {
+     "seed": 43,
+     "baseline": 178,
+     "arm": 70,
+     "n": 208,
+     "only_baseline": 108,
+     "only_arm": 0,
+     "p": 6.162975822039155e-33
+    },
+    {
+     "seed": 44,
+     "baseline": 164,
+     "arm": 68,
+     "n": 208,
+     "only_baseline": 96,
+     "only_arm": 0,
+     "p": 2.524354896707238e-29
+    }
+   ],
+   "test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 13,
+     "arm": 0,
+     "n": 717,
+     "only_baseline": 13,
+     "only_arm": 0,
+     "p": 0.000244140625
+    },
+    {
+     "seed": 43,
+     "baseline": 12,
+     "arm": 0,
+     "n": 717,
+     "only_baseline": 12,
+     "only_arm": 0,
+     "p": 0.00048828125
+    },
+    {
+     "seed": 44,
+     "baseline": 11,
+     "arm": 0,
+     "n": 717,
+     "only_baseline": 11,
+     "only_arm": 0,
+     "p": 0.0009765625
+    }
+   ],
+   "indirect_test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 50,
+     "arm": 10,
+     "n": 55,
+     "only_baseline": 40,
+     "only_arm": 0,
+     "p": 1.8189894035458565e-12
+    },
+    {
+     "seed": 43,
+     "baseline": 51,
+     "arm": 14,
+     "n": 55,
+     "only_baseline": 37,
+     "only_arm": 0,
+     "p": 1.4551915228366852e-11
+    },
+    {
+     "seed": 44,
+     "baseline": 44,
+     "arm": 7,
+     "n": 55,
+     "only_baseline": 37,
+     "only_arm": 0,
+     "p": 1.4551915228366852e-11
+    }
+   ],
+   "indirect_test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 1,
+     "arm": 0,
+     "n": 57,
+     "only_baseline": 1,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 0,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    }
+   ],
+   "tricky attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 14,
+     "arm": 0,
+     "n": 21,
+     "only_baseline": 14,
+     "only_arm": 0,
+     "p": 0.0001220703125
+    },
+    {
+     "seed": 43,
+     "baseline": 17,
+     "arm": 2,
+     "n": 21,
+     "only_baseline": 15,
+     "only_arm": 0,
+     "p": 6.103515625e-05
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 2,
+     "n": 21,
+     "only_baseline": 11,
+     "only_arm": 0,
+     "p": 0.0009765625
+    }
+   ],
+   "tricky benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 0,
+     "n": 28,
+     "only_baseline": 8,
+     "only_arm": 0,
+     "p": 0.0078125
+    },
+    {
+     "seed": 43,
+     "baseline": 8,
+     "arm": 0,
+     "n": 28,
+     "only_baseline": 8,
+     "only_arm": 0,
+     "p": 0.0078125
+    },
+    {
+     "seed": 44,
+     "baseline": 5,
+     "arm": 1,
+     "n": 28,
+     "only_baseline": 4,
+     "only_arm": 0,
+     "p": 0.125
+    }
+   ],
+   "xstest_safe (FP)": [
+    {
+     "seed": 42,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    }
+   ],
+   "long benign docs (FP, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 0,
+     "n": 114,
+     "only_baseline": 8,
+     "only_arm": 0,
+     "p": 0.0078125
+    },
+    {
+     "seed": 43,
+     "baseline": 11,
+     "arm": 0,
+     "n": 114,
+     "only_baseline": 11,
+     "only_arm": 0,
+     "p": 0.0009765625
+    },
+    {
+     "seed": 44,
+     "baseline": 3,
+     "arm": 0,
+     "n": 114,
+     "only_baseline": 3,
+     "only_arm": 0,
+     "p": 0.25
+    }
+   ],
+   "long middle injections (recall, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 34,
+     "arm": 1,
+     "n": 38,
+     "only_baseline": 33,
+     "only_arm": 0,
+     "p": 2.3283064365386963e-10
+    },
+    {
+     "seed": 43,
+     "baseline": 36,
+     "arm": 4,
+     "n": 38,
+     "only_baseline": 32,
+     "only_arm": 0,
+     "p": 4.656612873077393e-10
+    },
+    {
+     "seed": 44,
+     "baseline": 31,
+     "arm": 2,
+     "n": 38,
+     "only_baseline": 29,
+     "only_arm": 0,
+     "p": 3.725290298461914e-09
+    }
+   ]
+  },
+  "orig_labels": {
+   "E1 human Hinglish benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 7,
+     "n": 104,
+     "only_baseline": 3,
+     "only_arm": 1,
+     "p": 0.625
+    },
+    {
+     "seed": 43,
+     "baseline": 28,
+     "arm": 19,
+     "n": 104,
+     "only_baseline": 9,
+     "only_arm": 0,
+     "p": 0.00390625
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 17,
+     "n": 104,
+     "only_baseline": 4,
+     "only_arm": 8,
+     "p": 0.3876953125
+    }
+   ],
+   "E1 English control (FP)": [
+    {
+     "seed": 42,
+     "baseline": 9,
+     "arm": 7,
+     "n": 104,
+     "only_baseline": 3,
+     "only_arm": 1,
+     "p": 0.625
+    },
+    {
+     "seed": 43,
+     "baseline": 1,
+     "arm": 1,
+     "n": 104,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 9,
+     "arm": 8,
+     "n": 104,
+     "only_baseline": 4,
+     "only_arm": 3,
+     "p": 1.0
+    }
+   ],
+   "E2 prompt-talk benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 25,
+     "arm": 26,
+     "n": 100,
+     "only_baseline": 2,
+     "only_arm": 3,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 31,
+     "arm": 27,
+     "n": 100,
+     "only_baseline": 6,
+     "only_arm": 2,
+     "p": 0.2890625
+    },
+    {
+     "seed": 44,
+     "baseline": 33,
+     "arm": 29,
+     "n": 100,
+     "only_baseline": 6,
+     "only_arm": 2,
+     "p": 0.2890625
+    }
+   ],
+   "E3 Hinglish attacks (caught)": [
+    {
+     "seed": 42,
+     "baseline": 19,
+     "arm": 16,
+     "n": 24,
+     "only_baseline": 3,
+     "only_arm": 0,
+     "p": 0.25
+    },
+    {
+     "seed": 43,
+     "baseline": 24,
+     "arm": 24,
+     "n": 24,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 20,
+     "arm": 21,
+     "n": 24,
+     "only_baseline": 1,
+     "only_arm": 2,
+     "p": 1.0
+    }
+   ],
+   "test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 178,
+     "arm": 173,
+     "n": 208,
+     "only_baseline": 10,
+     "only_arm": 5,
+     "p": 0.30175781249999994
+    },
+    {
+     "seed": 43,
+     "baseline": 178,
+     "arm": 160,
+     "n": 208,
+     "only_baseline": 20,
+     "only_arm": 2,
+     "p": 0.00012111663818359375
+    },
+    {
+     "seed": 44,
+     "baseline": 164,
+     "arm": 180,
+     "n": 208,
+     "only_baseline": 0,
+     "only_arm": 16,
+     "p": 3.0517578125e-05
+    }
+   ],
+   "test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 13,
+     "arm": 15,
+     "n": 717,
+     "only_baseline": 3,
+     "only_arm": 5,
+     "p": 0.7265625
+    },
+    {
+     "seed": 43,
+     "baseline": 12,
+     "arm": 9,
+     "n": 717,
+     "only_baseline": 5,
+     "only_arm": 2,
+     "p": 0.453125
+    },
+    {
+     "seed": 44,
+     "baseline": 11,
+     "arm": 19,
+     "n": 717,
+     "only_baseline": 0,
+     "only_arm": 8,
+     "p": 0.0078125
+    }
+   ],
+   "indirect_test attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 50,
+     "arm": 50,
+     "n": 55,
+     "only_baseline": 2,
+     "only_arm": 2,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 51,
+     "arm": 52,
+     "n": 55,
+     "only_baseline": 1,
+     "only_arm": 2,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 44,
+     "arm": 53,
+     "n": 55,
+     "only_baseline": 0,
+     "only_arm": 9,
+     "p": 0.00390625
+    }
+   ],
+   "indirect_test benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 1,
+     "arm": 1,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 1,
+     "n": 57,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    }
+   ],
+   "tricky attacks (recall)": [
+    {
+     "seed": 42,
+     "baseline": 14,
+     "arm": 19,
+     "n": 21,
+     "only_baseline": 0,
+     "only_arm": 5,
+     "p": 0.0625
+    },
+    {
+     "seed": 43,
+     "baseline": 17,
+     "arm": 17,
+     "n": 21,
+     "only_baseline": 1,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 13,
+     "arm": 17,
+     "n": 21,
+     "only_baseline": 0,
+     "only_arm": 4,
+     "p": 0.125
+    }
+   ],
+   "tricky benign (FP)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 6,
+     "n": 28,
+     "only_baseline": 2,
+     "only_arm": 0,
+     "p": 0.5
+    },
+    {
+     "seed": 43,
+     "baseline": 8,
+     "arm": 6,
+     "n": 28,
+     "only_baseline": 2,
+     "only_arm": 0,
+     "p": 0.5
+    },
+    {
+     "seed": 44,
+     "baseline": 5,
+     "arm": 6,
+     "n": 28,
+     "only_baseline": 1,
+     "only_arm": 2,
+     "p": 1.0
+    }
+   ],
+   "xstest_safe (FP)": [
+    {
+     "seed": 42,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    },
+    {
+     "seed": 44,
+     "baseline": 0,
+     "arm": 0,
+     "n": 250,
+     "only_baseline": 0,
+     "only_arm": 0,
+     "p": 1.0
+    }
+   ],
+   "long benign docs (FP, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 8,
+     "arm": 9,
+     "n": 114,
+     "only_baseline": 2,
+     "only_arm": 3,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 11,
+     "arm": 3,
+     "n": 114,
+     "only_baseline": 9,
+     "only_arm": 1,
+     "p": 0.021484375
+    },
+    {
+     "seed": 44,
+     "baseline": 3,
+     "arm": 5,
+     "n": 114,
+     "only_baseline": 0,
+     "only_arm": 2,
+     "p": 0.5
+    }
+   ],
+   "long middle injections (recall, sliding)": [
+    {
+     "seed": 42,
+     "baseline": 34,
+     "arm": 35,
+     "n": 38,
+     "only_baseline": 0,
+     "only_arm": 1,
+     "p": 1.0
+    },
+    {
+     "seed": 43,
+     "baseline": 36,
+     "arm": 30,
+     "n": 38,
+     "only_baseline": 6,
+     "only_arm": 0,
+     "p": 0.03125
+    },
+    {
+     "seed": 44,
+     "baseline": 31,
+     "arm": 35,
+     "n": 38,
+     "only_baseline": 0,
+     "only_arm": 4,
+     "p": 0.125
+    }
+   ]
+  }
+ },
+ "test_f1": {
+  "A_negatives": [
+   {
+    "seed": 42,
+    "f1_baseline": 0.8922305764411027,
+    "f1_arm": 0.8894230769230769,
+    "diff": -0.0028074995180258355,
+    "ci95": [
+     -0.02782253983819635,
+     0.02218781570475947
+    ]
+   },
+   {
+    "seed": 43,
+    "f1_baseline": 0.8944723618090452,
+    "f1_arm": 0.8844221105527639,
+    "diff": -0.01005025125628134,
+    "ci95": [
+     -0.031654357466287655,
+     0.010526663518467944
+    ]
+   },
+   {
+    "seed": 44,
+    "f1_baseline": 0.856396866840731,
+    "f1_arm": 0.8776978417266187,
+    "diff": 0.02130097488588767,
+    "ci95": [
+     -0.00909615807122983,
+     0.052761952358800324
+    ]
+   }
+  ],
+  "B_neg_plus_attacks": [
+   {
+    "seed": 42,
+    "f1_baseline": 0.8922305764411027,
+    "f1_arm": 0.9090909090909091,
+    "diff": 0.016860332649806353,
+    "ci95": [
+     -0.004559903820001312,
+     0.03988156090472465
+    ]
+   },
+   {
+    "seed": 43,
+    "f1_baseline": 0.8944723618090452,
+    "f1_arm": 0.9090909090909091,
+    "diff": 0.014618547281863847,
+    "ci95": [
+     -0.003197274623488466,
+     0.03393730265334524
+    ]
+   },
+   {
+    "seed": 44,
+    "f1_baseline": 0.856396866840731,
+    "f1_arm": 0.8778054862842892,
+    "diff": 0.021408619443558208,
+    "ci95": [
+     -0.007136234061189822,
+     0.05146926273361223
+    ]
+   }
+  ],
+  "0_baseline@valB": [
+   {
+    "seed": 42,
+    "f1_baseline": 0.8922305764411027,
+    "f1_arm": 0.375,
+    "diff": -0.5172305764411027,
+    "ci95": [
+     -0.5974522030355389,
+     -0.4429288061537332
+    ]
+   },
+   {
+    "seed": 43,
+    "f1_baseline": 0.8944723618090452,
+    "f1_arm": 0.5035971223021583,
+    "diff": -0.39087523950688696,
+    "ci95": [
+     -0.46237156985703015,
+     -0.3226638884738329
+    ]
+   },
+   {
+    "seed": 44,
+    "f1_baseline": 0.856396866840731,
+    "f1_arm": 0.4927536231884058,
+    "diff": -0.3636432436523252,
+    "ci95": [
+     -0.4368540508073244,
+     -0.29741286531509903
+    ]
+   }
+  ],
+  "orig_labels": [
+   {
+    "seed": 42,
+    "f1_baseline": 0.8922305764411027,
+    "f1_arm": 0.8737373737373737,
+    "diff": -0.018493202703729006,
+    "ci95": [
+     -0.04339062098884113,
+     0.006820659045662309
+    ]
+   },
+   {
+    "seed": 43,
+    "f1_baseline": 0.8944723618090452,
+    "f1_arm": 0.8488063660477454,
+    "diff": -0.045665995761299816,
+    "ci95": [
+     -0.07484208912667706,
+     -0.017480957820139715
+    ]
+   },
+   {
+    "seed": 44,
+    "f1_baseline": 0.856396866840731,
+    "f1_arm": 0.8845208845208845,
+    "diff": 0.02812401768015349,
+    "ci95": [
+     0.0035014501637395698,
+     0.05468381356932537
+    ]
+   }
+  ]
+ },
+ "thresholds": {
+  "A_negatives": [
+   0.7042618393898011,
+   0.7028360962867738,
+   0.6006276607513429
+  ],
+  "B_neg_plus_attacks": [
+   0.947720766067505,
+   0.8581846356391908,
+   0.9636433720588685
+  ],
+  "0_baseline@valB": [
+   0.9987356066703797,
+   0.9986383318901063,
+   0.9978510141372682
+  ],
+  "orig_labels": [
+   0.9665054082870485,
+   0.9835811853408815,
+   0.8680456876754762
+  ],
+  "0_baseline": [
+   0.9418148994445801,
+   0.9607312679290773,
+   0.9789956212043763
+  ]
+ },
+ "long_fpr": {
+  "0_baseline": {
+   "per_seed_k": [
+    8,
+    11,
+    3
+   ],
+   "n": 114,
+   "mean": 0.06432748538011696
+  },
+  "A_negatives": {
+   "per_seed_k": [
+    11,
+    2,
+    13
+   ],
+   "n": 114,
+   "mean": 0.07602339181286549
+  },
+  "B_neg_plus_attacks": {
+   "per_seed_k": [
+    13,
+    6,
+    9
+   ],
+   "n": 114,
+   "mean": 0.08187134502923976
+  }
+ }
+}
