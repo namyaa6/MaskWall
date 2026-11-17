@@ -21,6 +21,12 @@ export function ModelStatusLine({ status, name, approxMB, readyText }: { status:
       </p>
     );
   const pct = status.total > 0 ? Math.min(100, Math.round((status.loaded / status.total) * 100)) : null;
+  if (pct === 100)
+    return (
+      <p className="model-status" role="status">
+        Downloaded. Starting the {name} on your device…
+      </p>
+    );
   return (
     <div className="model-status" role="status" aria-live="polite">
       <span>

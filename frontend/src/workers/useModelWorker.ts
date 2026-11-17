@@ -22,7 +22,7 @@ export function useModelWorker<R>(factory: () => Worker) {
     const w = factory();
     w.onmessage = (ev: MessageEvent<FromWorker<R>>) => {
       const m = ev.data;
-      if (m.type === "progress") setStatus({ state: "loading", loaded: m.loaded, total: m.total });
+      if (m.type === "progress") setStatus((s) => (s.state === "ready" ? s : { state: "loading", loaded: m.loaded, total: m.total }));
       else if (m.type === "ready") setStatus({ state: "ready", info: m.info });
       else if (m.type === "result") {
         pending.current.get(m.id)?.resolve(m.result);
