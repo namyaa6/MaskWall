@@ -1,13 +1,44 @@
+"""PII backup scanner tests.
+
+The format cases live in tests/fixtures/pii_cases.json and are shared with the browser's TypeScript port
+(frontend/src/pii/detectors.test.ts), so both implementations are held to the same expectations. Python-only
+properties (exhaustive Verhoeff checks, spans, no raw values, server-vs-browser prefixes) stay here.
+"""
 import dataclasses
+import json
+from pathlib import Path
 
 import pytest
 
+from app.normalize import normalize_text
 from app.scanners.pii_regex import mask, scan, verhoeff_check_digit, verhoeff_valid
+
+FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "pii_cases.json").read_text(encoding="utf-8"))
+SERVER_PREFIX = "S_"
 
 
 def aadhaar(payload="23456789012"):
     """A valid 12-digit Aadhaar-style number: 11 digits + Verhoeff check digit."""
     return payload + verhoeff_check_digit(payload)
+
+
+# ------------------------------------------------------------------ shared fixture (same cases as the browser)
+@pytest.mark.parametrize("case", FIXTURE["cases"], ids=[c["id"] for c in FIXTURE["cases"]])
+def test_shared_pii_case(case):
+    r = mask(case["text"])
+    assert r.counts == case["counts"]
+    if "masked" in case:
+        assert r.masked_text == case["masked"].replace("{P}", SERVER_PREFIX)
+
+
+@pytest.mark.parametrize("case", FIXTURE["normalize_cases"], ids=[c["id"] for c in FIXTURE["normalize_cases"]])
+def test_shared_normalize_case(case):
+    n = normalize_text(case["text"])
+    assert (n.text, n.smuggling_chars, n.invisible_removed) == (case["normalized"], case["smuggling"], case["invisible"])
+
+
+def test_fixture_aadhaar_numbers_are_the_documented_ones():
+    assert aadhaar("23456789012") == "234567890124" and aadhaar("34567890123") == "345678901238"
 
 
 # ------------------------------------------------------------------ Verhoeff
@@ -32,81 +63,15 @@ def test_verhoeff_rejects_non_digits():
     assert not verhoeff_valid("23a3") and not verhoeff_valid("")
 
 
-# ------------------------------------------------------------------ Aadhaar
-@pytest.mark.parametrize("fmt", ["{0}", "{1} {2} {3}", "{1}-{2}-{3}"])
-def test_valid_aadhaar_in_common_formats(fmt):
-    n = aadhaar()
-    text = "my aadhaar is " + fmt.format(n, n[:4], n[4:8], n[8:]) + " please update"
-    r = mask(text)
-    assert r.counts == {"AADHAAR": 1}
-    assert "[S_AADHAAR_1]" in r.masked_text and n[:4] not in r.masked_text.replace("[S_AADHAAR_1]", "")
-
-
-def test_invalid_checksum_not_flagged():
-    n = aadhaar()
-    bad = n[:-1] + str((int(n[-1]) + 1) % 10)
-    assert scan(f"number {bad} here") == []
-
-
-@pytest.mark.parametrize("first", ["0", "1"])
-def test_aadhaar_cannot_start_with_0_or_1(first):
-    payload = first + "3456789012"
-    assert scan(first + payload[1:] + verhoeff_check_digit(payload)) == []
-
-
-def test_card_number_and_longer_digit_runs_are_not_cut_up():
-    assert scan("card 4111 1111 1111 1111 expires soon") == []
-    assert scan("id 2345678901234567") == []
-    n = aadhaar()
-    assert scan(f"{n}1") == [] and scan(f"1{n}") == []
-
-
-# ------------------------------------------------------------------ PAN
-def test_valid_pan_detected_case_insensitive():
-    assert mask("PAN: ABCPE1234F").counts == {"PAN": 1}
-    assert mask("pan abcpe1234f ok").counts == {"PAN": 1}
-
-
-@pytest.mark.parametrize("text", ["ABCXE1234F", "ABCPE12345", "ABCPE1234", "AB1PE1234F", "XABCPE1234F", "ABCPE1234FX"])
-def test_invalid_pan_shapes_rejected(text):
-    assert scan(text) == []
-
-
-# ------------------------------------------------------------------ email and phone
-def test_email_detected():
-    r = mask("write to Priya.Sharma+test@example.co.in or bob@x.io today")
-    assert r.counts == {"EMAIL": 2} and "@" not in r.masked_text
-
-
-@pytest.mark.parametrize("phone", ["9876543210", "98765 43210", "98765-43210", "+91 98765 43210", "+919876543210", "91-9876543210"])
-def test_indian_mobile_formats(phone):
-    r = mask(f"call me on {phone} tomorrow")
-    assert r.counts == {"PHONE": 1} and "[S_PHONE_1]" in r.masked_text and "98765" not in r.masked_text
-
-
-@pytest.mark.parametrize("text", ["call 1234567890", "call 5876543210", "order 98765432", "ref 98765432101234"])
-def test_non_mobile_numbers_ignored(text):
-    assert scan(text) == []
-
-
-# ------------------------------------------------------------------ masking behaviour
-def test_same_value_same_placeholder_and_numbering_per_type():
-    a, b = aadhaar("23456789012"), aadhaar("34567890123")
-    r = mask(f"{a} then {b} then {a} again, mail a@b.com and c@d.com and a@b.com")
-    assert r.masked_text == "[S_AADHAAR_1] then [S_AADHAAR_2] then [S_AADHAAR_1] again, mail [S_EMAIL_1] and [S_EMAIL_2] and [S_EMAIL_1]"
-    assert r.counts == {"AADHAAR": 3, "EMAIL": 3} and r.total == 6
-
-
-def test_aadhaar_wins_over_phone_overlap_and_no_double_masking():
+# ------------------------------------------------------------------ masking behaviour (Python-only properties)
+def test_aadhaar_phone_overlap_never_double_masked():
     n = aadhaar("91987654321")              # 12 digits that also look like +91 plus a mobile number
     r = mask(f"num {n}")
-    assert r.counts in ({"AADHAAR": 1}, {"PHONE": 1}) and r.total == 1 and "[S_" in r.masked_text
+    assert r.total == 1 and "[S_" in r.masked_text
 
 
-def test_masking_is_idempotent_and_leaves_browser_placeholders_alone():
-    text = "hi [PHONE_1] and [EMAIL_2], my pan is ABCPE1234F"
-    once = mask(text)
-    assert once.masked_text == "hi [PHONE_1] and [EMAIL_2], my pan is [S_PAN_1]"
+def test_masking_is_idempotent():
+    once = mask("hi [PHONE_1] and [EMAIL_2], my pan is ABCPE1234F")
     assert mask(once.masked_text).total == 0
 
 
@@ -123,14 +88,7 @@ def test_no_raw_values_in_findings():
         assert raw not in blob
 
 
-def test_clean_text_unchanged_and_unicode_safe():
-    t = "naïve café résumé — 東京 😀 nothing sensitive here: 2024-11-14, v1.2.3, 42%"
-    r = mask(t)
-    assert r.masked_text == t and r.total == 0
-
-
-def test_empty_and_large_inputs():
-    assert mask("").masked_text == ""
+def test_large_input():
     big = ("lorem ipsum 123456 dolor " * 2000) + " mail x@y.com"
     r = mask(big)
     assert r.counts == {"EMAIL": 1} and r.masked_text.endswith("mail [S_EMAIL_1]")
@@ -141,25 +99,3 @@ def test_spans_point_at_original_text():
     text = f"x {n} y"
     f = scan(text)[0]
     assert text[f.start:f.end] == n and f.type == "AADHAAR"
-
-
-# ------------------------------------------------------------------ formats found missing by the review
-@pytest.mark.parametrize("phone", ["098765 43210", "09876543210", "9876 543 210", "+91 9876-543-210", "98 76 54 32 10", "0091 98765 43210"])
-def test_more_mobile_formats(phone):
-    r = mask(f"call {phone} tomorrow")
-    assert r.counts == {"PHONE": 1} and r.masked_text == "call [S_PHONE_1] tomorrow", phone
-
-
-@pytest.mark.parametrize("pan", ["ABCPE 1234 F", "abcpe-1234-f", "ABCPE1234F"])
-def test_pan_with_separators(pan):
-    r = mask(f"my pan is {pan}.")
-    assert r.counts == {"PAN": 1} and r.masked_text == "my pan is [S_PAN_1]."
-
-
-def test_same_pan_with_and_without_separators_gets_one_placeholder():
-    assert mask("ABCPE1234F and ABCPE 1234 F").masked_text == "[S_PAN_1] and [S_PAN_1]"
-
-
-@pytest.mark.parametrize("text", ["call 12 3456 7890", "ref 9876 543 21", "year 2024 1234 5", "ABCPE 12345 F", "ABC 1234 F"])
-def test_relaxed_formats_still_ignore_non_pii(text):
-    assert scan(text) == []

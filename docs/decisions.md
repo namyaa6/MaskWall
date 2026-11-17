@@ -849,3 +849,15 @@ The two runs agree on the headline metrics to within what the 3 original seeds s
 
 ### Limits of this conclusion
 One seed and one retrain; criteria met against a single served model that was itself one draw from a wide seed spread (the baseline retrains had E1 false positives 9 to 28); E2 and E3 are AI-generated and optimistic; E1 shares a domain with the human training commands; the long-document cost above; no Devanagari Hindi; int8 numbers are on the same evaluation sets that were used to judge the arms (never to choose between them beyond the pre-registered rule).
+
+## Day 3.0: Frontend scaffold and a shared PII fixture (`frontend/`, `backend/tests/fixtures/pii_cases.json`)
+
+**Plan for Day 3** (approved by the owner 2026-11-17, with four additions: a no-history note in the chat, a download-progress message for the name model, placeholder numbering that skips placeholders the user typed literally, and the names sample labelled as AI-drafted and not reviewed by the owner). Order: scaffold → TypeScript detectors and masking → name-model selection → in-browser attack pre-check → `/stats` recent rows → Chat → Playground → Dashboard → How it works / Benchmarks → polish and e2e.
+
+**Stack (why each):**
+- **Vite + React 18 + TypeScript (strict), react-router 6.** npm's latest are React 19, TypeScript 7 and Vite 8; I pinned the previous majors (React 18.3, TS 5.9, Vite 6.4, Vitest 3.2, ESLint 9) because they are the versions I can explain and debug, and typescript-eslint did not yet target TS 7. Exact versions are pinned in `package.json`.
+- **Plain CSS with custom-property tokens** (`src/styles/tokens.css`), no UI framework: the whole design is about 150 lines of CSS, and every colour lives in one file.
+- **Contrast is a test, not a promise:** `src/styles/contrast.test.ts` computes the WCAG ratio of every text colour on every background it is used on (18 pairs plus the placeholder pill and the accent button); all are >= 4.5:1.
+- **Fonts self-hosted** (`@fontsource/inter`, `@fontsource/jetbrains-mono`) so the page makes no third-party font request; for a privacy product, loading Google Fonts would leak every visitor's IP address to a third party.
+
+**Shared PII fixture.** The browser port must behave exactly like the server's backup scanner, so the format cases were moved out of `test_pii_regex.py` into `backend/tests/fixtures/pii_cases.json` (49 PII cases + 12 Unicode-normalisation cases; `{P}` in the expected masked text stands for the prefix, `S_` on the server and empty in the browser). The Python tests now load that file (392 backend tests, up from 372 because each fixture case is its own test); Python-only properties (exhaustive Verhoeff checks, spans, no raw values in findings, the `S_` prefix) stay in Python. Aadhaar numbers in the fixture are synthetic (valid Verhoeff, not real people).

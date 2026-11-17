@@ -1,0 +1,25 @@
+/* Design tokens: the only place colours, fonts and radii are defined.
+   Every text/background pair is checked for 4.5:1 contrast in src/styles/contrast.test.ts. */
+:root {
+  --bg: #0e1116;
+  --card: #161a21;
+  --card-raised: #1c212a;
+  --border: #2a303b;
+  --text: #f0f3f6;
+  --text-2: #b4bcc8;
+  --accent: #4fd1a5;
+  --accent-ink: #0e1116;          /* text on accent buttons */
+  --safe: #8fb8ff;
+  --suspicious: #f2c14e;
+  --blocked: #ff8a8a;
+  --pill-bg: #232a35;              /* light pills for placeholders */
+  --pill-text: #dfe6ee;
+  --focus: #4fd1a5;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --gap: 16px;
+  color-scheme: dark;
+}
