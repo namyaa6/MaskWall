@@ -16,3 +16,4 @@ models/*.safetensors
 models/*.zip
 backend/model/
 backend/data/
+models/backup/

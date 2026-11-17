@@ -7,7 +7,7 @@ T = Thresholds(warn=0.5, block=0.9)
 
 # ------------------------------------------------------------------ thresholds from the model's validation tuning
 def test_thresholds_block_is_max_and_warn_is_min_whatever_the_order():
-    a = thresholds_from_meta(thr_f1=0.924, thr_fpr1pct=0.779)      # MiniLM int8: F1-optimal threshold above the FPR<=1% one
+    a = thresholds_from_meta(thr_f1=0.924, thr_fpr1pct=0.779)      # the earlier served MiniLM int8 (its F1-optimal threshold above the FPR<=1% one; an example of the ordering, not the current model)
     b = thresholds_from_meta(thr_f1=0.277, thr_fpr1pct=0.60)       # reversed order
     assert (a.warn, a.block) == (0.779, 0.924) and (b.warn, b.block) == (0.277, 0.60)
 

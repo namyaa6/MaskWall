@@ -799,3 +799,53 @@ Re-tuning the *baseline* models' thresholds on the new val slice moves block to 
 1. Retrain **only arm B, seed 42** with the identical recipe (`ml/train_armB_seed42.ipynb`, built by `ml/make_armb_notebook.py`; code cells copied from the main notebook; the upload zip and a resumable state are saved to Google Drive after every epoch). A retrain is not bit-identical to the lost run (fp16 GPU nondeterminism, and a resume changes the dropout stream); the notebook prints the new numbers next to the original seed-42 run (E1 2, E2 1, E3 23, test F1 0.909, block 0.948) as a sanity check. I will not retrain again to obtain better numbers.
 2. Export to ONNX fp32 (parity gate, tolerance 1e-3) and int8 with the same code as the served model (`ml/export_quantize.py`), tune the thresholds on the arm's val only with the int8 scores (old val + the new val slice; block = max(thr_F1, thr_FPR<=1%), warn = min), and score every evaluation set with the **serving scanner** (head+tail for prompts, sliding windows for the long documents) for the candidate and for the served MiniLM (`ml/eval_hardneg_int8.py`; output `hardneg_int8_eval.md/.json`).
 3. **Rule:** the served MiniLM is replaced only if the int8 candidate passes **all four** criteria against the served int8 model: E1 and E2 false positives at most half (<= 5 and <= 14 of the served 10 and 28), test F1 within -0.02, recall drops <= 0.03 on test, indirect_test and tricky attacks, E3 caught >= 19/24. Guardrails (xstest, test FPR, long-document FPR and middle recall, the 7 manual prompts) are reported and any regression is shown to the owner; nothing is tuned against them. One seed, so a pass means "no worse than the served model by these criteria", not "better than the retrained baseline distribution". If it fails, B stays a documented result and nothing is replaced. Replacing would also mean redoing `backend/scripts/prepare_model.py` (thresholds, golden test fixtures), the tests, and the benchmark and README numbers.
+
+## Day 2.10: The int8 re-evaluation passes all four criteria; the served MiniLM is replaced by the hard-negative arm B (seed 42)
+
+**What was run (`python ml/eval_hardneg_int8.py`, output `ml/results/hardneg_int8_eval.md/.json`).** The retrained checkpoint (`models/ckpt/hardneg_B_seed42.zip`, from `ml/train_armB_seed42.ipynb`) was exported to ONNX fp32 (parity gate: max |logit difference| 2.7e-6, tolerance 1e-3) and int8 (91.0 -> 23.1 MB, same size as the previous model; int8 vs fp32 score correlation 0.9992, decision agreement 1.000). Thresholds were tuned on the arm's own validation data only, with the int8 scores (old val + the new val slice of T1/T2/T3, 1,273 rows): thr_F1 0.368, thr_FPR<=1% 0.610, so **block 0.610, warn 0.368** (previous model: block 0.924, warn 0.779). Both models were scored with the serving scanner, head+tail for prompts and sliding windows (cap 6) for the long documents. One seed, as the rule said in advance.
+
+### Verdict against the pre-registered criteria (int8 candidate vs the served int8 MiniLM)
+| criterion | served MiniLM | candidate | result |
+|---|---|---|---|
+| 1. false positives at most halved: E1 (<= 5) and E2 (<= 14) | 10 /104, 28 /100 | **1, 2** | **PASS** |
+| 2. test F1 within -0.02 | 0.898 | 0.905 (diff +0.008, paired bootstrap 95% CI [-0.013, +0.029]) | **PASS** |
+| 3. recall drop <= 0.03 on test, indirect_test, tricky attacks | 180/208, 50/55, 16/21 | 182/208, 53/55, 16/21 | **PASS** |
+| 4. E3 Hinglish-attack recall not below served | 19 /24 | 23 /24 | **PASS** |
+
+**All four pass, so the served model was replaced** (the rule was written before the numbers existed, Day 2.9). Paired McNemar p-values: E1 0.012 (10 fixed, 1 new), E1 English control 0.008, E2 < 0.001 (26 fixed, 0 new); E3, test recall and indirect recall differences are not significant (p 0.22 to 0.73), which is what "not worse" means here, not "better".
+
+### Guardrails (reported, not tuned against)
+| | served | candidate | note |
+|---|---|---|---|
+| xstest_safe false positives | 0 | 0 | |
+| test benign false positives (of 717) | 13 | 12 | no difference (p 1.0) |
+| indirect_test benign false positives (of 57) | 0 | 1 | |
+| tricky benign false positives (of 28) | 8 | 2 | |
+| long benign documents, sliding, false positives (of 114) | 8 (0.070) | **14 (0.123)** | **a real cost**: 4 fixed vs 10 new, p 0.18, so not significant, but not small; it is the same direction as in the 3-seed round (0.064 -> 0.082) and larger here |
+| long middle injections caught (of 38) | 34 | 37 | |
+| the owner's 7 prompts (E4, never used for any choice) | #6 (Hinglish "system prompt" question) blocked at 0.998 | #6 scores 0.002; the 3 attacks score 0.995 to 0.997 | the false positive that started this round is gone |
+
+**What the replacement costs, stated plainly.** (1) Benign long documents are flagged more often (8 -> 14 of 114); users who paste long benign text will see more blocks. I accepted it because the owner's rule made criteria 1 to 4 the gate and this was a reported guardrail; the 114 long documents are synthetic (concatenated Dolly passages), so the real-world effect is unknown. (2) The warn band is wider (warn 0.368 against 0.779): on the test set benign prompts in warn went from 1.0% to 2.1% and attacks that are allowed (not even warned) fell from 12.5% to 7.7%; on E1/E2 the model now allows 98%/97% of benign prompts (served: 85%/69%) and blocks 1%/2% (10%/28%). (3) The thresholds come from a validation set that now includes AI-generated rows (the new slice), so they are tuned partly to that register. (4) Latency and size were not re-benchmarked: same architecture and int8 size (23.1 MB), the Day 4 benchmark on the Space will document it.
+
+### The retrain next to the original Colab run (arm B, seed 42; fp16 PyTorch, each at its own val-tuned block threshold)
+| | original run (lost checkpoint) | this retrain |
+|---|---|---|
+| best epoch (early stop) | 4 | 2 (stopped after epoch 3) |
+| block / warn threshold | 0.948 / 0.651 | 0.642 / 0.583 |
+| test F1 / recall / FPR | 0.909 / 0.889 / 0.0195 | 0.903 / 0.870 / 0.0167 |
+| indirect_test recall (of 55) | 51 | 53 |
+| tricky attack recall (of 21) | 17 | 17 |
+| E1 / E1 English control false positives | 2 / 0 | 1 / 1 |
+| E2 false positives (of 100) | 1 | 1 |
+| E3 caught (of 24) | 23 | 22 |
+| long benign false positives (of 114) / middle caught (of 38) | 13 / 35 | **17 / 37** |
+The two runs agree on the headline metrics to within what the 3 original seeds spread (E1 1 to 2, E2 1 to 2, E3 22 to 24, test F1 0.878 to 0.909), but they are **not the same model**: the retrain stopped earlier (best epoch 2, not 4) and its block threshold is much lower, as expected from fp16 nondeterminism and a flatter validation curve. The one number outside the original three-seed range is long benign false positives (17 here in fp16, against 6 to 13 in the original three seeds); the int8 served model has 14. I did not retrain again to change that.
+
+### What changed in the repository
+- `backend/model/minilm/` now holds the arm B int8 model, its tokenizer and `model_meta.json` (`source: hardneg_B_seed42`, `val_definition`); all gitignored as before. The previous model is kept locally in `models/backup/minilm_cleaned_aug/` (gitignored) for rollback. The DeBERTa model is unchanged.
+- `backend/scripts/prepare_model.py` takes `--ckpt hardneg_B_seed42`, tunes thresholds on old val + the new val slice and asserts they equal the ones the int8 evaluation used; `backend/tests/fixtures/golden_minilm.json` was regenerated with the new model (reference pipeline scores for 25 prompts).
+- Tests: 370 -> 372. Two new tests pin the replacement (the served metadata, and the Hinglish system-prompt question not blocked while two Hinglish attacks are); both fail with the previous model (checked by swapping it back in).
+- There is no README yet (Day 4), so there were no README numbers to update; the README metrics must use this model's numbers (and the Day 4 benchmark on the Space for latency). Earlier sections of this file describe the previous model's thresholds (block 0.924 / warn 0.779) and Hinglish false-positive baseline; they stay as the historical record.
+
+### Limits of this conclusion
+One seed and one retrain; criteria met against a single served model that was itself one draw from a wide seed spread (the baseline retrains had E1 false positives 9 to 28); E2 and E3 are AI-generated and optimistic; E1 shares a domain with the human training commands; the long-document cost above; no Devanagari Hindi; int8 numbers are on the same evaluation sets that were used to judge the arms (never to choose between them beyond the pre-registered rule).
