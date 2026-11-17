@@ -38,7 +38,9 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
   }
   try {
     const m = await load();
-    post({ type: "result", id: msg.id, result: await m.detect(msg.text) });
+    const t0 = performance.now();
+    const spans = await m.detect(msg.text);
+    post({ type: "result", id: msg.id, result: { spans, ms: performance.now() - t0 } });
   } catch (e) {
     post({ type: "error", id: msg.id, message: String((e as Error)?.message ?? e) });
   }

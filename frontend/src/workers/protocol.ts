@@ -18,5 +18,9 @@ export interface ModelInfo {
   thresholds?: Thresholds;
 }
 
-export type NerResult = PiiSpan[];
+/** spans + inference time (excludes any first-time download, which is shown separately as a progress bar) */
+export interface NerResult {
+  spans: PiiSpan[];
+  ms: number;
+}
 export type { PrecheckResult };
