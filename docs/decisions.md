@@ -886,3 +886,24 @@ One seed and one retrain; criteria met against a single served model that was it
 **Metrics:** *strict recall* = gold name occurrences whose every non-space character is covered by predicted name spans (a half-masked name still leaks), out of 56; *any-overlap recall*; *false positives* = predicted spans that overlap no gold name (counted overall and on the 14 no-name sentences); *latency* = median and p95 per-sentence inference in headless Chromium, WASM backend, single-threaded (the page is not cross-origin isolated, which is the deployment default), after one warm-up; *load* = cold (download + initialise) and warm (from the browser cache).
 
 **Selection rule (fixed now):** eligible = q8 size <= 120 MB **and** median browser latency <= 300 ms. Among eligible models, pick the highest strict recall; if two are within 2 names of each other, pick the smaller. Recall comes first because a missed name leaks, while a false positive only hides a word from the AI. If no model is eligible, the fallback rule applies (names masked server-side temporarily, stated as a cost). The multilingual model is measured for the record even though it is over the size limit.
+
+### Day 3.2 result: `onnx-community/distilbert-NER-ONNX` selected by the rule (`ml/results/ner_browser_eval.md/.json`, `frontend/scripts/bench_ner_browser.ts`)
+Headless Chromium, Transformers.js 3.8.1, WASM, q8, single-threaded (not cross-origin isolated), 62 sentences / 56 names.
+| model | q8 MB | median / p95 ms per sentence | strict recall | any-overlap | false positives (on no-name sentences) | eligible |
+|---|---|---|---|---|---|---|
+| distilbert-NER | 65.8 | 39.9 / 56.7 | 47/56 | 48/56 | 5 (0) | yes |
+| bert-base-NER | 109.0 | 72.9 / 100.8 | **48/56** | 49/56 | 4 (1) | yes |
+| multilingual distilbert (hrl) | 135.4 | 56.9 / 82.1 | 41/56 | 41/56 | 0 (0) | no (size) |
+
+**Applying the rule:** both English models are eligible; bert-base-NER has the highest strict recall (48), distilbert-NER is within 2 names (47), so the smaller one is selected (66 MB vs 109 MB to download on first use). One name of difference on a 56-name AI-drafted sample is noise; download size is a cost every visitor pays.
+
+**What the numbers show (and the limits):**
+- **Lowercase names are mostly missed by every model** (1/7 for both English models, 0/7 multilingual): the models are cased and trained on news text, where names are capitalised. "pls tell priya…" leaks "priya". This is the largest known gap of the browser layer, and the How it works page states it.
+- English and Indian names written in English: 28/28 for both English models; Hinglish 10/13 (distilbert) vs 11/13; names inside quoted documents 6/6.
+- False positives are capitalised Hinglish words at the start of a sentence ("Mera", "Meri", "aur") and "Regards", "Ms": they hide a word from the AI (slightly worse answers) but leak nothing. None on the 14 no-name sentences (places, brands, "rose", "June", the attack prompt).
+- The multilingual model was the worst on Hinglish names (6/13): "multilingual" here means 10 high-resource languages, not Hindi or Hinglish.
+- **Cold-load times are not comparable between models**: the first model's cold run (113.7 s) also downloaded the ONNX Runtime WASM files and warmed the Vite dev server, and all cold loads depend on network speed at the time. Warm loads (from the browser cache) are 0.6 to 1.1 s. Latency is from one machine (8 logical cores, single-threaded WASM).
+- Cold and warm runs gave identical predictions for every model (checked by the script).
+- The sample is AI-drafted and not reviewed by the owner (see above), so the recall figures are indicative, not a benchmark.
+
+**Implementation:** `src/pii/nerCore.ts` (token-to-character alignment, because Transformers.js tokenizers return no offset mapping; "first sub-token" word labels; PER entities; 600-character chunks for long messages so each fits the 512-token limit), `src/pii/nerModel.ts` (Transformers.js loader), `src/workers/privacy.worker.ts` (runs it off the UI thread). Name spans go into the vault after the regex findings, so a regex finding wins any overlap.

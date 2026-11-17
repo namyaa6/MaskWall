@@ -1,0 +1,377 @@
+{
+  "protocol": "docs/decisions.md Day 3.2 (written before measuring)",
+  "rule": {
+    "maxMB": 120,
+    "maxMedianMs": 300,
+    "tieNames": 2
+  },
+  "sample": "ml/data/pii_names_sample.jsonl (AI-drafted, not reviewed by the owner)",
+  "n_sentences": 62,
+  "n_names": 56,
+  "transformers_js": "3.8.1",
+  "measured": "2026-11-17T16:46:45.544Z",
+  "selected": "onnx-community/distilbert-NER-ONNX",
+  "results": [
+    {
+      "id": "onnx-community/distilbert-NER-ONNX",
+      "q8MB": 65.8,
+      "license": "Apache-2.0",
+      "data": "CoNLL-2003 (English)",
+      "coldLoadMs": 113697,
+      "warmLoadMs": 639,
+      "downloadedMB": 66.4,
+      "medianMs": 39.9,
+      "p95Ms": 56.7,
+      "coldMedianMs": 45.7,
+      "coldWarmPredictionsIdentical": true,
+      "eval": {
+        "gold": 56,
+        "strict": 47,
+        "overlap": 48,
+        "falsePositives": 5,
+        "fpOnNoNameSentences": 0,
+        "missed": [
+          {
+            "id": 28,
+            "name": "Pooja Mehta"
+          },
+          {
+            "id": 29,
+            "name": "Sanjay"
+          },
+          {
+            "id": 34,
+            "name": "Anjali"
+          },
+          {
+            "id": 37,
+            "name": "priya"
+          },
+          {
+            "id": 38,
+            "name": "rahul sharma"
+          },
+          {
+            "id": 39,
+            "name": "john"
+          },
+          {
+            "id": 41,
+            "name": "mark"
+          },
+          {
+            "id": 42,
+            "name": "arun"
+          },
+          {
+            "id": 42,
+            "name": "meera"
+          }
+        ],
+        "fps": [
+          {
+            "id": 25,
+            "text": "Mera"
+          },
+          {
+            "id": 30,
+            "text": "Meri"
+          },
+          {
+            "id": 32,
+            "text": "aur"
+          },
+          {
+            "id": 43,
+            "text": "Regards"
+          },
+          {
+            "id": 44,
+            "text": "Ms"
+          }
+        ],
+        "byCategory": {
+          "english": {
+            "gold": 12,
+            "strict": 12,
+            "fp": 0
+          },
+          "indian_english": {
+            "gold": 16,
+            "strict": 16,
+            "fp": 0
+          },
+          "hinglish": {
+            "gold": 13,
+            "strict": 10,
+            "fp": 3
+          },
+          "lowercase": {
+            "gold": 7,
+            "strict": 1,
+            "fp": 0
+          },
+          "quoted_document": {
+            "gold": 6,
+            "strict": 6,
+            "fp": 2
+          },
+          "word_names": {
+            "gold": 2,
+            "strict": 2,
+            "fp": 0
+          },
+          "no_names": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          }
+        }
+      },
+      "env": {
+        "crossOriginIsolated": false,
+        "hardwareConcurrency": 8,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.186 Safari/537.36"
+      }
+    },
+    {
+      "id": "Xenova/bert-base-NER",
+      "q8MB": 109,
+      "license": "MIT",
+      "data": "CoNLL-2003 (English)",
+      "coldLoadMs": 39406,
+      "warmLoadMs": 799,
+      "downloadedMB": 109.6,
+      "medianMs": 72.9,
+      "p95Ms": 100.8,
+      "coldMedianMs": 67.7,
+      "coldWarmPredictionsIdentical": true,
+      "eval": {
+        "gold": 56,
+        "strict": 48,
+        "overlap": 49,
+        "falsePositives": 4,
+        "fpOnNoNameSentences": 1,
+        "missed": [
+          {
+            "id": 26,
+            "name": "Neha"
+          },
+          {
+            "id": 30,
+            "name": "Divya"
+          },
+          {
+            "id": 38,
+            "name": "rahul sharma"
+          },
+          {
+            "id": 39,
+            "name": "john"
+          },
+          {
+            "id": 40,
+            "name": "sunita"
+          },
+          {
+            "id": 41,
+            "name": "mark"
+          },
+          {
+            "id": 42,
+            "name": "arun"
+          },
+          {
+            "id": 42,
+            "name": "meera"
+          }
+        ],
+        "fps": [
+          {
+            "id": 25,
+            "text": "Mera"
+          },
+          {
+            "id": 30,
+            "text": "Meri"
+          },
+          {
+            "id": 45,
+            "text": "me"
+          },
+          {
+            "id": 57,
+            "text": "Mahindra"
+          }
+        ],
+        "byCategory": {
+          "english": {
+            "gold": 12,
+            "strict": 12,
+            "fp": 0
+          },
+          "indian_english": {
+            "gold": 16,
+            "strict": 16,
+            "fp": 0
+          },
+          "hinglish": {
+            "gold": 13,
+            "strict": 11,
+            "fp": 2
+          },
+          "lowercase": {
+            "gold": 7,
+            "strict": 1,
+            "fp": 0
+          },
+          "quoted_document": {
+            "gold": 6,
+            "strict": 6,
+            "fp": 1
+          },
+          "word_names": {
+            "gold": 2,
+            "strict": 2,
+            "fp": 0
+          },
+          "no_names": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 1
+          }
+        }
+      },
+      "env": {
+        "crossOriginIsolated": false,
+        "hardwareConcurrency": 8,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.186 Safari/537.36"
+      }
+    },
+    {
+      "id": "Xenova/distilbert-base-multilingual-cased-ner-hrl",
+      "q8MB": 135.4,
+      "license": "AFL-3.0",
+      "data": "10 high-resource languages (no Hindi)",
+      "coldLoadMs": 51081,
+      "warmLoadMs": 1056,
+      "downloadedMB": 138.3,
+      "medianMs": 56.9,
+      "p95Ms": 82.1,
+      "coldMedianMs": 99.7,
+      "coldWarmPredictionsIdentical": true,
+      "eval": {
+        "gold": 56,
+        "strict": 41,
+        "overlap": 41,
+        "falsePositives": 0,
+        "fpOnNoNameSentences": 0,
+        "missed": [
+          {
+            "id": 26,
+            "name": "Neha"
+          },
+          {
+            "id": 27,
+            "name": "Amit"
+          },
+          {
+            "id": 28,
+            "name": "Pooja Mehta"
+          },
+          {
+            "id": 29,
+            "name": "Sanjay"
+          },
+          {
+            "id": 30,
+            "name": "Divya"
+          },
+          {
+            "id": 32,
+            "name": "Simran"
+          },
+          {
+            "id": 32,
+            "name": "Karan"
+          },
+          {
+            "id": 37,
+            "name": "priya"
+          },
+          {
+            "id": 38,
+            "name": "rahul sharma"
+          },
+          {
+            "id": 39,
+            "name": "john"
+          },
+          {
+            "id": 40,
+            "name": "sunita"
+          },
+          {
+            "id": 41,
+            "name": "mark"
+          },
+          {
+            "id": 42,
+            "name": "arun"
+          },
+          {
+            "id": 42,
+            "name": "meera"
+          },
+          {
+            "id": 48,
+            "name": "Will"
+          }
+        ],
+        "fps": [],
+        "byCategory": {
+          "english": {
+            "gold": 12,
+            "strict": 12,
+            "fp": 0
+          },
+          "indian_english": {
+            "gold": 16,
+            "strict": 16,
+            "fp": 0
+          },
+          "hinglish": {
+            "gold": 13,
+            "strict": 6,
+            "fp": 0
+          },
+          "lowercase": {
+            "gold": 7,
+            "strict": 0,
+            "fp": 0
+          },
+          "quoted_document": {
+            "gold": 6,
+            "strict": 6,
+            "fp": 0
+          },
+          "word_names": {
+            "gold": 2,
+            "strict": 1,
+            "fp": 0
+          },
+          "no_names": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          }
+        }
+      },
+      "env": {
+        "crossOriginIsolated": false,
+        "hardwareConcurrency": 8,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.186 Safari/537.36"
+      }
+    }
+  ]
+}
