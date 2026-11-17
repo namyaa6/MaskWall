@@ -869,3 +869,20 @@ One seed and one retrain; criteria met against a single served model that was it
 - **`vault.ts`** (`PlaceholderVault`), one per conversation, **memory only** (a React ref; never localStorage/sessionStorage/IndexedDB, never logged or sent). The same value gets the same placeholder (`ABCPE 1234 F` = `abcpe1234f`). Numbering is per conversation, so `[EMAIL_1]` can never mean two different addresses. `unmask` replaces only `[TYPE_n]` keys the vault created, so the server's `[S_EMAIL_1]` and any placeholder the AI invents stay as they are.
 - **Literal placeholders (owner's addition):** if the user's text contains e.g. `[EMAIL_1]` before the vault has created it, that number is reserved and skipped (the email becomes `[EMAIL_2]`), so unmasking can't turn the user's literal text into someone's address. **Remaining limit:** if the user later types a placeholder the vault *already* created, the AI's echo of it is unmasked to the real value. That value is the user's own data, shown only on their device, so nothing leaks, but the display is ambiguous.
 - **Tests:** 76 Vitest tests, including all 61 shared fixture cases (identical expectations to pytest), exhaustive Verhoeff single-digit and swap checks, the round trip, the `S_` and invented-placeholder cases, the owner's literal-placeholder case, the NER-span overlap rule, and no raw values in findings.
+
+## Day 3.2: Name (NER) model for the browser: protocol written BEFORE any measurement
+
+**Labelled sample: `ml/data/pii_names_sample.jsonl`, AI-drafted, not reviewed by the owner.** 62 sentences written by me (Claude), with 56 person-name occurrences: English (10), Indian names in English (14), Hinglish (12), lowercase (6), names inside quoted documents (4), names that are also words ("Grace", "Will": 2), and 14 sentences with no names but capitalised places, brands, a flower, a month, an epic and an attack prompt. The owner chose not to review it. Its limits: small, written by the same assistant that runs the evaluation, no Devanagari, one author's idea of what is hard. It is used for this selection only, never for tuning anything.
+
+**Candidates (checked on the Hugging Face Hub, 2026-11-17; each has Transformers.js-ready ONNX weights, size = `onnx/model_quantized.onnx`, q8):**
+| candidate | base model | license | training data | q8 size |
+|---|---|---|---|---|
+| `onnx-community/distilbert-NER-ONNX` | dslim/distilbert-NER | Apache-2.0 | CoNLL-2003 (English) | 65.8 MB |
+| `Xenova/bert-base-NER` | dslim/bert-base-NER | MIT | CoNLL-2003 (English) | 109.0 MB |
+| `Xenova/distilbert-base-multilingual-cased-ner-hrl` | Davlan/distilbert-base-multilingual-cased-ner-hrl | AFL-3.0 | 10 high-resource languages (no Hindi) | 135.4 MB |
+
+**Fixed inference method (no tuning):** tokenise, run the model, take the argmax label per token, label each word with its first sub-token's label, keep PER entities only (B-PER starts an entity, I-PER continues it), map tokens back to character offsets. No confidence threshold.
+
+**Metrics:** *strict recall* = gold name occurrences whose every non-space character is covered by predicted name spans (a half-masked name still leaks), out of 56; *any-overlap recall*; *false positives* = predicted spans that overlap no gold name (counted overall and on the 14 no-name sentences); *latency* = median and p95 per-sentence inference in headless Chromium, WASM backend, single-threaded (the page is not cross-origin isolated, which is the deployment default), after one warm-up; *load* = cold (download + initialise) and warm (from the browser cache).
+
+**Selection rule (fixed now):** eligible = q8 size <= 120 MB **and** median browser latency <= 300 ms. Among eligible models, pick the highest strict recall; if two are within 2 names of each other, pick the smaller. Recall comes first because a missed name leaks, while a false positive only hides a word from the AI. If no model is eligible, the fallback rule applies (names masked server-side temporarily, stated as a cost). The multilingual model is measured for the record even though it is over the size limit.
