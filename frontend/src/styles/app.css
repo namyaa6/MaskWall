@@ -220,3 +220,17 @@ th { color: var(--text-2); font-weight: 600; }
 .limits { border-left: 4px solid var(--suspicious); }
 .row-ours th, .row-ours td { background: var(--card-raised); }
 td .pill { margin-left: 6px; font-size: 12px; padding: 0 8px; }
+
+/* ------------------------------------------------------------ phone layout for the top menu */
+@media (max-width: 640px) {
+  .topbar-inner { gap: 6px 12px; padding: 8px 12px; }
+  .brand { order: 1; }
+  .status { order: 2; margin-left: auto; font-size: 13px; }
+  .nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -4px; padding: 2px 4px; }
+  .nav a { white-space: nowrap; }
+  main { padding: 16px 16px 48px; }
+  h1 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}

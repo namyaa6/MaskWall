@@ -1,7 +1,10 @@
 /// <reference lib="webworker" />
 // Attack pre-check worker: the served int8 MiniLM, loaded from this site (/models/maskwall-minilm/), cached by the browser.
 import { loadPrecheck, MODEL_DIR, type ModelMeta, type Precheck } from "../precheck/precheckModel";
+import { serveOrtLocally } from "./localOrt";
 import type { FromWorker, PrecheckResult, ToWorker } from "./protocol";
+
+serveOrtLocally();
 
 const base = new URL(`${import.meta.env.BASE_URL}models/`, self.location.origin).href;
 let model: Promise<Precheck> | null = null;

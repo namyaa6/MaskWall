@@ -14,6 +14,7 @@ export default defineConfig({
   optimizeDeps: { exclude: ["@huggingface/transformers"] },
   test: {
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+    exclude: ["e2e/**", "node_modules/**"],
     environment: "node",
   },
 });

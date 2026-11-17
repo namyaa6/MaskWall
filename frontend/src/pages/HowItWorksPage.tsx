@@ -198,8 +198,8 @@ export function HowItWorksPage() {
             <strong>Narrow evidence for Hinglish</strong>: no Devanagari script in training, and the Hinglish attack tests are AI-written. The retrained model is one training run.
           </li>
           <li>
-            <strong>Third parties see model downloads</strong>: the browser fetches the name model from Hugging Face and the ONNX Runtime files from a CDN. No message text is
-            involved, but those services see your IP address.
+            <strong>Hugging Face sees the name-model download</strong>: the browser fetches the name model from the Hugging Face Hub on first use. No message text is
+            involved, but Hugging Face sees your IP address. Everything else (the attack model and the AI runtime) is served by this site.
           </li>
         </ul>
       </section>

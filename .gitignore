@@ -22,3 +22,4 @@ frontend/dist/
 frontend/public/models/
 frontend/test-results/
 frontend/playwright-report/
+frontend/public/ort/

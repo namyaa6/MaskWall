@@ -3,7 +3,10 @@
 // and cached by the browser. Only the model files are downloaded; the text never leaves this worker.
 import { NER_MODEL } from "../pii/nerConfig";
 import { loadNer, type NerModel } from "../pii/nerModel";
+import { serveOrtLocally } from "./localOrt";
 import type { FromWorker, NerResult, ToWorker } from "./protocol";
+
+serveOrtLocally();
 
 let model: Promise<NerModel> | null = null;
 const post = (m: FromWorker<NerResult>) => self.postMessage(m);
