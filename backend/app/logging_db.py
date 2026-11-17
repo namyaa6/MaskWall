@@ -117,7 +117,7 @@ class EventLog:
         return deleted
 
     # ---------------------------------------------------------------- statistics
-    def stats(self, *, latency_sample: int = 1000, hours: int = 24, ttl: float = 0.0) -> dict:
+    def stats(self, *, latency_sample: int = 1000, hours: int = 24, ttl: float = 0.0, recent: int = 20) -> dict:
         """Aggregates computed in SQL. With ttl > 0 a result younger than ttl seconds is returned from cache (dashboard polling)."""
         if ttl > 0 and self._cache and time.time() - self._cache[0] < ttl:
             return self._cache[1]
@@ -141,10 +141,27 @@ class EventLog:
             for r in q("SELECT CAST(ts / 3600 AS INTEGER) AS h, action, COUNT(*) AS n FROM events WHERE ts >= ? GROUP BY h, action", (since,)):
                 hourly.setdefault(r["h"] * 3600, {})[r["action"]] = r["n"]
             first = q("SELECT MIN(ts) FROM events").fetchone()[0]
+            recent_rows = q("SELECT ts, endpoint, action, injection_score, reasons, pii, latency_ms FROM events ORDER BY id DESC LIMIT ?",
+                            (recent,)).fetchall()
         latency = {}
         for layer in LAYERS:
             vals = [float(r[layer]) for r in lat_rows if r.get(layer) is not None]
             latency[layer] = {"n": len(vals), "mean": round(sum(vals) / len(vals), 2) if vals else None, "p50": _pct(vals, 0.5), "p95": _pct(vals, 0.95)}
+        # time MaskWall itself added to a request: total minus the LLM's own time (equal to total when the LLM was not called)
+        added = [max(0.0, float(r["total_ms"]) - float(r.get("llm_ms") or 0.0)) for r in lat_rows if r.get("total_ms") is not None]
+        latency["added_ms"] = {"n": len(added), "mean": round(sum(added) / len(added), 2) if added else None,
+                               "p50": _pct(added, 0.5), "p95": _pct(added, 0.95)}
+        recent_events = []
+        for r in recent_rows:                     # whitelisted fields only: no text, no fingerprint, no request id
+            lat = json.loads(r["latency_ms"]) if r["latency_ms"] else {}
+            pii_counts = json.loads(r["pii"]) if r["pii"] else {}
+            recent_events.append({
+                "ts": r["ts"], "endpoint": r["endpoint"], "action": r["action"],
+                "score": round(r["injection_score"], 4) if r["injection_score"] is not None else None,
+                "reasons": json.loads(r["reasons"]) if r["reasons"] else [],
+                "pii_server_side": sum(pii_counts.values()) if isinstance(pii_counts, dict) else 0,
+                "total_ms": lat.get("total_ms"), "llm_ms": lat.get("llm_ms"),
+            })
         result = {
             "total_requests": total,
             "attacks_blocked": by_action.get("block", 0),
@@ -158,6 +175,7 @@ class EventLog:
             "injection_score_histogram": {"bins": [f"{i / 10:.1f}-{(i + 1) / 10:.1f}" for i in range(10)], "counts": bins},
             "hourly": [{"hour_start": h, **a} for h, a in sorted(hourly.items())],
             "first_event_ts": first,
+            "recent": recent_events,
         }
         self._cache = (time.time(), result)
         return result

@@ -12,7 +12,7 @@ message ─► PII backup mask ─► injection scan (int8 ONNX) ─► policy �
 |---|---|
 | `POST /chat` | the full pipeline; `{"message": "..."}` -> `action` (allow, warn, block, output_blocked), `response`, `truncated` (reply hit the token limit), the scan details, per-layer latency |
 | `POST /scan` | input half only (verdict, score, per-window detail, thresholds); used by the Attack Playground |
-| `GET /stats` | aggregate numbers for the dashboard (blocked attacks, PII caught, latency per layer, score histogram); no prompt text |
+| `GET /stats` | aggregate numbers for the dashboard (blocked attacks, PII caught, latency per layer incl. `added_ms` = total minus LLM time, score histogram) and `recent`: the last 20 events (time, endpoint, action, score, reasons, server-side PII count, total and LLM ms); no prompt text, no fingerprints |
 | `GET /health` | status, model, scan mode, thresholds, configured providers (names only) |
 | `GET /docs` | interactive Swagger UI |
 
@@ -83,7 +83,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q            # 366 tests; no network, no keys; the real-model tests skip if backend\model is absent
+..\.venv\Scripts\python.exe -m pytest -q            # 394 tests; no network, no keys; the real-model tests skip if backend\model is absent
 ..\.venv\Scripts\python.exe scripts\smoke_llm.py    # optional: one real /chat call through Groq and one through Gemini (needs keys + network)
 ```
 
