@@ -1,0 +1,516 @@
+{
+  "_generated_by": "frontend/scripts/exportResults.ts from ml/results (do not edit by hand)",
+  "served": {
+    "source": "hardneg_B_seed42",
+    "block": 0.6102,
+    "warn": 0.3683,
+    "int8_mb": 23.1,
+    "fp32_mb": 91,
+    "params_m": 22.7,
+    "test_f1": 0.9055,
+    "test_recall": {
+      "k": 182,
+      "n": 208
+    },
+    "test_fp": {
+      "k": 12,
+      "n": 717
+    },
+    "indirect_recall": {
+      "k": 53,
+      "n": 55
+    },
+    "xstest_fp": {
+      "k": 0,
+      "n": 250
+    },
+    "hinglish_benign_fp": {
+      "k": 1,
+      "n": 104
+    },
+    "prompt_talk_fp": {
+      "k": 2,
+      "n": 100
+    },
+    "hinglish_attacks": {
+      "k": 23,
+      "n": 24
+    },
+    "long_benign_fp": {
+      "k": 14,
+      "n": 114
+    },
+    "long_middle_caught": {
+      "k": 37,
+      "n": 38
+    },
+    "tricky_attacks": {
+      "k": 16,
+      "n": 21
+    },
+    "tricky_benign_fp": {
+      "k": 2,
+      "n": 28
+    }
+  },
+  "baselines": [
+    {
+      "model": "Length only + logistic regression (floor)",
+      "f1": 0.3744,
+      "f1_ci": [
+        0.3356,
+        0.4141
+      ],
+      "precision": 0.2429,
+      "recall": 0.8173,
+      "fpr": 0.7392,
+      "fp": 530,
+      "benign": 717,
+      "attacks": 208,
+      "roc_auc": 0.5562,
+      "tricky_correct": 16,
+      "tricky_total": 49,
+      "xstest_fp": 54,
+      "xstest_n": 250
+    },
+    {
+      "model": "Word TF-IDF + logistic regression",
+      "f1": 0.9035,
+      "f1_ci": [
+        0.8724,
+        0.9311
+      ],
+      "precision": 0.8848,
+      "recall": 0.9231,
+      "fpr": 0.0349,
+      "fp": 25,
+      "benign": 717,
+      "attacks": 208,
+      "roc_auc": 0.9901,
+      "tricky_correct": 37,
+      "tricky_total": 49,
+      "xstest_fp": 0,
+      "xstest_n": 250
+    },
+    {
+      "model": "Word + character TF-IDF + logistic regression",
+      "f1": 0.899,
+      "f1_ci": [
+        0.8663,
+        0.9299
+      ],
+      "precision": 0.9468,
+      "recall": 0.8558,
+      "fpr": 0.0139,
+      "fp": 10,
+      "benign": 717,
+      "attacks": 208,
+      "roc_auc": 0.9901,
+      "tricky_correct": 31,
+      "tricky_total": 49,
+      "xstest_fp": 0,
+      "xstest_n": 250
+    },
+    {
+      "model": "Frozen MiniLM embeddings + logistic regression",
+      "f1": 0.8436,
+      "f1_ci": [
+        0.8051,
+        0.8812
+      ],
+      "precision": 0.8318,
+      "recall": 0.8558,
+      "fpr": 0.0502,
+      "fp": 36,
+      "benign": 717,
+      "attacks": 208,
+      "roc_auc": 0.9681,
+      "tricky_correct": 34,
+      "tricky_total": 49,
+      "xstest_fp": 5,
+      "xstest_n": 250
+    }
+  ],
+  "transformers": [
+    {
+      "model": "MiniLM-L6 fine-tuned",
+      "f1": 0.8922,
+      "f1_ci": [
+        0.8586,
+        0.9209
+      ],
+      "precision": 0.9319,
+      "recall": 0.8558,
+      "fpr": 0.0181,
+      "fp": 13,
+      "benign": 717,
+      "attacks": 208,
+      "roc_auc": 0.9874,
+      "tricky_correct": 34,
+      "tricky_total": 49,
+      "xstest_fp": 0,
+      "xstest_n": 250,
+      "params_m": 22.7
+    },
+    {
+      "model": "DeBERTa-v3-small fine-tuned",
+      "f1": 0.8838,
+      "f1_ci": [
+        0.8521,
+        0.9144
+      ],
+      "precision": 0.8398,
+      "recall": 0.9327,
+      "fpr": 0.0516,
+      "fp": 37,
+      "benign": 717,
+      "attacks": 208,
+      "roc_auc": 0.9832,
+      "tricky_correct": 35,
+      "tricky_total": 49,
+      "xstest_fp": 3,
+      "xstest_n": 250,
+      "params_m": 141.9
+    }
+  ],
+  "quantization": [
+    {
+      "model": "MiniLM-L6",
+      "precision": "fp32",
+      "size_mb": 91,
+      "p50_ms": 23,
+      "p50_512_ms": 526.9,
+      "f1": 0.8922,
+      "fpr": 0.0181
+    },
+    {
+      "model": "MiniLM-L6",
+      "precision": "int8",
+      "size_mb": 23.1,
+      "p50_ms": 11.9,
+      "p50_512_ms": 366,
+      "f1": 0.8978,
+      "fpr": 0.0181
+    },
+    {
+      "model": "DeBERTa-v3-small",
+      "precision": "fp32",
+      "size_mb": 568.1,
+      "p50_ms": 87.4,
+      "p50_512_ms": 1629.1,
+      "f1": 0.8838,
+      "fpr": 0.0516
+    },
+    {
+      "model": "DeBERTa-v3-small",
+      "precision": "int8",
+      "size_mb": 161.2,
+      "p50_ms": 44.8,
+      "p50_512_ms": 956.4,
+      "f1": 0.8894,
+      "fpr": 0.0391
+    }
+  ],
+  "quantization_env": {
+    "cpu_threads": 2,
+    "onnxruntime": "1.31.1"
+  },
+  "hard_negatives": {
+    "thresholds_before": {
+      "block": 0.9238,
+      "warn": 0.7787
+    },
+    "thresholds_after": {
+      "block": 0.6102,
+      "warn": 0.3683
+    },
+    "test_f1_before": 0.8978,
+    "test_f1_after": 0.9055,
+    "test_f1_diff_ci": [
+      -0.0132,
+      0.0286
+    ],
+    "all_criteria_pass": true,
+    "outcomes": [
+      {
+        "set": "E1 human Hinglish benign (FP)",
+        "n": 104,
+        "before": 10,
+        "after": 1,
+        "p": 0.0117,
+        "kind": "fp"
+      },
+      {
+        "set": "E1 English control (FP)",
+        "n": 104,
+        "before": 9,
+        "after": 1,
+        "p": 0.0078,
+        "kind": "fp"
+      },
+      {
+        "set": "E2 prompt-talk benign (FP)",
+        "n": 100,
+        "before": 28,
+        "after": 2,
+        "p": 0,
+        "kind": "fp"
+      },
+      {
+        "set": "E3 Hinglish attacks (caught)",
+        "n": 24,
+        "before": 19,
+        "after": 23,
+        "p": 0.2188,
+        "kind": "hit"
+      },
+      {
+        "set": "test attacks (recall)",
+        "n": 208,
+        "before": 180,
+        "after": 182,
+        "p": 0.7266,
+        "kind": "hit"
+      },
+      {
+        "set": "test benign (FP)",
+        "n": 717,
+        "before": 13,
+        "after": 12,
+        "p": 1,
+        "kind": "fp"
+      },
+      {
+        "set": "indirect_test attacks (recall)",
+        "n": 55,
+        "before": 50,
+        "after": 53,
+        "p": 0.25,
+        "kind": "hit"
+      },
+      {
+        "set": "indirect_test benign (FP)",
+        "n": 57,
+        "before": 0,
+        "after": 1,
+        "p": 1,
+        "kind": "fp"
+      },
+      {
+        "set": "tricky attacks (recall)",
+        "n": 21,
+        "before": 16,
+        "after": 16,
+        "p": 1,
+        "kind": "hit"
+      },
+      {
+        "set": "tricky benign (FP)",
+        "n": 28,
+        "before": 8,
+        "after": 2,
+        "p": 0.0313,
+        "kind": "fp"
+      },
+      {
+        "set": "xstest_safe (FP)",
+        "n": 250,
+        "before": 0,
+        "after": 0,
+        "p": 1,
+        "kind": "fp"
+      },
+      {
+        "set": "long benign docs (FP, sliding)",
+        "n": 114,
+        "before": 8,
+        "after": 14,
+        "p": 0.1796,
+        "kind": "fp"
+      },
+      {
+        "set": "long middle injections (recall, sliding)",
+        "n": 38,
+        "before": 34,
+        "after": 37,
+        "p": 0.25,
+        "kind": "hit"
+      }
+    ]
+  },
+  "prompt_guard": {
+    "caveats": [
+      "Different label definition: Prompt Guard flags only explicit attempts to override instructions; ours also counts jailbreak personas and instructions smuggled into documents.",
+      "Its training data is undisclosed and may overlap our public test sources.",
+      "It is designed as a first-line filter with a very low false-positive target and recommends splitting long inputs.",
+      "Prompt Guard was scored in fp32; ours in int8 at the served threshold. Our row uses the served model's numbers on the same sets."
+    ],
+    "rows": [
+      {
+        "model": "Prompt Guard 2 (22M)",
+        "point": "as shipped (0.5)",
+        "threshold": 0.5,
+        "int8_mb": 90.7,
+        "test_f1": 0.6793,
+        "test_fpr": 0.0488,
+        "test_recall": 0.601,
+        "indirect_recall": 0.1636,
+        "xstest_fp": 0,
+        "hinglish_benign_fp": 0,
+        "prompt_talk_fp": 2,
+        "hinglish_attacks_caught": 5
+      },
+      {
+        "model": "Prompt Guard 2 (22M)",
+        "point": "tuned on our validation set",
+        "threshold": 0.2299,
+        "int8_mb": 90.7,
+        "test_f1": 0.6981,
+        "test_fpr": 0.0948,
+        "test_recall": 0.7115,
+        "indirect_recall": 0.2545,
+        "xstest_fp": 0,
+        "hinglish_benign_fp": 0,
+        "prompt_talk_fp": 2,
+        "hinglish_attacks_caught": 6
+      },
+      {
+        "model": "Prompt Guard 2 (86M)",
+        "point": "as shipped (0.5)",
+        "threshold": 0.5,
+        "int8_mb": 338.9,
+        "test_f1": 0.6957,
+        "test_fpr": 0.1911,
+        "test_recall": 0.8846,
+        "indirect_recall": 0.6727,
+        "xstest_fp": 0,
+        "hinglish_benign_fp": 0,
+        "prompt_talk_fp": 4,
+        "hinglish_attacks_caught": 7
+      },
+      {
+        "model": "Prompt Guard 2 (86M)",
+        "point": "tuned on our validation set",
+        "threshold": 0.9622,
+        "int8_mb": 338.9,
+        "test_f1": 0.7146,
+        "test_fpr": 0.159,
+        "test_recall": 0.8606,
+        "indirect_recall": 0.6,
+        "xstest_fp": 0,
+        "hinglish_benign_fp": 0,
+        "prompt_talk_fp": 3,
+        "hinglish_attacks_caught": 7
+      },
+      {
+        "model": "MiniLM int8 (ours, served)",
+        "point": "served block threshold",
+        "threshold": 0.6102,
+        "int8_mb": 23.1,
+        "test_f1": 0.9055,
+        "test_fpr": 0.0167,
+        "test_recall": 0.875,
+        "indirect_recall": 0.9636,
+        "xstest_fp": 0,
+        "hinglish_benign_fp": 1,
+        "prompt_talk_fp": 2,
+        "hinglish_attacks_caught": 23
+      }
+    ]
+  },
+  "ner": {
+    "selected": "onnx-community/distilbert-NER-ONNX",
+    "n_sentences": 62,
+    "n_names": 56,
+    "rows": [
+      {
+        "model": "onnx-community/distilbert-NER-ONNX",
+        "q8_mb": 65.8,
+        "median_ms": 39.9,
+        "strict": 47,
+        "gold": 56,
+        "false_positives": 5,
+        "lowercase": {
+          "gold": 7,
+          "strict": 1,
+          "fp": 0
+        },
+        "hinglish": {
+          "gold": 13,
+          "strict": 10,
+          "fp": 3
+        }
+      },
+      {
+        "model": "Xenova/bert-base-NER",
+        "q8_mb": 109,
+        "median_ms": 72.9,
+        "strict": 48,
+        "gold": 56,
+        "false_positives": 4,
+        "lowercase": {
+          "gold": 7,
+          "strict": 1,
+          "fp": 0
+        },
+        "hinglish": {
+          "gold": 13,
+          "strict": 11,
+          "fp": 2
+        }
+      },
+      {
+        "model": "Xenova/distilbert-base-multilingual-cased-ner-hrl",
+        "q8_mb": 135.4,
+        "median_ms": 56.9,
+        "strict": 41,
+        "gold": 56,
+        "false_positives": 0,
+        "lowercase": {
+          "gold": 7,
+          "strict": 0,
+          "fp": 0
+        },
+        "hinglish": {
+          "gold": 13,
+          "strict": 6,
+          "fp": 0
+        }
+      }
+    ]
+  },
+  "browser_precheck": {
+    "max_abs_diff": 0.0009356238442881359,
+    "verdict_mismatches": 0,
+    "n": 25,
+    "load_ms": 2057,
+    "short_median_ms": 22.1,
+    "long": [
+      {
+        "tokens": 683,
+        "windows": 2,
+        "ms": 1993
+      },
+      {
+        "tokens": 698,
+        "windows": 2,
+        "ms": 1796
+      },
+      {
+        "tokens": 698,
+        "windows": 2,
+        "ms": 1869
+      },
+      {
+        "tokens": 698,
+        "windows": 2,
+        "ms": 1857
+      },
+      {
+        "tokens": 1920,
+        "windows": 6,
+        "ms": 5239
+      }
+    ]
+  }
+}
