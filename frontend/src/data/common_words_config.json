@@ -1,0 +1,8 @@
+{
+  "tEn": 500,
+  "kH": 2,
+  "share": 0.8,
+  "chosenOn": "round-1 development set (ml/data/pii_names_lowercase.jsonl) + existing sample; never on the round-2 test set",
+  "noneMetLimitsOnDev": true,
+  "frozen": "2026-11-18T07:04:57.864Z"
+}
