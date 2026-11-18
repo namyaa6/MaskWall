@@ -237,3 +237,10 @@ td .pill { margin-left: 6px; font-size: 12px; padding: 0 8px; }
 .crash { margin-top: var(--gap); }
 
 .subhead { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+/* ------------------------------------------------------------ lowercase notice and strict name hiding */
+.notice { margin: 0; border-left: 3px solid var(--suspicious); padding-left: 10px; font-size: 14.5px; }
+.strict-option { display: flex; flex-direction: column; gap: 2px; }
+.strict-option p { margin: 0 0 0 26px; }
+.callout { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 14px; margin: 14px 0; background: var(--card-raised); }
+.callout h3 { margin-top: 0; }

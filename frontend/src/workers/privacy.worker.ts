@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 // Name-detection worker: the NER model chosen in docs/decisions.md Day 3.2, downloaded once from the Hugging Face Hub
 // and cached by the browser. Only the model files are downloaded; the text never leaves this worker.
+import { detectNamesForMode } from "../pii/nameMode";
 import { NER_MODEL } from "../pii/nerConfig";
 import { loadNer, type NerModel } from "../pii/nerModel";
 import { serveOrtLocally } from "./localOrt";
@@ -9,6 +10,10 @@ import type { FromWorker, NerResult, ToWorker } from "./protocol";
 serveOrtLocally();
 
 let model: Promise<NerModel> | null = null;
+
+// The word list for Strict name hiding (approach B2) is a separate chunk, fetched only the first time strict mode is used.
+let strictWords: Promise<ReadonlySet<string>> | null = null;
+const loadStrictWords = () => (strictWords ??= import("../data/commonWordsB2.json").then((m) => new Set<string>(m.default.words)));
 const post = (m: FromWorker<NerResult>) => self.postMessage(m);
 
 function load(): Promise<NerModel> {
@@ -42,7 +47,7 @@ self.onmessage = async (ev: MessageEvent<ToWorker>) => {
   try {
     const m = await load();
     const t0 = performance.now();
-    const spans = await m.detect(msg.text);
+    const spans = await detectNamesForMode(msg.strict ? "strict" : "standard", msg.text, m, loadStrictWords);
     post({ type: "result", id: msg.id, result: { spans, ms: performance.now() - t0 } });
   } catch (e) {
     post({ type: "error", id: msg.id, message: String((e as Error)?.message ?? e) });

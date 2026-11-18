@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { PageHead } from "../components/PageHead";
 import { f3, kn, ms, pct, R } from "../data/results";
 
@@ -55,9 +56,16 @@ function ClassifierTable({ rows, caption }: { rows: Row[]; caption: string }) {
 }
 
 export function BenchmarksPage() {
+  const { hash } = useLocation();
+  useEffect(() => {
+    // jump to a section when arriving with #id (the Chat page links to #lowercase2)
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: "start" });
+  }, [hash]);
   const H = R.hard_negatives;
   const L = R.lowercase_names;
   const L2 = R.lowercase_names_r2;
+  const L2A = L2.rows.find((r) => r.approach === "A")!;
+  const L2B = L2.rows.find((r) => r.approach === "B")!;
   return (
     <>
       <PageHead title="Benchmarks">
@@ -390,6 +398,29 @@ export function BenchmarksPage() {
             ))}
           </tbody>
         </table>
+        <div className="callout" role="note" aria-labelledby="strict-note-title">
+          <h3 id="strict-note-title">Strict name hiding in Chat is the re-casing row above (B2)</h3>
+          <p>
+            It is an <strong>opt-in toggle in <Link to="/chat">Chat</Link>, off by default</strong>. It was <strong>added after the round-2 results were known</strong>, as a choice the user can make,
+            and <strong>not</strong> because it passed: it failed the rule above, and the default method is unchanged. Measured numbers for the same two settings:
+          </p>
+          <ul className="plain-list">
+            <li>
+              Lowercase names hidden: <strong>{L2B.recall} of {L2B.gold}</strong> with Strict name hiding, against {L2A.recall} of {L2A.gold} without it.
+            </li>
+            <li>
+              Harmless sentences where a word was wrongly hidden: <strong>{L2B.fp_sentences} of {L2.n_negatives}</strong> with it, against {L2A.fp_sentences} of {L2.n_negatives} without it.
+            </li>
+            <li>
+              On the earlier sample: {L2B.existing_fp_spans} wrongly hidden words against {L2A.existing_fp_spans}; capitalised names hidden {L2B.existing_cap_recall} of {L2B.existing_cap_gold} against {L2A.existing_cap_recall}.
+            </li>
+          </ul>
+          <p className="muted small">
+            Wrongly hiding a word costs a slightly worse answer; missing a name leaks it, which is why the choice is left to you. A few first names (for example "david" and "jane") are in the
+            word list by accident, so Strict mode misses them. The list is built from Hinglish-TOP (Apache-2.0) and Wikipedia text via WikiText-103 (CC BY-SA 3.0 / GFDL), and is shared under
+            CC BY-SA 3.0.
+          </p>
+        </div>
         <p className="muted small">
           Re-casing is far better than today's method (+{Math.round(L2.gain_points)} points) and finds every name written without a cue, but it still hides everyday Hinglish words that a small
           corpus of assistant commands cannot cover ("hain", "mahina", "shadi", "kharch"), shorthand such as "pls", and brands and festivals. Names that are also words (joy, rose, deep) are

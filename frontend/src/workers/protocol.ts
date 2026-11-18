@@ -4,7 +4,7 @@ import type { PrecheckResult, Thresholds } from "../precheck/types";
 // Messages between the UI thread and the two model workers. Each worker owns its own Transformers.js `env`
 // (the name model comes from the Hugging Face Hub, the attack model from this site), so they never share settings.
 
-export type ToWorker = { type: "load" } | { type: "run"; id: number; text: string };
+export type ToWorker = { type: "load" } | { type: "run"; id: number; text: string; strict?: boolean };
 
 export type FromWorker<R> =
   | { type: "progress"; loaded: number; total: number }

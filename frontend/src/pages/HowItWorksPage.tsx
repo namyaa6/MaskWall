@@ -19,7 +19,7 @@ const JOURNEY = [
 ];
 
 const PII_ROWS = [
-  { type: "Name", how: `A small AI model running in your browser (${NER.model.split("/")[1]}, about ${Math.round(NER.q8_mb)} MB, downloaded once)`, example: "Priya Sharma", ph: "[NAME_1]" },
+  { type: "Name", how: `A small AI model running in your browser (${NER.model.split("/")[1]}, about ${Math.round(NER.q8_mb)} MB, downloaded once). Names typed in lowercase are often missed: switch on Strict name hiding in Chat to catch more of them`, example: "Priya Sharma", ph: "[NAME_1]" },
   { type: "Email address", how: "Pattern: something@domain.tld", example: "asha@example.com", ph: "[EMAIL_1]" },
   { type: "Indian mobile number", how: "Pattern: 10 digits starting with 6 to 9, with or without +91, 0, spaces or hyphens", example: "+91 98765 43210", ph: "[PHONE_1]" },
   { type: "Aadhaar number", how: "12 digits not starting with 0 or 1, and the Verhoeff checksum must be valid (so random 12-digit numbers are not hidden)", example: "2345 6789 0124 (made up)", ph: "[AADHAAR_1]" },
@@ -178,8 +178,13 @@ export function HowItWorksPage() {
           <li>
             <strong>Lowercase names are mostly missed</strong> (“pls tell priya…”): only {LC2_BASE.recall} of {LC2_BASE.gold} in a fresh lowercase test. The name model learned from news text,
             where names are capitalised. Two rounds of fixes were measured; the best finds {LC2_B.recall} of {LC2_B.gold} but also hides ordinary words in {LC2_B.fp_sentences} of{" "}
-            {R.lowercase_names_r2.n_negatives} harmless sentences, which breaks the limit set beforehand, so none was shipped (see Benchmarks). Addresses, dates of birth and bank details are
-            not detected at all.
+            {R.lowercase_names_r2.n_negatives} harmless sentences, which breaks the limit set beforehand, so it is <strong>not the default</strong>. Chat warns you when a message is mostly lowercase,
+            and offers <strong>Strict name hiding</strong> as an opt-in: it finds most lowercase names but may also hide some ordinary words (added after these results were known, as your choice; see
+            Benchmarks). Addresses, dates of birth and bank details are not detected at all.
+          </li>
+          <li>
+            <strong>Planned for v1.1: a name model that does not depend on capital letters.</strong> The plan is to fine-tune the name model on lowercased and mixed-case text, so it reads context
+            instead of capitalisation. Not started: the training data's licence has to be checked first, then the model exported and a new browser download added.
           </li>
           <li>
             <strong>It is a detector with error rates, not a guarantee.</strong> About {pct(1 - S.test_recall.k / S.test_recall.n, 0)} of test attacks get through, and new

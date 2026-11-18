@@ -6,6 +6,7 @@ import { MaskedText, ResultPill } from "./Pills";
 export interface HandledTurn {
   privacyOn: boolean;
   namesChecked: boolean;
+  strict?: boolean;
   counts: Partial<Record<string, number>>;
   sent: string;
   maskMs: number;
@@ -68,6 +69,7 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
             <p>
               {local ? `On your device: ${local}.` : "On your device: nothing personal found."}
               {!turn.namesChecked && " Names were not checked (the privacy model was not available)."}
+              {turn.namesChecked && turn.strict && " Strict name hiding was on: unknown lowercase words were treated as possible names."}
             </p>
           ) : (
             <p>Off. Your message was sent as you typed it.</p>

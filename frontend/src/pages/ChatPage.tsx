@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { Link } from "react-router-dom";
 import { describeError, postChat, type ChatResponse } from "../api";
 import { HandledPanel, type HandledTurn } from "../components/HandledPanel";
 import { ModelStatusLine } from "../components/ModelStatus";
@@ -7,6 +8,7 @@ import { ResultPill } from "../components/Pills";
 import { Reply } from "../components/Reply";
 import { chatLabel, mainReason, nextStep, plural, toneFor } from "../explain";
 import type { PiiSpan } from "../pii/detectors";
+import { isMostlyLowercase } from "../pii/nameMode";
 import { NER_MODEL } from "../pii/nerConfig";
 import { normalizeText } from "../pii/normalize";
 import { PlaceholderVault } from "../pii/vault";
@@ -56,6 +58,8 @@ export function ChatPage() {
   const [draft, setDraft] = useState("");
   const [privacyOn, setPrivacyOn] = useState(true);
   const [skipNames, setSkipNames] = useState(false);
+  // Strict name hiding (approach B2): OFF by default, opt-in, per visit. Added after the round-2 results were known (docs/decisions.md Day 3.14).
+  const [strict, setStrict] = useState(false);
   const [busy, setBusy] = useState(false);
   const [introHidden, setIntroHidden] = useState(readDismissed);
   const ner = useModelWorker<NerResult>(createPrivacyWorker);
@@ -91,7 +95,7 @@ export function ChatPage() {
     if (!raw.trim() || busy) return;
     const id = nextId.current++;
     const norm = normalizeText(raw);        // same normalisation as the server, before masking
-    const base: Turn = { id, original: raw, sent: norm.text, privacyOn, namesChecked: false, counts: {}, hiddenCount: 0, maskMs: 0, status: "masking" };
+    const base: Turn = { id, original: raw, sent: norm.text, privacyOn, strict, namesChecked: false, counts: {}, hiddenCount: 0, maskMs: 0, status: "masking" };
     setTurns((ts) => [...ts, base]);
     setSelected(id);
     setDraft("");
@@ -104,7 +108,7 @@ export function ChatPage() {
         let namesChecked = false;
         if (!(skipNames && ner.status.state === "error")) {
           try {
-            const r = await ner.run(norm.text);      // waits for the first download if needed (shown as a progress bar)
+            const r = await ner.run(norm.text, { strict });      // waits for the first download if needed (shown as a progress bar)
             names = r.spans;
             nerMs = r.ms;
             namesChecked = true;
@@ -197,6 +201,17 @@ export function ChatPage() {
                 />
                 <span>Hide my personal data</span>
               </label>
+              {privacyOn && (
+                <div className="strict-option">
+                  <label className="switch">
+                    <input type="checkbox" role="switch" checked={strict} onChange={(e) => setStrict(e.target.checked)} aria-describedby="strict-help" />
+                    <span>Strict name hiding</span>
+                  </label>
+                  <p id="strict-help" className="muted small">
+                    Finds most lowercase names but may also hide some ordinary words. <Link to="/benchmarks#lowercase2">See the measured numbers</Link>
+                  </p>
+                </div>
+              )}
               {ner.status.state === "error" && privacyOn && (
                 <label className="switch">
                   <input type="checkbox" checked={skipNames} onChange={(e) => setSkipNames(e.target.checked)} />
@@ -231,6 +246,15 @@ export function ChatPage() {
               maxLength={8000}
               placeholder="Type a message. Enter sends, Shift+Enter adds a new line."
             />
+            {privacyOn && !strict && isMostlyLowercase(draft) && (
+              <p className="notice" role="note">
+                This message is mostly lowercase, so names in it may not be hidden.{" "}
+                <button type="button" className="link-btn" onClick={() => setStrict(true)}>
+                  Turn on Strict name hiding
+                </button>{" "}
+                to catch more of them.
+              </p>
+            )}
             <div className="composer-foot">
               <p className="muted small">Each message is answered on its own; the AI doesn't see earlier messages.</p>
               <button type="submit" className="btn btn-primary" disabled={busy || !draft.trim()}>

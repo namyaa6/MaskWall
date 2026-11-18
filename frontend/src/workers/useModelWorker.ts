@@ -45,12 +45,12 @@ export function useModelWorker<R>(factory: () => Worker) {
   }, [ensure]);
 
   const run = useCallback(
-    (text: string): Promise<R> => {
+    (text: string, opts?: { strict?: boolean }): Promise<R> => {
       load();
       const id = nextId.current++;
       return new Promise<R>((resolve, reject) => {
         pending.current.set(id, { resolve, reject });
-        ensure().postMessage({ type: "run", id, text } satisfies ToWorker);
+        ensure().postMessage({ type: "run", id, text, strict: opts?.strict } satisfies ToWorker);
       });
     },
     [ensure, load],
