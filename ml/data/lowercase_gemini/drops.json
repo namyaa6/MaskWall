@@ -1,0 +1,402 @@
+[
+ {
+  "call": "pos_0",
+  "text": "my brother will be here in an hour",
+  "reason": "manual: label error: 'will' is the modal verb here, not a person's name (skimmed before any list or approach existed)"
+ },
+ {
+  "call": "pos_3",
+  "text": "will you come to the party tonight",
+  "reason": "manual: label error: 'will' is the modal verb here, not a person's name (skimmed before any list or approach existed)"
+ },
+ {
+  "call": "pos_0",
+  "text": "please mark this email as urgent",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "mujhe ayesha se milna hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "did you ask manish about the trip",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "anjali is waiting outside the gate",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "sara kahan gayab ho gayi",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "please tell rajesh that i am busy",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "sunita ji ne sab khana bana liya",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "the coffee was so good with ramesh",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_0",
+  "text": "sanjeev khanna is coming to the office",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "kya tumne manish ka phone uthaya",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "sonia ne ghar ki safai kar di",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "kal rajat humare ghar pe rukega",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "hello sunita ji kaise ho aap",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "vicky please thoda jaldi aa jana",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "deepak ne ticket book karwa li hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "kashish ka result aaj aayega",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "maine sarita ko message bhej diya",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "yash ne car sale kar di aaj",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_1",
+  "text": "is it possible to ask nisha about the plan",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "it was so good meeting thomas miller yesterday",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "kal deep ne mujhe call kiya tha",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "hi jessica hope u had a nice weekend",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "did u hear that lucas got a new job",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "vikram bhaiyya se puch lo kya plan hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "chloe looked really tired during the meeting",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "i think felix forgot his bag in the car",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "neha ji please check the email i sent",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "robert clark is moving to a new apartment soon",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_2",
+  "text": "rose told me she likes the new song",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "sneha ko bolo ki jaldi ghar aaye",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "amit and rohit are going to mumbai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "dear anjali please send the file",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "sumit is planning a trip to goa",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "my brother said sanjay is coming home",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "pooja left her umbrella at the cafe",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "his name is manish and he plays cricket",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "kavita has been practicing yoga daily",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "pos_3",
+  "text": "megha ji ne khaana bhijwaya hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "japan ka weather kaisa hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "morning pooja khatam ho gayi",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "kya tum agra ghumne gaye the",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "i need more faith to get through this",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "new york is so crowded",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "hope u find peace in ur work",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "germany mein bahut thand hogi abhi",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "can u keep a secret for me",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "sydney ka opera house bahut cool hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_0",
+  "text": "do u want to share the harvest with us",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "wednesday ko meeting shift ho gayi hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "starbucks ki coffee peene ka mann hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "dusshera ki chutti milegi kya humein",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "google maps par traffic dikha raha hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "august mein monsoon ka mazaa lenge",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "myntra se kuch mangwana hai pls check kar",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "eid par sab log biryani khaenge",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "whatsapp par pdf bhej di hai",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "christmas ki shopping ho gayi kya",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_1",
+  "text": "samsung ka phone lena chahiye ya nahi",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "aaj dinner bahar hi karenge",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "metro station pe milte hain",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "sabzi le aana aate hue",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "kaam khatam ho gaya kya tumhara",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "taxi nahi mil rahi hai yahan",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "kal ki meeting cancel ho gayi",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "mujhe thodi der aur sone do",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "paytm kar do please",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "movie dekhne ka plan hai kya",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_2",
+  "text": "aaj bohot thak gaya hoon",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "how to improve my english grammar skills",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "muze 3 din ka goa trip plan bana kar do",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "what happens if i drink too much coffee",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "kya tum mujhe java ka basic syntax sikha sakte ho",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "write a formal email for leave application",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "batao ki stock market mein invest kaise kare",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "give me a list of common interview questions",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "ghar pe cake banane ka asan tarika batao",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "can you check if this sentence is grammatically correct",
+  "reason": "surplus beyond 15 per prompt"
+ },
+ {
+  "call": "neg_3",
+  "text": "thoda history ke bare mein batao mughal empire ki",
+  "reason": "surplus beyond 15 per prompt"
+ }
+]

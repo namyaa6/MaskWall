@@ -1,0 +1,4 @@
+[
+  {"text": "my brother will be here in an hour", "reason": "label error: 'will' is the modal verb here, not a person's name (skimmed before any list or approach existed)"},
+  {"text": "will you come to the party tonight", "reason": "label error: 'will' is the modal verb here, not a person's name (skimmed before any list or approach existed)"}
+]

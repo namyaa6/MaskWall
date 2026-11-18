@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that each mention at least one PERSON'S NAME (a real-sounding first name, sometimes first and last name) written entirely in lowercase. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. For each message return an object with: \"text\" (the message), \"names\" (list of the person names exactly as they appear in the text), and \"kind\": \"cue\" if the name comes right after or before a word that signals a person (for example tell, call, ask, hi, dear, 'ne', 'ko', 'ji', 'bhaiya', said, 'name is'), \"no_cue\" if the name just sits in the sentence without such a word, or \"word_name\" if the name is also an ordinary everyday word (for example rose, joy, will, mark, grace, deep). Focus: a balanced mix; make about half of them 'no_cue' messages, and include about five 'word_name' messages with names that are also everyday words.",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\n    \"text\": \"hi arjun kaisa hai bhai\",\n    \"names\": [\"arjun\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"sara is wearing that green dress today\",\n    \"names\": [\"sara\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"please tell rahul to bring the keys\",\n    \"names\": [\"rahul\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"i saw rose in the garden this morning\",\n    \"names\": [\"rose\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"riya was just sitting there quietly\",\n    \"names\": [\"riya\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"call aman later for the update\",\n    \"names\": [\"aman\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"will you come to the party tonight\",\n    \"names\": [\"will\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"vikram ne mujhe abhi call kiya tha\",\n    \"names\": [\"vikram\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"deep is looking for a new job in delhi\",\n    \"names\": [\"deep\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"did you see priya at the store\",\n    \"names\": [\"priya\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"karan bhaiya se pooch lo na\",\n    \"names\": [\"karan\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"joy likes to listen to jazz music\",\n    \"names\": [\"joy\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"neha went to the movies without us\",\n    \"names\": [\"neha\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"please ask kabir about the project deadline\",\n    \"names\": [\"kabir\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"simran was running late for the meeting\",\n    \"names\": [\"simran\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"mark is studying architecture in london\",\n    \"names\": [\"mark\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"sneha ko bolo ki jaldi ghar aaye\",\n    \"names\": [\"sneha\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"amit and rohit are going to mumbai\",\n    \"names\": [\"amit\", \"rohit\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"dear anjali please send the file\",\n    \"names\": [\"anjali\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"sumit is planning a trip to goa\",\n    \"names\": [\"sumit\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"my brother said sanjay is coming home\",\n    \"names\": [\"sanjay\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"pooja left her umbrella at the cafe\",\n    \"names\": [\"pooja\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"his name is manish and he plays cricket\",\n    \"names\": [\"manish\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"kavita has been practicing yoga daily\",\n    \"names\": [\"kavita\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"megha ji ne khaana bhijwaya hai\",\n    \"names\": [\"megha\"],\n    \"kind\": \"cue\"\n  }\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRM1mn0xDMviBjSWQVL+Eoyo+bH/I6NFavyDcL+60vKOqrR8DFqKNHt2JDYG3sYF0B4sG+ULHNj8frN19OyD41g4h5jjw0CRm5HGWsnt9ul+VUY3FVuQcqGAbRWjoh6Qge7FT5IOtKsIAArD3aDNqZJEys+LB9IhBAR7ndQk9vRMx0duxiuE7jHUJyVYHcMCNTxhGvFH"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 301,
+   "candidatesTokenCount": 973,
+   "totalTokenCount": 1274,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 301
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "60j9avDpMqHKz7sP9fi1uQ4"
+ }
+}

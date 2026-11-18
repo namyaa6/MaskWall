@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that each mention at least one PERSON'S NAME (a real-sounding first name, sometimes first and last name) written entirely in lowercase. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. For each message return an object with: \"text\" (the message), \"names\" (list of the person names exactly as they appear in the text), and \"kind\": \"cue\" if the name comes right after or before a word that signals a person (for example tell, call, ask, hi, dear, 'ne', 'ko', 'ji', 'bhaiya', said, 'name is'), \"no_cue\" if the name just sits in the sentence without such a word, or \"word_name\" if the name is also an ordinary everyday word (for example rose, joy, will, mark, grace, deep). Focus: Hinglish messages with Indian names, about everyday things (office, family, travel, food, exams, money).",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\n    \"text\": \"hi rahul kal office aana hai kya\",\n    \"names\": [\"rahul\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"sneha ne mujhe report bheji hai\",\n    \"names\": [\"sneha\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"party mein arjun bhi aa raha hai\",\n    \"names\": [\"arjun\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"please call priya for the meeting updates\",\n    \"names\": [\"priya\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"did you see the email from amit\",\n    \"names\": [\"amit\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"kal deep ka exam hai tension ho rahi hai\",\n    \"names\": [\"deep\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"meera ko bolo ki jaldi ghar aaye\",\n    \"names\": [\"meera\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"aaj rohan mere saath lunch karega\",\n    \"names\": [\"rohan\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"dear kavita please send the file\",\n    \"names\": [\"kavita\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"suresh bhaiya ne paise bheje the\",\n    \"names\": [\"suresh\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"i need to talk to sanjay about the trip\",\n    \"names\": [\"sanjay\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"joy will handle the client presentation\",\n    \"names\": [\"joy\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"anjali ki mummy hospital mein hai\",\n    \"names\": [\"anjali\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"vikram ne bola tha ki wo late hoga\",\n    \"names\": [\"vikram\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"neha ko market jana hai shopping ke liye\",\n    \"names\": [\"neha\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"kya tumne manish ka phone uthaya\",\n    \"names\": [\"manish\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"sonia ne ghar ki safai kar di\",\n    \"names\": [\"sonia\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"kal rajat humare ghar pe rukega\",\n    \"names\": [\"rajat\"],\n    \"kind\": \"no_cue\"\n  },\n  {\n    \"text\": \"hello sunita ji kaise ho aap\",\n    \"names\": [\"sunita\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"vicky please thoda jaldi aa jana\",\n    \"names\": [\"vicky\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"deepak ne ticket book karwa li hai\",\n    \"names\": [\"deepak\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"kashish ka result aaj aayega\",\n    \"names\": [\"kashish\"],\n    \"kind\": \"word_name\"\n  },\n  {\n    \"text\": \"maine sarita ko message bhej diya\",\n    \"names\": [\"sarita\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"yash ne car sale kar di aaj\",\n    \"names\": [\"yash\"],\n    \"kind\": \"cue\"\n  },\n  {\n    \"text\": \"is it possible to ask nisha about the plan\",\n    \"names\": [\"nisha\"],\n    \"kind\": \"cue\"\n  }\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRMG8BrFzuiaiHByfIjA3OuBnxig65Yw1DChR3frcKJwfd6KgAwlH2VVGRS0NZJeLmSIjK2kq8uiPxG39B/bhAVLgax+g4lPywnkKHttsM+tCaOs0Ab1f9iaZ4NBq5ZbCoOmeTIRhM9mvlDVOf2utilw5DQgwoU+Ixs3Cd5fTI5WNXIFGCPCopWMs5sFlV30yEIekZwM"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 290,
+   "candidatesTokenCount": 975,
+   "totalTokenCount": 1265,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 290
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "40j9at2gG5ft694Pzsn1AQ"
+ }
+}

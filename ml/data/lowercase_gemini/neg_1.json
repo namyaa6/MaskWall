@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that contain NO person's name at all. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. Each message is an object with \"text\" and \"names\" (always an empty list) and \"category\". Category \"brand\": messages about companies, apps, shops and products; category \"date_festival\": messages about months, weekdays, festivals and holidays (including Indian ones).",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\n    \"text\": \"bhai aaj amazon par bohot achhi sale chal rahi hai\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"kal to sunday hai to chutti hogi\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"zomato se kuch order kar le kya aaj\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"diwali ki preparation shuru kar di hai sabne\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"ye iphone ka naya update install kiya tune\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"agla mahina bahut busy jane wala hai\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"netflix par koi nayi movie aayi hai kya\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"holi ke din sab log milenge ghar par\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"insta par wo wali reel dekhi tune\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"friday ko jaldi nikal jayenge office se\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"flipkart par electronics kafi saste mil rahe hain\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"january mein kitni thand hogi wahan\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"mujhe uber ki cab nahi mil rahi hai\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"chalo rakhi par ghar chalte hain\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"spotify par ye gaana loop par chal raha hai\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"wednesday ko meeting shift ho gayi hai\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"starbucks ki coffee peene ka mann hai\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"dusshera ki chutti milegi kya humein\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"google maps par traffic dikha raha hai\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"august mein monsoon ka mazaa lenge\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"myntra se kuch mangwana hai pls check kar\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"eid par sab log biryani khaenge\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"whatsapp par pdf bhej di hai\",\n    \"names\": [],\n    \"category\": \"brand\"\n  },\n  {\n    \"text\": \"christmas ki shopping ho gayi kya\",\n    \"names\": [],\n    \"category\": \"date_festival\"\n  },\n  {\n    \"text\": \"samsung ka phone lena chahiye ya nahi\",\n    \"names\": [],\n    \"category\": \"brand\"\n  }\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRNpxz8RR2csu89FQzm1T4ChmlIrbypWEXRqXkiIaFigoKy8KuK7rqh4kV0EF3WgPEaufw4XLViBjzANouWpPpEbCnRph0CIp9vjhGgcf1GoDQwzqTw3UfJ2Eef8Iox2LZjk1+wzEb0MUGq0eJDAiXfrvZMf6KfrB1KBDEW1H/23Bnu9w1EJaWef33Ls+e916o737gGY"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 169,
+   "candidatesTokenCount": 933,
+   "totalTokenCount": 1102,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 169
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "90j9auTzCPWEz7sPgvqF8Aw"
+ }
+}

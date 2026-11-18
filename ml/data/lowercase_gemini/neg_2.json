@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that contain NO person's name at all. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. Each message is an object with \"text\" and \"names\" (always an empty list) and \"category\". Category \"hinglish_plain\": everyday Hinglish messages about chores, work, food, travel and money, with no names at all.",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\n    \"text\": \"kal office jana padega kya\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"bhook lagi hai kuch manga le\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"train ka ticket book ho gaya finally\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"itne paise kahan kharch kar diye\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"aaj raat ko chicken banayenge\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"jaldi ghar aa jana thx\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"mujhe abhi wo report bhejo pls\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"barish bahut tez ho rahi hai bahar\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"electricity ka bill pay kar diya kya\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"traffic mein bahut der se phasa hoon\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"kal subah jaldi uthna hai\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"coffee peene chalein kya\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"bank account mein balance kam hai\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"chalo market chalte hain kuch saman lena hai\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"laptop charger bhul gaya main\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"aaj dinner bahar hi karenge\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"metro station pe milte hain\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"sabzi le aana aate hue\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"kaam khatam ho gaya kya tumhara\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"taxi nahi mil rahi hai yahan\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"kal ki meeting cancel ho gayi\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"mujhe thodi der aur sone do\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"paytm kar do please\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"movie dekhne ka plan hai kya\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  },\n  {\n    \"text\": \"aaj bohot thak gaya hoon\",\n    \"names\": [],\n    \"category\": \"hinglish_plain\"\n  }\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRNN8iv1Um9PGSk/AoVSkKqPiacsthjpY3eZmHoel2S4MUnepxX4ShhpLjCsNwNzYhuzt246IFETeIoUSXGHbrvpu/PvWZ51C1StXQ54r85UWp4r6t29MyI6aTrQZ+hgQXE8PKRCCkkeeDRAnNj0541MdKrQXIGs3CmvLo8X+rdoLQl9WiSvqjAvR69I0SHtFpjMvjdm"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 163,
+   "candidatesTokenCount": 937,
+   "totalTokenCount": 1100,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 163
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "-0j9atzmFam-0r4Ppp2wwQ8"
+ }
+}

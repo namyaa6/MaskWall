@@ -1,0 +1,120 @@
+{"id": 1, "set": "pos", "category": "cue", "text": "hey ananya how are u doing today", "names": ["ananya"], "call": "pos_0"}
+{"id": 2, "set": "pos", "category": "no_cue", "text": "did you see rahul at the party last night", "names": ["rahul"], "call": "pos_0"}
+{"id": 3, "set": "pos", "category": "cue", "text": "suresh bhaiya please send the files soon", "names": ["suresh"], "call": "pos_0"}
+{"id": 4, "set": "pos", "category": "word_name", "text": "i think rose is such a lovely girl", "names": ["rose"], "call": "pos_0"}
+{"id": 5, "set": "pos", "category": "cue", "text": "please ask arjun to call me back asap", "names": ["arjun"], "call": "pos_0"}
+{"id": 6, "set": "pos", "category": "no_cue", "text": "priyanka kahan hai aaj", "names": ["priyanka"], "call": "pos_0"}
+{"id": 7, "set": "pos", "category": "cue", "text": "hi fatima long time no see", "names": ["fatima"], "call": "pos_0"}
+{"id": 8, "set": "pos", "category": "cue", "text": "vikram sharma ne mujhse baat ki thi", "names": ["vikram sharma"], "call": "pos_0"}
+{"id": 9, "set": "pos", "category": "no_cue", "text": "did u send the report to karthik", "names": ["karthik"], "call": "pos_0"}
+{"id": 10, "set": "pos", "category": "word_name", "text": "joy is coming over for dinner tonight", "names": ["joy"], "call": "pos_0"}
+{"id": 11, "set": "pos", "category": "cue", "text": "bata dena deep ko ki kal chutti hai", "names": ["deep"], "call": "pos_0"}
+{"id": 12, "set": "pos", "category": "cue", "text": "karan ne mujhe phone kiya tha", "names": ["karan"], "call": "pos_0"}
+{"id": 13, "set": "pos", "category": "unlabelled", "text": "just saw simran at the grocery store", "names": ["simran"], "call": "pos_0"}
+{"id": 14, "set": "pos", "category": "cue", "text": "grace told me she loves the new movie", "names": ["grace"], "call": "pos_0"}
+{"id": 15, "set": "pos", "category": "no_cue", "text": "harpreet singh is the best person for this job", "names": ["harpreet singh"], "call": "pos_0"}
+{"id": 16, "set": "pos", "category": "cue", "text": "hi rahul kal office aana hai kya", "names": ["rahul"], "call": "pos_1"}
+{"id": 17, "set": "pos", "category": "cue", "text": "sneha ne mujhe report bheji hai", "names": ["sneha"], "call": "pos_1"}
+{"id": 18, "set": "pos", "category": "no_cue", "text": "party mein arjun bhi aa raha hai", "names": ["arjun"], "call": "pos_1"}
+{"id": 19, "set": "pos", "category": "cue", "text": "please call priya for the meeting updates", "names": ["priya"], "call": "pos_1"}
+{"id": 20, "set": "pos", "category": "cue", "text": "did you see the email from amit", "names": ["amit"], "call": "pos_1"}
+{"id": 21, "set": "pos", "category": "word_name", "text": "kal deep ka exam hai tension ho rahi hai", "names": ["deep"], "call": "pos_1"}
+{"id": 22, "set": "pos", "category": "cue", "text": "meera ko bolo ki jaldi ghar aaye", "names": ["meera"], "call": "pos_1"}
+{"id": 23, "set": "pos", "category": "no_cue", "text": "aaj rohan mere saath lunch karega", "names": ["rohan"], "call": "pos_1"}
+{"id": 24, "set": "pos", "category": "cue", "text": "dear kavita please send the file", "names": ["kavita"], "call": "pos_1"}
+{"id": 25, "set": "pos", "category": "cue", "text": "suresh bhaiya ne paise bheje the", "names": ["suresh"], "call": "pos_1"}
+{"id": 26, "set": "pos", "category": "cue", "text": "i need to talk to sanjay about the trip", "names": ["sanjay"], "call": "pos_1"}
+{"id": 27, "set": "pos", "category": "word_name", "text": "joy will handle the client presentation", "names": ["joy"], "call": "pos_1"}
+{"id": 28, "set": "pos", "category": "cue", "text": "anjali ki mummy hospital mein hai", "names": ["anjali"], "call": "pos_1"}
+{"id": 29, "set": "pos", "category": "cue", "text": "vikram ne bola tha ki wo late hoga", "names": ["vikram"], "call": "pos_1"}
+{"id": 30, "set": "pos", "category": "cue", "text": "neha ko market jana hai shopping ke liye", "names": ["neha"], "call": "pos_1"}
+{"id": 31, "set": "pos", "category": "cue", "text": "hey sarah are u coming to the party later", "names": ["sarah"], "call": "pos_2"}
+{"id": 32, "set": "pos", "category": "no_cue", "text": "just saw john smith walking his dog in the park", "names": ["john smith"], "call": "pos_2"}
+{"id": 33, "set": "pos", "category": "cue", "text": "bhaiya rahul ne kal kaha tha ki wo aayega", "names": ["rahul"], "call": "pos_2"}
+{"id": 34, "set": "pos", "category": "cue", "text": "i need to call emily about the project details", "names": ["emily"], "call": "pos_2"}
+{"id": 35, "set": "pos", "category": "word_name", "text": "mark left his umbrella at my place", "names": ["mark"], "call": "pos_2"}
+{"id": 36, "set": "pos", "category": "cue", "text": "ask priya if she wants to go out for dinner", "names": ["priya"], "call": "pos_2"}
+{"id": 37, "set": "pos", "category": "no_cue", "text": "did u see alice wearing that new dress today", "names": ["alice"], "call": "pos_2"}
+{"id": 38, "set": "pos", "category": "cue", "text": "rohan ko bata dena ki class cancel ho gayi hai", "names": ["rohan"], "call": "pos_2"}
+{"id": 39, "set": "pos", "category": "cue", "text": "please send the files to michael johnson asap", "names": ["michael johnson"], "call": "pos_2"}
+{"id": 40, "set": "pos", "category": "word_name", "text": "grace just sent me a really funny meme", "names": ["grace"], "call": "pos_2"}
+{"id": 41, "set": "pos", "category": "cue", "text": "i was talking to david about the movie we saw", "names": ["david"], "call": "pos_2"}
+{"id": 42, "set": "pos", "category": "cue", "text": "kya anjali ko tumne invite bheja hai", "names": ["anjali"], "call": "pos_2"}
+{"id": 43, "set": "pos", "category": "word_name", "text": "joy is bringing the dessert for the bbq", "names": ["joy"], "call": "pos_2"}
+{"id": 44, "set": "pos", "category": "no_cue", "text": "my boss charlie is so annoying sometimes", "names": ["charlie"], "call": "pos_2"}
+{"id": 45, "set": "pos", "category": "cue", "text": "will you tell sophie that i am running late", "names": ["sophie"], "call": "pos_2"}
+{"id": 46, "set": "pos", "category": "cue", "text": "hi arjun kaisa hai bhai", "names": ["arjun"], "call": "pos_3"}
+{"id": 47, "set": "pos", "category": "no_cue", "text": "sara is wearing that green dress today", "names": ["sara"], "call": "pos_3"}
+{"id": 48, "set": "pos", "category": "cue", "text": "please tell rahul to bring the keys", "names": ["rahul"], "call": "pos_3"}
+{"id": 49, "set": "pos", "category": "word_name", "text": "i saw rose in the garden this morning", "names": ["rose"], "call": "pos_3"}
+{"id": 50, "set": "pos", "category": "no_cue", "text": "riya was just sitting there quietly", "names": ["riya"], "call": "pos_3"}
+{"id": 51, "set": "pos", "category": "cue", "text": "call aman later for the update", "names": ["aman"], "call": "pos_3"}
+{"id": 52, "set": "pos", "category": "cue", "text": "vikram ne mujhe abhi call kiya tha", "names": ["vikram"], "call": "pos_3"}
+{"id": 53, "set": "pos", "category": "word_name", "text": "deep is looking for a new job in delhi", "names": ["deep"], "call": "pos_3"}
+{"id": 54, "set": "pos", "category": "no_cue", "text": "did you see priya at the store", "names": ["priya"], "call": "pos_3"}
+{"id": 55, "set": "pos", "category": "cue", "text": "karan bhaiya se pooch lo na", "names": ["karan"], "call": "pos_3"}
+{"id": 56, "set": "pos", "category": "word_name", "text": "joy likes to listen to jazz music", "names": ["joy"], "call": "pos_3"}
+{"id": 57, "set": "pos", "category": "no_cue", "text": "neha went to the movies without us", "names": ["neha"], "call": "pos_3"}
+{"id": 58, "set": "pos", "category": "cue", "text": "please ask kabir about the project deadline", "names": ["kabir"], "call": "pos_3"}
+{"id": 59, "set": "pos", "category": "no_cue", "text": "simran was running late for the meeting", "names": ["simran"], "call": "pos_3"}
+{"id": 60, "set": "pos", "category": "word_name", "text": "mark is studying architecture in london", "names": ["mark"], "call": "pos_3"}
+{"id": 61, "set": "neg", "category": "word_that_can_a_name", "text": "it is a beautiful rose in the garden today", "names": [], "call": "neg_0"}
+{"id": 62, "set": "neg", "category": "place", "text": "we are planning to visit london next month", "names": [], "call": "neg_0"}
+{"id": 63, "set": "neg", "category": "word_that_can_a_name", "text": "i feel so much joy when i listen to music", "names": [], "call": "neg_0"}
+{"id": 64, "set": "neg", "category": "place", "text": "did u see the tower in paris yet", "names": [], "call": "neg_0"}
+{"id": 65, "set": "neg", "category": "word_that_can_a_name", "text": "the deep water looks scary at night", "names": [], "call": "neg_0"}
+{"id": 66, "set": "neg", "category": "place", "text": "is it humid in mumbai right now", "names": [], "call": "neg_0"}
+{"id": 67, "set": "neg", "category": "word_that_can_a_name", "text": "plz grace the event with ur presence", "names": [], "call": "neg_0"}
+{"id": 68, "set": "neg", "category": "place", "text": "kal hum delhi ja rahe hai", "names": [], "call": "neg_0"}
+{"id": 69, "set": "neg", "category": "word_that_can_a_name", "text": "will u be there on time", "names": [], "call": "neg_0"}
+{"id": 70, "set": "neg", "category": "place", "text": "i want to move to canada someday", "names": [], "call": "neg_0"}
+{"id": 71, "set": "neg", "category": "word_that_can_a_name", "text": "i bought a ruby ring for my mom", "names": [], "call": "neg_0"}
+{"id": 72, "set": "neg", "category": "place", "text": "have u ever been to the taj mahal", "names": [], "call": "neg_0"}
+{"id": 73, "set": "neg", "category": "word_that_can_a_name", "text": "the summer heat is getting worse", "names": [], "call": "neg_0"}
+{"id": 74, "set": "neg", "category": "place", "text": "flight to dubai book kar li kya", "names": [], "call": "neg_0"}
+{"id": 75, "set": "neg", "category": "word_that_can_a_name", "text": "did u mark the important dates on the calendar", "names": [], "call": "neg_0"}
+{"id": 76, "set": "neg", "category": "brand", "text": "bhai aaj amazon par bohot achhi sale chal rahi hai", "names": [], "call": "neg_1"}
+{"id": 77, "set": "neg", "category": "date_festival", "text": "kal to sunday hai to chutti hogi", "names": [], "call": "neg_1"}
+{"id": 78, "set": "neg", "category": "brand", "text": "zomato se kuch order kar le kya aaj", "names": [], "call": "neg_1"}
+{"id": 79, "set": "neg", "category": "date_festival", "text": "diwali ki preparation shuru kar di hai sabne", "names": [], "call": "neg_1"}
+{"id": 80, "set": "neg", "category": "brand", "text": "ye iphone ka naya update install kiya tune", "names": [], "call": "neg_1"}
+{"id": 81, "set": "neg", "category": "date_festival", "text": "agla mahina bahut busy jane wala hai", "names": [], "call": "neg_1"}
+{"id": 82, "set": "neg", "category": "brand", "text": "netflix par koi nayi movie aayi hai kya", "names": [], "call": "neg_1"}
+{"id": 83, "set": "neg", "category": "date_festival", "text": "holi ke din sab log milenge ghar par", "names": [], "call": "neg_1"}
+{"id": 84, "set": "neg", "category": "brand", "text": "insta par wo wali reel dekhi tune", "names": [], "call": "neg_1"}
+{"id": 85, "set": "neg", "category": "date_festival", "text": "friday ko jaldi nikal jayenge office se", "names": [], "call": "neg_1"}
+{"id": 86, "set": "neg", "category": "brand", "text": "flipkart par electronics kafi saste mil rahe hain", "names": [], "call": "neg_1"}
+{"id": 87, "set": "neg", "category": "date_festival", "text": "january mein kitni thand hogi wahan", "names": [], "call": "neg_1"}
+{"id": 88, "set": "neg", "category": "brand", "text": "mujhe uber ki cab nahi mil rahi hai", "names": [], "call": "neg_1"}
+{"id": 89, "set": "neg", "category": "date_festival", "text": "chalo rakhi par ghar chalte hain", "names": [], "call": "neg_1"}
+{"id": 90, "set": "neg", "category": "brand", "text": "spotify par ye gaana loop par chal raha hai", "names": [], "call": "neg_1"}
+{"id": 91, "set": "neg", "category": "hinglish_plain", "text": "kal office jana padega kya", "names": [], "call": "neg_2"}
+{"id": 92, "set": "neg", "category": "hinglish_plain", "text": "bhook lagi hai kuch manga le", "names": [], "call": "neg_2"}
+{"id": 93, "set": "neg", "category": "hinglish_plain", "text": "train ka ticket book ho gaya finally", "names": [], "call": "neg_2"}
+{"id": 94, "set": "neg", "category": "hinglish_plain", "text": "itne paise kahan kharch kar diye", "names": [], "call": "neg_2"}
+{"id": 95, "set": "neg", "category": "hinglish_plain", "text": "aaj raat ko chicken banayenge", "names": [], "call": "neg_2"}
+{"id": 96, "set": "neg", "category": "hinglish_plain", "text": "jaldi ghar aa jana thx", "names": [], "call": "neg_2"}
+{"id": 97, "set": "neg", "category": "hinglish_plain", "text": "mujhe abhi wo report bhejo pls", "names": [], "call": "neg_2"}
+{"id": 98, "set": "neg", "category": "hinglish_plain", "text": "barish bahut tez ho rahi hai bahar", "names": [], "call": "neg_2"}
+{"id": 99, "set": "neg", "category": "hinglish_plain", "text": "electricity ka bill pay kar diya kya", "names": [], "call": "neg_2"}
+{"id": 100, "set": "neg", "category": "hinglish_plain", "text": "traffic mein bahut der se phasa hoon", "names": [], "call": "neg_2"}
+{"id": 101, "set": "neg", "category": "hinglish_plain", "text": "kal subah jaldi uthna hai", "names": [], "call": "neg_2"}
+{"id": 102, "set": "neg", "category": "hinglish_plain", "text": "coffee peene chalein kya", "names": [], "call": "neg_2"}
+{"id": 103, "set": "neg", "category": "hinglish_plain", "text": "bank account mein balance kam hai", "names": [], "call": "neg_2"}
+{"id": 104, "set": "neg", "category": "hinglish_plain", "text": "chalo market chalte hain kuch saman lena hai", "names": [], "call": "neg_2"}
+{"id": 105, "set": "neg", "category": "hinglish_plain", "text": "laptop charger bhul gaya main", "names": [], "call": "neg_2"}
+{"id": 106, "set": "neg", "category": "generic", "text": "can u help me write a python script to scrape some data", "names": [], "call": "neg_3"}
+{"id": 107, "set": "neg", "category": "generic", "text": "batao na best pasta recipe kya hai", "names": [], "call": "neg_3"}
+{"id": 108, "set": "neg", "category": "generic", "text": "summarize this long article for me pls", "names": [], "call": "neg_3"}
+{"id": 109, "set": "neg", "category": "generic", "text": "muze delhi se mumbai jaane ka best route bata do", "names": [], "call": "neg_3"}
+{"id": 110, "set": "neg", "category": "generic", "text": "what is the difference between kinetic and potential energy", "names": [], "call": "neg_3"}
+{"id": 111, "set": "neg", "category": "generic", "text": "translate this paragraph into simple hindi for me", "names": [], "call": "neg_3"}
+{"id": 112, "set": "neg", "category": "generic", "text": "aj kal yoga shuru karna hai koi easy routine batao", "names": [], "call": "neg_3"}
+{"id": 113, "set": "neg", "category": "generic", "text": "explain the concept of supply and demand", "names": [], "call": "neg_3"}
+{"id": 114, "set": "neg", "category": "generic", "text": "how do i fix this css alignment issue", "names": [], "call": "neg_3"}
+{"id": 115, "set": "neg", "category": "generic", "text": "office jane ke liye koi ache outfit ideas do", "names": [], "call": "neg_3"}
+{"id": 116, "set": "neg", "category": "generic", "text": "can you solve this math problem for me", "names": [], "call": "neg_3"}
+{"id": 117, "set": "neg", "category": "generic", "text": "thoda help kardo excel formula samajhne mein", "names": [], "call": "neg_3"}
+{"id": 118, "set": "neg", "category": "generic", "text": "what are some healthy snacks for late night study", "names": [], "call": "neg_3"}
+{"id": 119, "set": "neg", "category": "generic", "text": "suggest me a good science fiction book", "names": [], "call": "neg_3"}
+{"id": 120, "set": "neg", "category": "generic", "text": "shadi ke liye koi achi invitation line likh do", "names": [], "call": "neg_3"}

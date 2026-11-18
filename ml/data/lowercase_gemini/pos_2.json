@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that each mention at least one PERSON'S NAME (a real-sounding first name, sometimes first and last name) written entirely in lowercase. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. For each message return an object with: \"text\" (the message), \"names\" (list of the person names exactly as they appear in the text), and \"kind\": \"cue\" if the name comes right after or before a word that signals a person (for example tell, call, ask, hi, dear, 'ne', 'ko', 'ji', 'bhaiya', said, 'name is'), \"no_cue\" if the name just sits in the sentence without such a word, or \"word_name\" if the name is also an ordinary everyday word (for example rose, joy, will, mark, grace, deep). Focus: common English and international first names (British, American, European), casual English messages, plus some with full names.",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\"text\": \"hey sarah are u coming to the party later\", \"names\": [\"sarah\"], \"kind\": \"cue\"},\n  {\"text\": \"just saw john smith walking his dog in the park\", \"names\": [\"john smith\"], \"kind\": \"no_cue\"},\n  {\"text\": \"bhaiya rahul ne kal kaha tha ki wo aayega\", \"names\": [\"rahul\"], \"kind\": \"cue\"},\n  {\"text\": \"i need to call emily about the project details\", \"names\": [\"emily\"], \"kind\": \"cue\"},\n  {\"text\": \"mark left his umbrella at my place\", \"names\": [\"mark\"], \"kind\": \"word_name\"},\n  {\"text\": \"ask priya if she wants to go out for dinner\", \"names\": [\"priya\"], \"kind\": \"cue\"},\n  {\"text\": \"did u see alice wearing that new dress today\", \"names\": [\"alice\"], \"kind\": \"no_cue\"},\n  {\"text\": \"rohan ko bata dena ki class cancel ho gayi hai\", \"names\": [\"rohan\"], \"kind\": \"cue\"},\n  {\"text\": \"please send the files to michael johnson asap\", \"names\": [\"michael johnson\"], \"kind\": \"cue\"},\n  {\"text\": \"grace just sent me a really funny meme\", \"names\": [\"grace\"], \"kind\": \"word_name\"},\n  {\"text\": \"i was talking to david about the movie we saw\", \"names\": [\"david\"], \"kind\": \"cue\"},\n  {\"text\": \"kya anjali ko tumne invite bheja hai\", \"names\": [\"anjali\"], \"kind\": \"cue\"},\n  {\"text\": \"joy is bringing the dessert for the bbq\", \"names\": [\"joy\"], \"kind\": \"word_name\"},\n  {\"text\": \"my boss charlie is so annoying sometimes\", \"names\": [\"charlie\"], \"kind\": \"no_cue\"},\n  {\"text\": \"will you tell sophie that i am running late\", \"names\": [\"sophie\"], \"kind\": \"cue\"},\n  {\"text\": \"it was so good meeting thomas miller yesterday\", \"names\": [\"thomas miller\"], \"kind\": \"cue\"},\n  {\"text\": \"kal deep ne mujhe call kiya tha\", \"names\": [\"deep\"], \"kind\": \"word_name\"},\n  {\"text\": \"hi jessica hope u had a nice weekend\", \"names\": [\"jessica\"], \"kind\": \"cue\"},\n  {\"text\": \"did u hear that lucas got a new job\", \"names\": [\"lucas\"], \"kind\": \"no_cue\"},\n  {\"text\": \"vikram bhaiyya se puch lo kya plan hai\", \"names\": [\"vikram\"], \"kind\": \"cue\"},\n  {\"text\": \"chloe looked really tired during the meeting\", \"names\": [\"chloe\"], \"kind\": \"no_cue\"},\n  {\"text\": \"i think felix forgot his bag in the car\", \"names\": [\"felix\"], \"kind\": \"no_cue\"},\n  {\"text\": \"neha ji please check the email i sent\", \"names\": [\"neha\"], \"kind\": \"cue\"},\n  {\"text\": \"robert clark is moving to a new apartment soon\", \"names\": [\"robert clark\"], \"kind\": \"no_cue\"},\n  {\"text\": \"rose told me she likes the new song\", \"names\": [\"rose\"], \"kind\": \"word_name\"}\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRMoqJW0LU1zimg35bmMBWLmYjvLEwsrCMrikluSerscH4DmGDC0xTeFGhI8U2gEmsoo79Pd2m4OBkjUIcnWQ/1IPp5/VLCT9MtQ7SnN4kCEgSyI986z7fN/JvewLZuTYV2z9cjTGhSsAVO/j2Izfsl2hDp2xbnrUQ4ryRZDFDHZo2aZivUwtDyzd6LCvDMF/69gVjg3"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 290,
+   "candidatesTokenCount": 759,
+   "totalTokenCount": 1049,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 290
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "50j9aqqsJpHs694PwpSF-A8"
+ }
+}

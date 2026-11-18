@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that contain NO person's name at all. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. Each message is an object with \"text\" and \"names\" (always an empty list) and \"category\". Category \"word_that_can_be_a_name\": messages that use ordinary words which are also sometimes first names, in their ordinary meaning (for example rose, joy, grace, deep, mark, will, summer, ruby, pooja as in the act of worship); and category \"place\": messages about cities, states, countries and landmarks.",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\n    \"text\": \"it is a beautiful rose in the garden today\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"we are planning to visit london next month\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"i feel so much joy when i listen to music\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"did u see the tower in paris yet\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"the deep water looks scary at night\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"is it humid in mumbai right now\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"plz grace the event with ur presence\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"kal hum delhi ja rahe hai\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"will u be there on time\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"i want to move to canada someday\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"i bought a ruby ring for my mom\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"have u ever been to the taj mahal\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"the summer heat is getting worse\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"flight to dubai book kar li kya\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"did u mark the important dates on the calendar\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"japan ka weather kaisa hai\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"morning pooja khatam ho gayi\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"kya tum agra ghumne gaye the\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"i need more faith to get through this\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"new york is so crowded\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"hope u find peace in ur work\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"germany mein bahut thand hogi abhi\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"can u keep a secret for me\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  },\n  {\n    \"text\": \"sydney ka opera house bahut cool hai\",\n    \"names\": [],\n    \"category\": \"place\"\n  },\n  {\n    \"text\": \"do u want to share the harvest with us\",\n    \"names\": [],\n    \"category\": \"word_that_can_a_name\"\n  }\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRNRjjnMPaT6zwy91A74KlEVL9S+zhcp6A0fUb9R4C4c5rO9IRALygHQyaRO6Gquw2W6yHXkciI1J/QAduISI88+BBmRTCWWbstS+wMmveM+9zwPRjodsrXHKU26ZfkNH+Qa4NQnbnPF0QhjlGwbNVd+r28xITHG6gy/aAF1I1DkEfnSLcYQx8k0Bq5ZofGUs/MLZx+T"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 208,
+   "candidatesTokenCount": 972,
+   "totalTokenCount": 1180,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 208
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "8kj9apqjDuSIqfkP_ObgYQ"
+ }
+}

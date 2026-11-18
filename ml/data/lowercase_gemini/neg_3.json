@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that contain NO person's name at all. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. Each message is an object with \"text\" and \"names\" (always an empty list) and \"category\". Category \"generic\": questions and requests to an AI assistant (recipes, coding help, travel plans, study help, summaries, translations), in English or Hinglish, with no names at all.",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\n    \"text\": \"can u help me write a python script to scrape some data\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"batao na best pasta recipe kya hai\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"summarize this long article for me pls\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"muze delhi se mumbai jaane ka best route bata do\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"what is the difference between kinetic and potential energy\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"translate this paragraph into simple hindi for me\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"aj kal yoga shuru karna hai koi easy routine batao\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"explain the concept of supply and demand\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"how do i fix this css alignment issue\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"office jane ke liye koi ache outfit ideas do\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"can you solve this math problem for me\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"thoda help kardo excel formula samajhne mein\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"what are some healthy snacks for late night study\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"suggest me a good science fiction book\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"shadi ke liye koi achi invitation line likh do\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"how to improve my english grammar skills\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"muze 3 din ka goa trip plan bana kar do\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"what happens if i drink too much coffee\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"kya tum mujhe java ka basic syntax sikha sakte ho\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"write a formal email for leave application\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"batao ki stock market mein invest kaise kare\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"give me a list of common interview questions\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"ghar pe cake banane ka asan tarika batao\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"can you check if this sentence is grammatically correct\",\n    \"names\": [],\n    \"category\": \"generic\"\n  },\n  {\n    \"text\": \"thoda history ke bare mein batao mughal empire ki\",\n    \"names\": [],\n    \"category\": \"generic\"\n  }\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRM2Sm886D+Gzmmt4vgHjQRWLkLG3Y1bGqHWkcVQxqeoOxFa1ALJEjYrBrJRSAFFRPb9OUncP7jKBiQa9+wfCMvPtOic8P9jX7TriE3uWVQjf55WtAPwc7t1EZbnubvXqhpgG+7MDmm3wzUy53KmOUNWRPdGgZ6HuNhqcju1DKlAcOWmPfQo/vV4gfTr0evHgzRf1g0E"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 174,
+   "candidatesTokenCount": 915,
+   "totalTokenCount": 1089,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 174
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "AEn9aoDeCLri1_oPwIOrgQ4"
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "prompt": "Write 25 chat messages that each mention at least one PERSON'S NAME (a real-sounding first name, sometimes first and last name) written entirely in lowercase. These are casual chat messages as people type them on a phone: NO capital letters anywhere (not even at the start of the sentence or for names), little or no punctuation, abbreviations like pls, thx, u are fine. Hinglish means Hindi written in the Roman alphabet mixed with English (for example 'kal meeting hai', 'mujhe bata dena'), never Devanagari script. Every sentence must be different in structure and topic. Return ONLY a JSON array. For each message return an object with: \"text\" (the message), \"names\" (list of the person names exactly as they appear in the text), and \"kind\": \"cue\" if the name comes right after or before a word that signals a person (for example tell, call, ask, hi, dear, 'ne', 'ko', 'ji', 'bhaiya', said, 'name is'), \"no_cue\" if the name just sits in the sentence without such a word, or \"word_name\" if the name is also an ordinary everyday word (for example rose, joy, will, mark, grace, deep). Focus: Indian first and last names (north and south Indian, Muslim, Sikh, Christian), messages written in English.",
+ "model": "gemini-3.1-flash-lite",
+ "response": {
+  "candidates": [
+   {
+    "content": {
+     "parts": [
+      {
+       "text": "[\n  {\"text\": \"hey ananya how are u doing today\", \"names\": [\"ananya\"], \"kind\": \"cue\"},\n  {\"text\": \"did you see rahul at the party last night\", \"names\": [\"rahul\"], \"kind\": \"no_cue\"},\n  {\"text\": \"suresh bhaiya please send the files soon\", \"names\": [\"suresh\"], \"kind\": \"cue\"},\n  {\"text\": \"i think rose is such a lovely girl\", \"names\": [\"rose\"], \"kind\": \"word_name\"},\n  {\"text\": \"please ask arjun to call me back asap\", \"names\": [\"arjun\"], \"kind\": \"cue\"},\n  {\"text\": \"priyanka kahan hai aaj\", \"names\": [\"priyanka\"], \"kind\": \"no_cue\"},\n  {\"text\": \"my brother will be here in an hour\", \"names\": [\"will\"], \"kind\": \"word_name\"},\n  {\"text\": \"hi fatima long time no see\", \"names\": [\"fatima\"], \"kind\": \"cue\"},\n  {\"text\": \"vikram sharma ne mujhse baat ki thi\", \"names\": [\"vikram sharma\"], \"kind\": \"cue\"},\n  {\"text\": \"did u send the report to karthik\", \"names\": [\"karthik\"], \"kind\": \"no_cue\"},\n  {\"text\": \"joy is coming over for dinner tonight\", \"names\": [\"joy\"], \"kind\": \"word_name\"},\n  {\"text\": \"bata dena deep ko ki kal chutti hai\", \"names\": [\"deep\"], \"kind\": \"cue\"},\n  {\"text\": \"karan ne mujhe phone kiya tha\", \"names\": [\"karan\"], \"kind\": \"cue\"},\n  {\"text\": \"just saw simran at the grocery store\", \"names\": [\"simran\"], \"no_cue\": \"no_cue\"},\n  {\"text\": \"grace told me she loves the new movie\", \"names\": [\"grace\"], \"kind\": \"cue\"},\n  {\"text\": \"harpreet singh is the best person for this job\", \"names\": [\"harpreet singh\"], \"kind\": \"no_cue\"},\n  {\"text\": \"please mark this email as urgent\", \"names\": [\"mark\"], \"kind\": \"word_name\"},\n  {\"text\": \"mujhe ayesha se milna hai\", \"names\": [\"ayesha\"], \"kind\": \"cue\"},\n  {\"text\": \"did you ask manish about the trip\", \"names\": [\"manish\"], \"kind\": \"cue\"},\n  {\"text\": \"anjali is waiting outside the gate\", \"names\": [\"anjali\"], \"kind\": \"no_cue\"},\n  {\"text\": \"sara kahan gayab ho gayi\", \"names\": [\"sara\"], \"kind\": \"no_cue\"},\n  {\"text\": \"please tell rajesh that i am busy\", \"names\": [\"rajesh\"], \"kind\": \"cue\"},\n  {\"text\": \"sunita ji ne sab khana bana liya\", \"names\": [\"sunita\"], \"kind\": \"cue\"},\n  {\"text\": \"the coffee was so good with ramesh\", \"names\": [\"ramesh\"], \"kind\": \"no_cue\"},\n  {\"text\": \"sanjeev khanna is coming to the office\", \"names\": [\"sanjeev khanna\"], \"kind\": \"no_cue\"}\n]",
+       "thoughtSignature": "EpwBCpkBAWkUfRNVn2pihP4VTlgkoWzbgQ2q5aApjZkvQqom0AoiqrVacOjqaISCffRhbdaSuoEYRlCUI9CtJsV0KJ1fQf+smkNXcT3oLtK+QTU7EDw6zGU3Vfc5qQAgzj0RrehW5w62wmWHoVjM+QjmCMoVixJQyZjKGmbBZiJdr5ZfaMAgqQLNeAprJjz6M+1in5tjtIzQQWcHQIs8"
+      }
+     ],
+     "role": "model"
+    },
+    "finishReason": "STOP",
+    "index": 0
+   }
+  ],
+  "usageMetadata": {
+   "promptTokenCount": 289,
+   "candidatesTokenCount": 737,
+   "totalTokenCount": 1026,
+   "promptTokensDetails": [
+    {
+     "modality": "TEXT",
+     "tokenCount": 289
+    }
+   ],
+   "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.1-flash-lite",
+  "responseId": "4Ej9arh37qfr3g_o_vyACQ"
+ }
+}
