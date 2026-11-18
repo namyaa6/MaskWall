@@ -5,8 +5,8 @@ import { kn, ms, pct, R } from "../data/results";
 const S = R.served;
 const NER = R.ner.rows.find((r) => r.model === R.ner.selected)!;
 const P = R.browser_precheck;
-const LC_BASE = R.lowercase_names.rows.find((r) => r.approach === "A")!;
-const LC_BEST = R.lowercase_names.rows.filter((r) => r.approach !== "A").reduce((a, b) => (b.recall > a.recall ? b : a));
+const LC2_BASE = R.lowercase_names_r2.rows.find((r) => r.approach === "A")!;
+const LC2_B = R.lowercase_names_r2.rows.find((r) => r.approach === "B")!;
 const Q_INT8 = R.quantization.find((q) => q.model === "MiniLM-L6" && q.precision === "int8")!;
 
 const JOURNEY = [
@@ -176,9 +176,9 @@ export function HowItWorksPage() {
         <h2 id="limits-title">What it can't do yet</h2>
         <ul className="plain-list">
           <li>
-            <strong>Lowercase names are mostly missed</strong> (“pls tell priya…”): only {LC_BASE.recall} of {LC_BASE.gold} in a larger lowercase test. The name model learned from news
-            text, where names are capitalised. Three fixes were tried and measured; the best found {LC_BEST.recall} of {LC_BEST.gold} but also hid ordinary words in {LC_BEST.fp_sentences} of{" "}
-            {R.lowercase_names.n_negatives} harmless sentences, which broke the limit set beforehand, so none was shipped (see Benchmarks). Addresses, dates of birth and bank details are
+            <strong>Lowercase names are mostly missed</strong> (“pls tell priya…”): only {LC2_BASE.recall} of {LC2_BASE.gold} in a fresh lowercase test. The name model learned from news text,
+            where names are capitalised. Two rounds of fixes were measured; the best finds {LC2_B.recall} of {LC2_B.gold} but also hides ordinary words in {LC2_B.fp_sentences} of{" "}
+            {R.lowercase_names_r2.n_negatives} harmless sentences, which breaks the limit set beforehand, so none was shipped (see Benchmarks). Addresses, dates of birth and bank details are
             not detected at all.
           </li>
           <li>

@@ -57,6 +57,7 @@ function ClassifierTable({ rows, caption }: { rows: Row[]; caption: string }) {
 export function BenchmarksPage() {
   const H = R.hard_negatives;
   const L = R.lowercase_names;
+  const L2 = R.lowercase_names_r2;
   return (
     <>
       <PageHead title="Benchmarks">
@@ -330,6 +331,70 @@ export function BenchmarksPage() {
           so it failed the false-alarm limit. Cue rules find most names written with a cue ("tell X", "X ne") but nothing extra without one, and they too flag some harmless words. Names that are also words
           (joy, rose, grace, deep) are missed by every approach. Every sentence was written by the same assistant that wrote the rules, which favours the cue approach; the
           results are indicative, not a benchmark.
+        </p>
+      </Section>
+      <Section
+        id="lowercase2"
+        title="8. Lowercase names, round 2 (fresh test set, independent word lists): still not shipped"
+        intro={
+          <>
+            Round 1's failure was a word list I wrote by hand. Round 2 rebuilt it only from outside data (Hinglish-TOP training queries, Apache-2.0; Wikipedia text from WikiText-103,
+            CC BY-SA 3.0 / GFDL; the name model's own vocabulary, Apache-2.0), tuned its {L2.dev.settings} settings on the round-1 sentences (which were then retired as "seen") and froze them
+            ({L2.config.words.toLocaleString("en")} words). It was then tested once on {L2.n_positive_names} lowercase names and {L2.n_negatives} harmless sentences written by a different AI (Gemini; not
+            reviewed by the project owner) before anything was built. The rule was the same: at most {L2.rule.fpNegSentencesMax} of {L2.n_negatives} harmless sentences flagged, no drop in capitalised-name recall,
+            under {L2.rule.maxMedianMs} ms, at most {L2.rule.fpExistingExtra} more wrong spans on the earlier sample, and a gain of at least {L2.rule.minGainPoints} points.{" "}
+            <strong>{L2.b2_eligible ? "The re-casing approach passed and shipped." : "The re-casing approach did not pass, so nothing was shipped."}</strong>
+          </>
+        }
+      >
+        <table>
+          <caption className="sr-only">Lowercase name approaches, round 2</caption>
+          <thead>
+            <tr>
+              <th scope="col">Approach</th>
+              <th scope="col">Lowercase names hidden</th>
+              <th scope="col">With a cue</th>
+              <th scope="col">Without a cue</th>
+              <th scope="col">Name is also a word</th>
+              <th scope="col">Harmless sentences wrongly flagged</th>
+              <th scope="col">Capitalised names hidden (earlier sample)</th>
+              <th scope="col">Wrong spans (earlier sample)</th>
+              <th scope="col">Median time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {L2.rows.map((r) => (
+              <tr key={r.approach} className={r.approach === "B" ? "row-ours" : undefined}>
+                <th scope="row">{r.label}</th>
+                <td className="num">
+                  {r.recall} of {r.gold}
+                </td>
+                <td className="num">
+                  {r.cue.strict} of {r.cue.gold}
+                </td>
+                <td className="num">
+                  {r.no_cue.strict} of {r.no_cue.gold}
+                </td>
+                <td className="num">
+                  {r.word_name.strict} of {r.word_name.gold}
+                </td>
+                <td className="num">
+                  {r.fp_sentences} of {L2.n_negatives}
+                </td>
+                <td className="num">
+                  {r.existing_cap_recall} of {r.existing_cap_gold}
+                </td>
+                <td className="num">{r.existing_fp_spans}</td>
+                <td className="num">{ms(r.median_ms)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="muted small">
+          Re-casing is far better than today's method (+{Math.round(L2.gain_points)} points) and finds every name written without a cue, but it still hides everyday Hinglish words that a small
+          corpus of assistant commands cannot cover ("hain", "mahina", "shadi", "kharch"), shorthand such as "pls", and brands and festivals. Names that are also words (joy, rose, deep) are
+          still missed by every approach. The cue rows are for information; only re-casing could ship in this round. On the earlier sample re-casing adds wrong spans too ({L2.rows.find((r) => r.approach === "B")!.existing_fp_spans} against {L2.rows.find((r) => r.approach === "A")!.existing_fp_spans} today; the limit allowed {L2.rule.fpExistingExtra} more).
+          All test sentences are AI-written, so the numbers are indicative, not a benchmark.
         </p>
       </Section>
     </>

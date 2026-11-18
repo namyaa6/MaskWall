@@ -55,6 +55,8 @@ export function buildResults(repo: string) {
   const ner = read("ner_browser_eval.json");
   const parity = read("browser_precheck_parity.json");
   const lc = read("ner_lowercase_eval.json");
+  const lc2 = read("ner_lowercase_r2_eval.json");
+  const lc2dev = read("ner_lowercase_r2_dev.json");
 
   const BASE_NAMES: Record<string, string> = {
     length_lr: "Length only + logistic regression (floor)",
@@ -209,6 +211,34 @@ export function buildResults(repo: string) {
         median_ms: r.latency.medianMs,
       })),
       checks: lc.checks as J[],
+    },
+    lowercase_names_r2: {
+      rule: lc2.rule,
+      b2_eligible: lc2.b2Eligible as boolean,
+      gain_points: lc2.gainPoints as number,
+      checks: lc2.checks as J,
+      config: { tEn: lc2.config.tEn, kH: lc2.config.kH, share: lc2.config.share, words: lc2.rows[1].nWords },
+      dev: {
+        none_met_limits: lc2dev.noneMetLimits as boolean,
+        best_flagged: Math.min(...(lc2dev.rows as J[]).map((r) => r.negatives.fpSentences)),
+        settings: (lc2dev.rows as J[]).length,
+      },
+      n_positive_names: lc2.rows[0].lowercase.gold,
+      n_negatives: lc2.rows[0].negatives.n,
+      rows: (lc2.rows as J[]).map((r) => ({
+        approach: r.approach as string,
+        label: r.label as string,
+        recall: r.lowercase.recall,
+        gold: r.lowercase.gold,
+        cue: r.lowercase.byGroup.cue,
+        no_cue: r.lowercase.byGroup.no_cue,
+        word_name: r.lowercase.byGroup.word_name,
+        fp_sentences: r.negatives.fpSentences,
+        existing_cap_recall: r.existing.capRecall,
+        existing_cap_gold: r.existing.capGold,
+        existing_fp_spans: r.existing.fpSpans,
+        median_ms: r.latency.medianMs,
+      })),
     },
     browser_precheck: {
       max_abs_diff: parity.maxAbsDiffHeadTail,
