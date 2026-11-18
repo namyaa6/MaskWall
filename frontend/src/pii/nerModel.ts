@@ -17,6 +17,8 @@ export interface LoadProgress {
 export interface NerModel {
   id: string;
   detect(text: string): Promise<PiiSpan[]>;
+  /** is this exact string a whole token of the model's vocabulary? (used to tell common words from names) */
+  hasToken(word: string): boolean;
 }
 
 interface ProgressEvent {
@@ -52,8 +54,11 @@ export async function loadNer(modelId: string, onProgress?: (p: LoadProgress) =>
     return personSpans(text, toTokens(ids), labels, offset);
   }
 
+  const tokensToIds = (tokenizer as unknown as { model: { tokens_to_ids: Map<string, number> } }).model.tokens_to_ids;
+
   return {
     id: modelId,
+    hasToken: (word: string) => tokensToIds.has(word),
     async detect(text: string) {
       const out: PiiSpan[] = [];
       for (const c of chunkText(text)) out.push(...(await detectChunk(c.text, c.offset)));
