@@ -55,6 +55,9 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
   const llmMs = res?.latency_ms.llm_ms ?? 0;
   const serverAdded = res ? Math.max(0, res.latency_ms.total_ms - llmMs) : null;
   const pc = turn.precheck;
+  const receivedText = inp ? inp.masked_input : turn.sent;
+  const hasServerPh = /\[S_(NAME|EMAIL|PHONE|AADHAAR|PAN)_\d+\]/.test(receivedText);
+  const hasDevicePh = /\[(NAME|EMAIL|PHONE|AADHAAR|PAN)_\d+\]/.test(receivedText);
 
   return (
     <aside className="card handled" aria-label="How this message was handled" aria-live="polite">
@@ -126,7 +129,7 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
       </ol>
 
       <div className="time-added">
-        <h3>Time MaskWall added</h3>
+        <h3>Time MaskWall added (server + your device)</h3>
         <p>
           {serverAdded === null ? "–" : <strong>{fmtMs(serverAdded + turn.maskMs)}</strong>}
           {serverAdded !== null && (
@@ -141,11 +144,23 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
       <div className="received">
         <h3>{res?.action === "block" ? "What the firewall received (not sent to the AI)" : "What the AI actually received"}</h3>
         <p className="received-text">
-          <MaskedText text={inp ? inp.masked_input : turn.sent} />
+          <MaskedText text={receivedText} />
         </p>
-        <p className="muted small">
-          <span className="ph">[EMAIL_1]</span> hidden on your device · <span className="ph ph-server">[S_EMAIL_1]</span> hidden by the server's backup check
-        </p>
+        {(hasDevicePh || hasServerPh) && (
+          <p className="muted small">
+            {hasDevicePh && (
+              <>
+                <span className="ph">[EMAIL_1]</span> hidden on your device
+              </>
+            )}
+            {hasDevicePh && hasServerPh && " · "}
+            {hasServerPh && (
+              <>
+                <span className="ph ph-server">[S_EMAIL_1]</span> hidden by the server's backup check
+              </>
+            )}
+          </p>
+        )}
       </div>
     </aside>
   );

@@ -235,3 +235,5 @@ td .pill { margin-left: 6px; font-size: 12px; padding: 0 8px; }
   * { scroll-behavior: auto !important; }
 }
 .crash { margin-top: var(--gap); }
+
+.subhead { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }

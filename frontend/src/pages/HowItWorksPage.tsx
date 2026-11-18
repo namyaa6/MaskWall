@@ -94,7 +94,7 @@ export function HowItWorksPage() {
           </li>
         </ul>
 
-        <h3>How it handles tricky inputs</h3>
+        <h3 className="subhead">How it handles tricky inputs</h3>
         <dl className="notes">
           <dt>Long messages: overlapping chunks</dt>
           <dd>

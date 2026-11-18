@@ -83,7 +83,7 @@ export function DashboardPage() {
             <Tile
               label="Blocked"
               value={String(stats.attacks_blocked + stats.outputs_blocked)}
-              note={`${stats.attacks_blocked} attacks${stats.outputs_blocked ? `, ${stats.outputs_blocked} replies withheld` : ""}`}
+              note={stats.outputs_blocked ? "Stopped before reaching the AI, plus replies withheld after it" : "Stopped before reaching the AI"}
             />
             <Tile
               label="Safe"
@@ -91,9 +91,9 @@ export function DashboardPage() {
               note={`Let through with no warning (chat messages were answered). ${plural(by.warn ?? 0, "more was", "more were")} suspicious.`}
             />
             <Tile
-              label="Typical time added"
+              label="Typical time added on the server"
               value={fmtMs(added?.p50)}
-              note={added?.p95 != null ? `Median; 95% of messages under ${fmtMs(added.p95)}. The AI's own time is not counted.` : "No messages yet."}
+              note={added?.p95 != null ? `Median; 95% of messages under ${fmtMs(added.p95)}. The AI's own time and the work done on your device are not counted.` : "No messages yet."}
             />
           </div>
 
@@ -118,7 +118,7 @@ export function DashboardPage() {
                       <th scope="col">Risk score</th>
                       <th scope="col">Reason</th>
                       <th scope="col">From</th>
-                      <th scope="col">Time added</th>
+                      <th scope="col">Time added (server)</th>
                       <th scope="col">When</th>
                     </tr>
                   </thead>
