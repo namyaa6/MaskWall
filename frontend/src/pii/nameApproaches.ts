@@ -77,9 +77,13 @@ function tokenize(text: string): Tok[] {
   return out;
 }
 
-/** True for chat shorthand, Hinglish function words and words in the model's lowercase vocabulary. */
-export function isCommonWord(lw: string, model: Pick<NameModel, "hasToken">): boolean {
-  return HINGLISH_COMMON.has(lw) || model.hasToken(lw);
+/**
+ * Words that are never read as names: the model's lowercase vocabulary plus EITHER the round-1 hand-written list (when `words` is
+ * omitted: reproduces Day 3.12) OR `words`, a set built only from independent corpora (round 2, Day 3.13: see commonWords.ts).
+ */
+export type CommonWords = ReadonlySet<string>;
+export function isCommonWord(lw: string, model: Pick<NameModel, "hasToken">, words?: CommonWords): boolean {
+  return (words ? words.has(lw) : HINGLISH_COMMON.has(lw)) || model.hasToken(lw);
 }
 
 /** Characters around a token that mean it is part of an email address, URL, handle or number: never a name. */
@@ -89,11 +93,11 @@ function insideIdentifier(text: string, t: Tok): boolean {
   return before === "@" || after === "@" || (before !== undefined && /[0-9_/]/.test(before)) || (after !== undefined && /[0-9_/]/.test(after));
 }
 
-function candidate(text: string, t: Tok, model: Pick<NameModel, "hasToken">): boolean {
+function candidate(text: string, t: Tok, model: Pick<NameModel, "hasToken">, words?: CommonWords): boolean {
   if (t.w.length < 3) return false;
   if (insideIdentifier(text, t)) return false;
   const lw = t.lw;
-  if (isCommonWord(lw, model)) return false;
+  if (isCommonWord(lw, model, words)) return false;
   return !(TITLES.has(lw) || VERB_BEFORE.has(lw) || TO_AFTER.has(lw) || GREETING_BEFORE.has(lw) || POST_PARTICLES.has(lw) || POST_ENGLISH.has(lw) || CONNECTORS.has(lw));
 }
 
@@ -102,7 +106,7 @@ function candidate(text: string, t: Tok, model: Pick<NameModel, "hasToken">): bo
  * Same length as the input (only ASCII letters change case), so a span found in the copy is valid in the original.
  * Words inside emails, URLs and handles are left alone. Words already capitalised are left alone.
  */
-export function recase(text: string, model: Pick<NameModel, "hasToken">): string {
+export function recase(text: string, model: Pick<NameModel, "hasToken">, words?: CommonWords): string {
   let out = "";
   let pos = 0;
   for (const chunk of text.matchAll(/\S+/g)) {
@@ -111,7 +115,7 @@ export function recase(text: string, model: Pick<NameModel, "hasToken">): string
     if (/@|:\/\/|^www\./i.test(c)) continue;
     for (const m of c.matchAll(/(?<![A-Za-z])[a-z]{3,}(?![A-Za-z])/g)) {
       const start = base + m.index!;
-      if (isCommonWord(m[0], model)) continue;
+      if (isCommonWord(m[0], model, words)) continue;
       out += text.slice(pos, start) + m[0][0].toUpperCase() + m[0].slice(1);
       pos = start + m[0].length;
     }
@@ -125,21 +129,21 @@ function span(text: string, from: Tok, to: Tok): PiiSpan {
 }
 
 /** Up to two candidate tokens in a row starting at index i, separated by plain spaces. */
-function chainForward(text: string, toks: Tok[], i: number, model: Pick<NameModel, "hasToken">): [number, number] | null {
-  if (i >= toks.length || !candidate(text, toks[i], model)) return null;
+function chainForward(text: string, toks: Tok[], i: number, model: Pick<NameModel, "hasToken">, words?: CommonWords): [number, number] | null {
+  if (i >= toks.length || !candidate(text, toks[i], model, words)) return null;
   let j = i;
-  if (j + 1 < toks.length && /^ +$/.test(text.slice(toks[j].end, toks[j + 1].start)) && candidate(text, toks[j + 1], model)) j++;
+  if (j + 1 < toks.length && /^ +$/.test(text.slice(toks[j].end, toks[j + 1].start)) && candidate(text, toks[j + 1], model, words)) j++;
   return [i, j];
 }
 
-function chainBackward(text: string, toks: Tok[], i: number, model: Pick<NameModel, "hasToken">): [number, number] | null {
-  if (i < 0 || !candidate(text, toks[i], model)) return null;
+function chainBackward(text: string, toks: Tok[], i: number, model: Pick<NameModel, "hasToken">, words?: CommonWords): [number, number] | null {
+  if (i < 0 || !candidate(text, toks[i], model, words)) return null;
   let j = i;
-  if (j - 1 >= 0 && /^ +$/.test(text.slice(toks[j - 1].end, toks[j].start)) && candidate(text, toks[j - 1], model)) j--;
+  if (j - 1 >= 0 && /^ +$/.test(text.slice(toks[j - 1].end, toks[j].start)) && candidate(text, toks[j - 1], model, words)) j--;
   return [j, i];
 }
 
-export function cueSpans(text: string, model: Pick<NameModel, "hasToken">): PiiSpan[] {
+export function cueSpans(text: string, model: Pick<NameModel, "hasToken">, words?: CommonWords): PiiSpan[] {
   const toks = tokenize(text);
   const found: PiiSpan[] = [];
   const add = (r: [number, number] | null) => {
@@ -150,18 +154,18 @@ export function cueSpans(text: string, model: Pick<NameModel, "hasToken">): PiiS
     const lw = toks[i].lw;
     const prev = i > 0 ? toks[i - 1].lw : "";
     // cue BEFORE the name: "tell X", "call X", "hi X", "mr X", "my name is X", "naam X", "talk to X"
-    if (VERB_BEFORE.has(lw) || GREETING_BEFORE.has(lw) || TITLES.has(lw) || lw === "naam") add(chainForward(text, toks, i + 1, model));
-    if (lw === "to" && TO_AFTER.has(prev)) add(chainForward(text, toks, i + 1, model));
-    if (lw === "is" && prev === "name") add(chainForward(text, toks, i + 1, model));
-    if ((lw === "am" && prev === "i") || (lw === "is" && prev === "this") || lw === "myself") add(chainForward(text, toks, i + 1, model));
+    if (VERB_BEFORE.has(lw) || GREETING_BEFORE.has(lw) || TITLES.has(lw) || lw === "naam") add(chainForward(text, toks, i + 1, model, words));
+    if (lw === "to" && TO_AFTER.has(prev)) add(chainForward(text, toks, i + 1, model, words));
+    if (lw === "is" && prev === "name") add(chainForward(text, toks, i + 1, model, words));
+    if ((lw === "am" && prev === "i") || (lw === "is" && prev === "this") || lw === "myself") add(chainForward(text, toks, i + 1, model, words));
     // cue AFTER the name: "X ne", "X ko", "X ji", "X bhaiya", "X said", "X's"
-    if (POST_PARTICLES.has(lw) || POST_ENGLISH.has(lw)) add(chainBackward(text, toks, i - 1, model));
+    if (POST_PARTICLES.has(lw) || POST_ENGLISH.has(lw)) add(chainBackward(text, toks, i - 1, model, words));
   }
   // lists: "X and Y", "X aur Y", "X, Y": a candidate right after a connector that follows an already-found name
   const spansByEnd = new Map(found.map((s) => [s.end, s]));
   for (let i = 1; i < toks.length - 1; i++) {
     const gap = text.slice(toks[i - 1].end, toks[i].start);
-    if (CONNECTORS.has(toks[i].lw) && spansByEnd.has(toks[i - 1].end) && /^ *$/.test(gap)) add(chainForward(text, toks, i + 1, model));
+    if (CONNECTORS.has(toks[i].lw) && spansByEnd.has(toks[i - 1].end) && /^ *$/.test(gap)) add(chainForward(text, toks, i + 1, model, words));
   }
   return found;
 }
@@ -183,10 +187,10 @@ export function mergeNameSpans(text: string, spans: PiiSpan[]): PiiSpan[] {
 }
 
 /** Name spans for `text` with the chosen approach. Offsets always refer to `text`. */
-export async function detectNames(approach: NameApproach, text: string, model: NameModel): Promise<PiiSpan[]> {
+export async function detectNames(approach: NameApproach, text: string, model: NameModel, words?: CommonWords): Promise<PiiSpan[]> {
   const useRecase = approach === "B" || approach === "E";
   const useCues = approach === "C" || approach === "E";
-  const ner = await model.detect(useRecase ? recase(text, model) : text);
+  const ner = await model.detect(useRecase ? recase(text, model, words) : text);
   if (!useCues) return useRecase ? ner.map((s) => ({ ...s, key: text.slice(s.start, s.end).toLowerCase().replace(/\s+/g, " ") })) : ner;
-  return mergeNameSpans(text, [...ner, ...cueSpans(text, model)]);
+  return mergeNameSpans(text, [...ner, ...cueSpans(text, model, words)]);
 }
