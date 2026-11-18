@@ -1,0 +1,12 @@
+# THROWAWAY: a second free service that measures memory, latency and the proxy chain on Render's free hardware.
+# Apply it as its own Blueprint (New > Blueprint, file path render.bench.yaml), read /result and /headers, then DELETE the service.
+services:
+  - type: web
+    name: maskwall-bench
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/bench/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    autoDeployTrigger: "off"

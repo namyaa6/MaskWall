@@ -99,4 +99,4 @@ cd backend
 - **Stateless:** each `/chat` call is one message; conversation history is not accepted (scanning client-supplied history is a separate problem).
 - **Limits:** an output scanner cannot catch a paraphrased system prompt or credentials in unknown formats; the injection classifier is a model with
   measured error rates (docs/decisions.md Day 1.8, 1.11), not a guarantee.
-- **Docker:** the `Dockerfile` downloads the pinned model from the Hugging Face Hub at build time and installs `requirements.lock.txt`. It has never been built on the development machine (no Docker there); CI builds it on every push and the Space's build log is the runtime test. `docker-compose.yml` is the same image for local use and is likewise untested here.
+- **Docker:** the `Dockerfile` downloads the pinned model from the Hugging Face Hub at build time and installs `requirements.lock.txt`. It has never been built on the development machine (no Docker there); CI builds it on every push and the Render deploy log is the runtime test. `docker-compose.yml` is the same image for local use and is likewise untested here.

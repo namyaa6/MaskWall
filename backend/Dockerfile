@@ -1,14 +1,14 @@
-# MaskWall firewall API (Hugging Face Docker Space; also runs anywhere with Docker).
+# MaskWall firewall API (Render free Docker web service; also runs anywhere with Docker).
 # Build:  docker build -t maskwall-api backend        (context = backend/; no local model needed, it is downloaded from the Hub)
 # Run:    docker run -p 7860:7860 --env-file .env maskwall-api
 #
-# Port 7860 and the non-root uid 1000 are what Hugging Face Docker Spaces expect. API keys come from the environment at run time
-# (Space secrets); they are never baked into the image.
+# Listens on 7860 (render.yaml sets PORT=7860 so Render routes to it); runs as non-root uid 1000. API keys come from the environment
+# at run time (Render environment variables); they are never baked into the image.
 #
 # The model is fetched at BUILD time from the public Hub repo, pinned to a commit (REVISION in scripts/fetch_model.py), so a cold start needs no
 # network and the image is reproducible. To use a newer model: upload it, then change REVISION there.
-# NOTE: this file has never been built on the development machine (no Docker there); CI builds it on every push and the Space
-# build log is the real test.
+# NOTE: this file has never been built on the development machine (no Docker there); CI builds it on every push and the Render
+# deploy log is the real runtime test.
 
 # ---- stage 1: download the model files (huggingface_hub stays out of the final image) ----
 FROM python:3.13-slim AS model

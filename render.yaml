@@ -1,0 +1,30 @@
+# Render Blueprint: the firewall API as a free Docker web service.
+# Dashboard: New > Blueprint > connect the GitHub repo > Apply. Secrets (sync: false) are typed in the dashboard, never stored here.
+# Free instances sleep after ~15 minutes without traffic and take about a minute to wake up; disk is ephemeral.
+# Hardware label for every latency figure in the docs: "Render free tier (0.1 vCPU, 512 MB)".
+services:
+  - type: web
+    name: maskwall-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass        # redeploy only when CI is green
+    envVars:
+      - key: PORT                        # the Dockerfile listens on 7860; Render must be told
+        value: "7860"
+      - key: MASKWALL_SERVER_MODEL
+        value: minilm
+      - key: MASKWALL_DAILY_LLM_LIMIT
+        value: "500"
+      - key: MASKWALL_FINGERPRINT_SECRET # Render generates a random 256-bit value; nobody (including me) ever sees it
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MASKWALL_CORS_ORIGINS       # set after the Vercel URL exists (https://<project>.vercel.app, no trailing slash)
+        sync: false
+      # MASKWALL_TRUST_PROXY / hop count: added only after the proxy chain has been measured (step 5b)

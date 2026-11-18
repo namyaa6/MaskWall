@@ -10,3 +10,4 @@ requirements-dev.txt
 pytest.ini
 Dockerfile
 model/
+!bench/

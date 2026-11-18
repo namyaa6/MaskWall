@@ -42,7 +42,7 @@ Response shown to user
 - **Backend:** FastAPI, Pydantic, SQLite (logs), slowapi (rate limiting), pytest
 - **Frontend:** React + Vite, Transformers.js (WASM backend, not WebGPU)
 - **LLM:** Groq API (key in `.env` as `GROQ_API_KEY`)
-- **Deploy:** frontend on Vercel, backend on Hugging Face Spaces (Docker), models on Hugging Face Hub
+- **Deploy:** frontend on Vercel, backend on Render (free Docker web service; Hugging Face Docker Spaces now require a paid PRO plan), models on Hugging Face Hub
 - **CI:** GitHub Actions running pytest + lint on every push
 
 ## Folder structure
@@ -112,7 +112,7 @@ maskwall/
 4. **Fallback rule:** if in-browser loading blocks progress for more than ~2 hours, move masking to the server temporarily and continue. Do not let this layer sink the project.
 
 ### Day 4 — Ship
-1. Dockerfile + docker-compose; deploy backend to HF Spaces, frontend to Vercel.
+1. Dockerfile + docker-compose; deploy backend to Render (blueprint `render.yaml`), frontend to Vercel.
 2. GitHub Actions CI (pytest + lint).
 3. README: architecture diagram, demo GIF, metrics tables, design decisions, limitations, how to run locally.
 4. Record a 2-minute demo video.

@@ -4,7 +4,7 @@
 - **Working tree and all reachable commits:** searched for key-shaped strings (`gsk_`, `AIza`, `hf_`, `sk-`, PEM private-key headers, `KEY/SECRET/TOKEN = <24+ chars>`). No real credential found. The only hit is a test fixture string `-----BEGIN RSA PRIVATE KEY-----` in `backend/tests/test_output_scanner.py` (a header, used to test the output scanner).
 - **`.env` was committed once.** The very first commit (`43764c4`, 2026-11-12) contained `.env` with a `GROQ_API_KEY` line. It was removed by amending and force-pushing, so the file is not in the current history. The old commit still exists locally as an unreachable object and, because the repository is public, **must be treated as exposed** (a clone, a fork or GitHub's cache taken in that window could still hold it).
   - What the value was: a 13-character string starting with "you…" and without the `gsk_` prefix of real Groq keys, so it looks like a placeholder (for example `your_key_here`). I looked at its length and prefix only; the value is not reproduced anywhere.
-  - **Action: the owner confirms that the Groq key in use today was created after that date or has been rotated** (rotate at console.groq.com, then update the local `.env` and the Space secret). Rotation is the only real remedy; history rewriting cannot recall copies.
+  - **Action: the owner confirms that the Groq key in use today was created after that date or has been rotated** (rotate at console.groq.com, then update the local `.env` and the Render environment variable). Rotation is the only real remedy; history rewriting cannot recall copies.
   - Status: *awaiting the owner's confirmation.*
 - `.env`, model binaries and `backend/data/` are gitignored. Keys are read from the environment on the server and are excluded from `repr()` of the settings object; deployed secrets live only in the Space settings.
 
@@ -24,6 +24,6 @@ The audit database still reports the items below, because their fix is a **major
 **Standing rule:** `npm audit --omit=dev` is reviewed before each release; findings in the shipped bundle are fixed, others are explained here. CI runs `npm audit --omit=dev --audit-level=high` as an informational step (it does not block, because the two production-side findings above are explained, not fixable without a major upgrade).
 
 ## 3. Other items (tracked in later Day 4 steps)
-- Deployed CORS limited to the production origin; proxy-hop count measured on the real Space before trusting `X-Forwarded-For`.
+- Deployed CORS limited to the production origin; proxy-hop count measured on the real host (Render) before trusting `X-Forwarded-For`.
 - A global daily cap on LLM calls so public traffic cannot exhaust the free provider quotas.
 - Final independent review (security and claims-versus-evidence) recorded in `docs/decisions.md`.

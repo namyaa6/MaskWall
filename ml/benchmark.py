@@ -1,6 +1,6 @@
 """Benchmark the exported ONNX models: size, CPU latency, and (real checkpoints only) accuracy. fp32 vs int8.
 
-Latency protocol (fixed before any number was seen; 2 intra-op threads to mimic a 2-vCPU Hugging Face Space):
+Latency protocol (fixed before any number was seen; 2 intra-op threads to mimic a small 2-vCPU host; the deployment hardware, Render free tier at 0.1 vCPU, is measured separately by backend/bench/bench_service.py):
   * onnxruntime CPUExecutionProvider, intra_op_num_threads=2, inter_op_num_threads=1, all graph optimisations
   * batch size 1; 20 warm-up runs; then 300 timed runs, each on a different random val prompt (seed 42) at its NATURAL
     head+tail length (the number the 50 ms selection rule uses: p50 over these 300)
