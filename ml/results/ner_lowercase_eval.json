@@ -1,0 +1,1209 @@
+{
+  "protocol": "docs/decisions.md Day 3.12 (written before any approach, evaluation sentence or measurement)",
+  "rule": {
+    "fpNegSentencesExtra": 3,
+    "fpNegSentencesMax": 6,
+    "fpExistingExtra": 2,
+    "maxMedianMs": 300,
+    "minGainPoints": 15,
+    "tieNames": 2
+  },
+  "sets": {
+    "existing": "ml/data/pii_names_sample.jsonl (AI-drafted, not reviewed by the owner)",
+    "lowercase": "ml/data/pii_names_lowercase.jsonl (AI-drafted, not reviewed by the owner)"
+  },
+  "env": {
+    "crossOriginIsolated": false,
+    "hardwareConcurrency": 8,
+    "runtime": "headless Chromium, Transformers.js 3.8.1, WASM, single thread, warm"
+  },
+  "measured": "2026-11-18T06:08:47.405Z",
+  "selected": null,
+  "checks": [
+    {
+      "approach": "B",
+      "gainPoints": 56.1,
+      "noRecallDrop": true,
+      "fpNegatives": false,
+      "fpExisting": true,
+      "latency": true,
+      "worthShipping": true,
+      "eligible": false
+    },
+    {
+      "approach": "C",
+      "gainPoints": 27.3,
+      "noRecallDrop": true,
+      "fpNegatives": false,
+      "fpExisting": false,
+      "latency": true,
+      "worthShipping": true,
+      "eligible": false
+    },
+    {
+      "approach": "E",
+      "gainPoints": 63.6,
+      "noRecallDrop": true,
+      "fpNegatives": false,
+      "fpExisting": false,
+      "latency": true,
+      "worthShipping": true,
+      "eligible": false
+    }
+  ],
+  "rows": [
+    {
+      "approach": "A",
+      "label": "A. NER as typed (baseline)",
+      "lowercase": {
+        "recall": 11,
+        "gold": 66,
+        "overlap": 14,
+        "byGroup": {
+          "cue": {
+            "gold": 23,
+            "strict": 4,
+            "fp": 1
+          },
+          "no_cue": {
+            "gold": 28,
+            "strict": 6,
+            "fp": 0
+          },
+          "ambiguous": {
+            "gold": 15,
+            "strict": 1,
+            "fp": 0
+          }
+        },
+        "missed": [
+          {
+            "id": 1,
+            "name": "priya"
+          },
+          {
+            "id": 2,
+            "name": "rahul"
+          },
+          {
+            "id": 3,
+            "name": "neha"
+          },
+          {
+            "id": 4,
+            "name": "amit"
+          },
+          {
+            "id": 6,
+            "name": "kavya"
+          },
+          {
+            "id": 7,
+            "name": "arjun mehta"
+          },
+          {
+            "id": 8,
+            "name": "suresh"
+          },
+          {
+            "id": 9,
+            "name": "meera"
+          },
+          {
+            "id": 10,
+            "name": "vikram"
+          },
+          {
+            "id": 12,
+            "name": "simran"
+          },
+          {
+            "id": 13,
+            "name": "ananya"
+          },
+          {
+            "id": 14,
+            "name": "kiran"
+          },
+          {
+            "id": 15,
+            "name": "karan"
+          },
+          {
+            "id": 17,
+            "name": "pooja"
+          },
+          {
+            "id": 18,
+            "name": "deepak"
+          },
+          {
+            "id": 20,
+            "name": "gaurav"
+          },
+          {
+            "id": 21,
+            "name": "lakshmi"
+          },
+          {
+            "id": 22,
+            "name": "harpreet"
+          },
+          {
+            "id": 22,
+            "name": "nikhil"
+          },
+          {
+            "id": 23,
+            "name": "rohan"
+          },
+          {
+            "id": 26,
+            "name": "kavya"
+          },
+          {
+            "id": 28,
+            "name": "divya"
+          },
+          {
+            "id": 29,
+            "name": "nikhil"
+          },
+          {
+            "id": 30,
+            "name": "gaurav"
+          },
+          {
+            "id": 31,
+            "name": "tanvi"
+          },
+          {
+            "id": 32,
+            "name": "priya"
+          },
+          {
+            "id": 33,
+            "name": "rahul"
+          },
+          {
+            "id": 34,
+            "name": "sunita"
+          },
+          {
+            "id": 35,
+            "name": "meera"
+          },
+          {
+            "id": 36,
+            "name": "manish"
+          },
+          {
+            "id": 36,
+            "name": "shruti"
+          },
+          {
+            "id": 38,
+            "name": "john miller"
+          },
+          {
+            "id": 39,
+            "name": "david"
+          },
+          {
+            "id": 39,
+            "name": "emily"
+          },
+          {
+            "id": 40,
+            "name": "sarah"
+          },
+          {
+            "id": 41,
+            "name": "daniel"
+          },
+          {
+            "id": 44,
+            "name": "venkatesh"
+          },
+          {
+            "id": 45,
+            "name": "aisha khan"
+          },
+          {
+            "id": 46,
+            "name": "sneha"
+          },
+          {
+            "id": 47,
+            "name": "harpreet kaur"
+          },
+          {
+            "id": 48,
+            "name": "ryan"
+          },
+          {
+            "id": 49,
+            "name": "joy"
+          },
+          {
+            "id": 51,
+            "name": "grace"
+          },
+          {
+            "id": 52,
+            "name": "deep"
+          },
+          {
+            "id": 53,
+            "name": "mark"
+          },
+          {
+            "id": 54,
+            "name": "will"
+          },
+          {
+            "id": 55,
+            "name": "faith"
+          },
+          {
+            "id": 55,
+            "name": "hope"
+          },
+          {
+            "id": 56,
+            "name": "summer"
+          },
+          {
+            "id": 57,
+            "name": "pooja"
+          },
+          {
+            "id": 58,
+            "name": "priya"
+          },
+          {
+            "id": 58,
+            "name": "joy"
+          },
+          {
+            "id": 59,
+            "name": "ruby"
+          },
+          {
+            "id": 59,
+            "name": "pearl"
+          },
+          {
+            "id": 60,
+            "name": "amber"
+          }
+        ],
+        "fpOnPositiveSentences": 1
+      },
+      "negatives": {
+        "fpSpans": 0,
+        "fpSentences": 0,
+        "n": 60,
+        "byCategory": {
+          "common_word": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "place": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "brand": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "date_festival": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "hinglish_plain": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "generic": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          }
+        },
+        "fps": []
+      },
+      "existing": {
+        "cap": {
+          "recall": 46,
+          "gold": 49,
+          "missed": [
+            {
+              "id": 28,
+              "name": "Pooja Mehta"
+            },
+            {
+              "id": 29,
+              "name": "Sanjay"
+            },
+            {
+              "id": 34,
+              "name": "Anjali"
+            }
+          ]
+        },
+        "lowercaseCategory": {
+          "recall": 1,
+          "gold": 7
+        },
+        "all": {
+          "recall": 47,
+          "gold": 56
+        },
+        "fpSpans": 5,
+        "fps": [
+          {
+            "id": 25,
+            "text": "Mera"
+          },
+          {
+            "id": 30,
+            "text": "Meri"
+          },
+          {
+            "id": 32,
+            "text": "aur"
+          },
+          {
+            "id": 43,
+            "text": "Regards"
+          },
+          {
+            "id": 44,
+            "text": "Ms"
+          }
+        ]
+      },
+      "latency": {
+        "medianMs": 29.2,
+        "p95Ms": 65.8,
+        "n": 182
+      }
+    },
+    {
+      "approach": "B",
+      "label": "B. NER on a selectively re-cased copy",
+      "lowercase": {
+        "recall": 48,
+        "gold": 66,
+        "overlap": 48,
+        "byGroup": {
+          "cue": {
+            "gold": 23,
+            "strict": 18,
+            "fp": 1
+          },
+          "no_cue": {
+            "gold": 28,
+            "strict": 27,
+            "fp": 3
+          },
+          "ambiguous": {
+            "gold": 15,
+            "strict": 3,
+            "fp": 2
+          }
+        },
+        "missed": [
+          {
+            "id": 6,
+            "name": "kavya"
+          },
+          {
+            "id": 8,
+            "name": "suresh"
+          },
+          {
+            "id": 14,
+            "name": "kiran"
+          },
+          {
+            "id": 17,
+            "name": "pooja"
+          },
+          {
+            "id": 21,
+            "name": "lakshmi"
+          },
+          {
+            "id": 41,
+            "name": "daniel"
+          },
+          {
+            "id": 49,
+            "name": "joy"
+          },
+          {
+            "id": 51,
+            "name": "grace"
+          },
+          {
+            "id": 52,
+            "name": "deep"
+          },
+          {
+            "id": 53,
+            "name": "mark"
+          },
+          {
+            "id": 54,
+            "name": "will"
+          },
+          {
+            "id": 55,
+            "name": "faith"
+          },
+          {
+            "id": 55,
+            "name": "hope"
+          },
+          {
+            "id": 56,
+            "name": "summer"
+          },
+          {
+            "id": 58,
+            "name": "joy"
+          },
+          {
+            "id": 59,
+            "name": "ruby"
+          },
+          {
+            "id": 59,
+            "name": "pearl"
+          },
+          {
+            "id": 60,
+            "name": "amber"
+          }
+        ],
+        "fpOnPositiveSentences": 6
+      },
+      "negatives": {
+        "fpSpans": 15,
+        "fpSentences": 13,
+        "n": 60,
+        "byCategory": {
+          "common_word": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 1
+          },
+          "place": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 2
+          },
+          "brand": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 3
+          },
+          "date_festival": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 3
+          },
+          "hinglish_plain": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 6
+          },
+          "generic": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          }
+        },
+        "fps": [
+          {
+            "id": 65,
+            "text": "pooja"
+          },
+          {
+            "id": 81,
+            "text": "jaipur"
+          },
+          {
+            "id": 83,
+            "text": "barish"
+          },
+          {
+            "id": 94,
+            "text": "karu"
+          },
+          {
+            "id": 95,
+            "text": "swiggy"
+          },
+          {
+            "id": 95,
+            "text": "zomato"
+          },
+          {
+            "id": 98,
+            "text": "holi"
+          },
+          {
+            "id": 101,
+            "text": "eid mubarak"
+          },
+          {
+            "id": 102,
+            "text": "ganesh chaturthi"
+          },
+          {
+            "id": 105,
+            "text": "khatam"
+          },
+          {
+            "id": 108,
+            "text": "pahunchna"
+          },
+          {
+            "id": 109,
+            "text": "peene"
+          },
+          {
+            "id": 109,
+            "text": "mann"
+          },
+          {
+            "id": 111,
+            "text": "acchi"
+          },
+          {
+            "id": 112,
+            "text": "jeeta"
+          }
+        ]
+      },
+      "existing": {
+        "cap": {
+          "recall": 47,
+          "gold": 49,
+          "missed": [
+            {
+              "id": 28,
+              "name": "Pooja Mehta"
+            },
+            {
+              "id": 29,
+              "name": "Sanjay"
+            }
+          ]
+        },
+        "lowercaseCategory": {
+          "recall": 6,
+          "gold": 7
+        },
+        "all": {
+          "recall": 53,
+          "gold": 56
+        },
+        "fpSpans": 7,
+        "fps": [
+          {
+            "id": 29,
+            "text": "bana sakte"
+          },
+          {
+            "id": 30,
+            "text": "shaadi agle mahine"
+          },
+          {
+            "id": 32,
+            "text": "rehte"
+          },
+          {
+            "id": 34,
+            "text": "kaha"
+          },
+          {
+            "id": 43,
+            "text": "Regards"
+          },
+          {
+            "id": 44,
+            "text": "Ms"
+          },
+          {
+            "id": 56,
+            "text": "beginner"
+          }
+        ]
+      },
+      "latency": {
+        "medianMs": 30.6,
+        "p95Ms": 48,
+        "n": 182
+      }
+    },
+    {
+      "approach": "C",
+      "label": "C. NER + context cues",
+      "lowercase": {
+        "recall": 29,
+        "gold": 66,
+        "overlap": 31,
+        "byGroup": {
+          "cue": {
+            "gold": 23,
+            "strict": 21,
+            "fp": 1
+          },
+          "no_cue": {
+            "gold": 28,
+            "strict": 6,
+            "fp": 0
+          },
+          "ambiguous": {
+            "gold": 15,
+            "strict": 2,
+            "fp": 1
+          }
+        },
+        "missed": [
+          {
+            "id": 22,
+            "name": "harpreet"
+          },
+          {
+            "id": 22,
+            "name": "nikhil"
+          },
+          {
+            "id": 23,
+            "name": "rohan"
+          },
+          {
+            "id": 26,
+            "name": "kavya"
+          },
+          {
+            "id": 28,
+            "name": "divya"
+          },
+          {
+            "id": 29,
+            "name": "nikhil"
+          },
+          {
+            "id": 30,
+            "name": "gaurav"
+          },
+          {
+            "id": 31,
+            "name": "tanvi"
+          },
+          {
+            "id": 32,
+            "name": "priya"
+          },
+          {
+            "id": 33,
+            "name": "rahul"
+          },
+          {
+            "id": 34,
+            "name": "sunita"
+          },
+          {
+            "id": 35,
+            "name": "meera"
+          },
+          {
+            "id": 36,
+            "name": "manish"
+          },
+          {
+            "id": 36,
+            "name": "shruti"
+          },
+          {
+            "id": 38,
+            "name": "john miller"
+          },
+          {
+            "id": 39,
+            "name": "david"
+          },
+          {
+            "id": 39,
+            "name": "emily"
+          },
+          {
+            "id": 40,
+            "name": "sarah"
+          },
+          {
+            "id": 41,
+            "name": "daniel"
+          },
+          {
+            "id": 44,
+            "name": "venkatesh"
+          },
+          {
+            "id": 45,
+            "name": "aisha khan"
+          },
+          {
+            "id": 46,
+            "name": "sneha"
+          },
+          {
+            "id": 47,
+            "name": "harpreet kaur"
+          },
+          {
+            "id": 48,
+            "name": "ryan"
+          },
+          {
+            "id": 49,
+            "name": "joy"
+          },
+          {
+            "id": 51,
+            "name": "grace"
+          },
+          {
+            "id": 52,
+            "name": "deep"
+          },
+          {
+            "id": 53,
+            "name": "mark"
+          },
+          {
+            "id": 54,
+            "name": "will"
+          },
+          {
+            "id": 55,
+            "name": "faith"
+          },
+          {
+            "id": 55,
+            "name": "hope"
+          },
+          {
+            "id": 56,
+            "name": "summer"
+          },
+          {
+            "id": 58,
+            "name": "priya"
+          },
+          {
+            "id": 58,
+            "name": "joy"
+          },
+          {
+            "id": 59,
+            "name": "ruby"
+          },
+          {
+            "id": 59,
+            "name": "pearl"
+          },
+          {
+            "id": 60,
+            "name": "amber"
+          }
+        ],
+        "fpOnPositiveSentences": 2
+      },
+      "negatives": {
+        "fpSpans": 5,
+        "fpSentences": 5,
+        "n": 60,
+        "byCategory": {
+          "common_word": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "place": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "brand": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          },
+          "date_festival": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 2
+          },
+          "hinglish_plain": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 3
+          },
+          "generic": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          }
+        },
+        "fps": [
+          {
+            "id": 98,
+            "text": "holi"
+          },
+          {
+            "id": 103,
+            "text": "navratri"
+          },
+          {
+            "id": 105,
+            "text": "khatam"
+          },
+          {
+            "id": 109,
+            "text": "peene"
+          },
+          {
+            "id": 113,
+            "text": "emi"
+          }
+        ]
+      },
+      "existing": {
+        "cap": {
+          "recall": 49,
+          "gold": 49,
+          "missed": []
+        },
+        "lowercaseCategory": {
+          "recall": 6,
+          "gold": 7
+        },
+        "all": {
+          "recall": 55,
+          "gold": 56
+        },
+        "fpSpans": 9,
+        "fps": [
+          {
+            "id": 25,
+            "text": "Mera"
+          },
+          {
+            "id": 29,
+            "text": "bana sakte"
+          },
+          {
+            "id": 34,
+            "text": "Mummy"
+          },
+          {
+            "id": 34,
+            "text": "kaha"
+          },
+          {
+            "id": 36,
+            "text": "gaane"
+          },
+          {
+            "id": 43,
+            "text": "Regards"
+          },
+          {
+            "id": 44,
+            "text": "Ms"
+          },
+          {
+            "id": 59,
+            "text": "Mumbai"
+          },
+          {
+            "id": 59,
+            "text": "Pune"
+          }
+        ]
+      },
+      "latency": {
+        "medianMs": 33.2,
+        "p95Ms": 50.7,
+        "n": 182
+      }
+    },
+    {
+      "approach": "E",
+      "label": "E. B + C",
+      "lowercase": {
+        "recall": 53,
+        "gold": 66,
+        "overlap": 53,
+        "byGroup": {
+          "cue": {
+            "gold": 23,
+            "strict": 23,
+            "fp": 1
+          },
+          "no_cue": {
+            "gold": 28,
+            "strict": 27,
+            "fp": 3
+          },
+          "ambiguous": {
+            "gold": 15,
+            "strict": 3,
+            "fp": 2
+          }
+        },
+        "missed": [
+          {
+            "id": 41,
+            "name": "daniel"
+          },
+          {
+            "id": 49,
+            "name": "joy"
+          },
+          {
+            "id": 51,
+            "name": "grace"
+          },
+          {
+            "id": 52,
+            "name": "deep"
+          },
+          {
+            "id": 53,
+            "name": "mark"
+          },
+          {
+            "id": 54,
+            "name": "will"
+          },
+          {
+            "id": 55,
+            "name": "faith"
+          },
+          {
+            "id": 55,
+            "name": "hope"
+          },
+          {
+            "id": 56,
+            "name": "summer"
+          },
+          {
+            "id": 58,
+            "name": "joy"
+          },
+          {
+            "id": 59,
+            "name": "ruby"
+          },
+          {
+            "id": 59,
+            "name": "pearl"
+          },
+          {
+            "id": 60,
+            "name": "amber"
+          }
+        ],
+        "fpOnPositiveSentences": 6
+      },
+      "negatives": {
+        "fpSpans": 17,
+        "fpSentences": 15,
+        "n": 60,
+        "byCategory": {
+          "common_word": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 1
+          },
+          "place": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 2
+          },
+          "brand": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 3
+          },
+          "date_festival": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 4
+          },
+          "hinglish_plain": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 7
+          },
+          "generic": {
+            "gold": 0,
+            "strict": 0,
+            "fp": 0
+          }
+        },
+        "fps": [
+          {
+            "id": 65,
+            "text": "pooja"
+          },
+          {
+            "id": 81,
+            "text": "jaipur"
+          },
+          {
+            "id": 83,
+            "text": "barish"
+          },
+          {
+            "id": 94,
+            "text": "karu"
+          },
+          {
+            "id": 95,
+            "text": "swiggy"
+          },
+          {
+            "id": 95,
+            "text": "zomato"
+          },
+          {
+            "id": 98,
+            "text": "holi"
+          },
+          {
+            "id": 101,
+            "text": "eid mubarak"
+          },
+          {
+            "id": 102,
+            "text": "ganesh chaturthi"
+          },
+          {
+            "id": 103,
+            "text": "navratri"
+          },
+          {
+            "id": 105,
+            "text": "khatam"
+          },
+          {
+            "id": 108,
+            "text": "pahunchna"
+          },
+          {
+            "id": 109,
+            "text": "peene"
+          },
+          {
+            "id": 109,
+            "text": "mann"
+          },
+          {
+            "id": 111,
+            "text": "acchi"
+          },
+          {
+            "id": 112,
+            "text": "jeeta"
+          },
+          {
+            "id": 113,
+            "text": "emi"
+          }
+        ]
+      },
+      "existing": {
+        "cap": {
+          "recall": 49,
+          "gold": 49,
+          "missed": []
+        },
+        "lowercaseCategory": {
+          "recall": 6,
+          "gold": 7
+        },
+        "all": {
+          "recall": 55,
+          "gold": 56
+        },
+        "fpSpans": 11,
+        "fps": [
+          {
+            "id": 29,
+            "text": "bana sakte"
+          },
+          {
+            "id": 30,
+            "text": "shaadi agle mahine"
+          },
+          {
+            "id": 32,
+            "text": "rehte"
+          },
+          {
+            "id": 34,
+            "text": "Mummy"
+          },
+          {
+            "id": 34,
+            "text": "kaha"
+          },
+          {
+            "id": 36,
+            "text": "gaane"
+          },
+          {
+            "id": 43,
+            "text": "Regards"
+          },
+          {
+            "id": 44,
+            "text": "Ms"
+          },
+          {
+            "id": 56,
+            "text": "beginner"
+          },
+          {
+            "id": 59,
+            "text": "Mumbai"
+          },
+          {
+            "id": 59,
+            "text": "Pune"
+          }
+        ]
+      },
+      "latency": {
+        "medianMs": 31.5,
+        "p95Ms": 47.6,
+        "n": 182
+      }
+    }
+  ]
+}

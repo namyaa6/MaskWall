@@ -54,6 +54,7 @@ export function buildResults(repo: string) {
   const pg = read("prompt_guard_reference.json");
   const ner = read("ner_browser_eval.json");
   const parity = read("browser_precheck_parity.json");
+  const lc = read("ner_lowercase_eval.json");
 
   const BASE_NAMES: Record<string, string> = {
     length_lr: "Length only + logistic regression (floor)",
@@ -187,6 +188,27 @@ export function buildResults(repo: string) {
         lowercase: r.eval.byCategory.lowercase,
         hinglish: r.eval.byCategory.hinglish,
       })),
+    },
+    lowercase_names: {
+      selected: lc.selected as string | null,
+      rule: lc.rule,
+      n_positive_names: lc.rows[0].lowercase.gold,
+      n_negatives: lc.rows[0].negatives.n,
+      rows: (lc.rows as J[]).map((r) => ({
+        approach: r.approach as string,
+        label: r.label as string,
+        recall: r.lowercase.recall,
+        gold: r.lowercase.gold,
+        cue: r.lowercase.byGroup.cue,
+        no_cue: r.lowercase.byGroup.no_cue,
+        ambiguous: r.lowercase.byGroup.ambiguous,
+        fp_sentences: r.negatives.fpSentences,
+        existing_cap_recall: r.existing.cap.recall,
+        existing_cap_gold: r.existing.cap.gold,
+        existing_fp_spans: r.existing.fpSpans,
+        median_ms: r.latency.medianMs,
+      })),
+      checks: lc.checks as J[],
     },
     browser_precheck: {
       max_abs_diff: parity.maxAbsDiffHeadTail,

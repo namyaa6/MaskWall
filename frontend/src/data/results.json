@@ -479,6 +479,157 @@
       }
     ]
   },
+  "lowercase_names": {
+    "selected": null,
+    "rule": {
+      "fpNegSentencesExtra": 3,
+      "fpNegSentencesMax": 6,
+      "fpExistingExtra": 2,
+      "maxMedianMs": 300,
+      "minGainPoints": 15,
+      "tieNames": 2
+    },
+    "n_positive_names": 66,
+    "n_negatives": 60,
+    "rows": [
+      {
+        "approach": "A",
+        "label": "A. NER as typed (baseline)",
+        "recall": 11,
+        "gold": 66,
+        "cue": {
+          "gold": 23,
+          "strict": 4,
+          "fp": 1
+        },
+        "no_cue": {
+          "gold": 28,
+          "strict": 6,
+          "fp": 0
+        },
+        "ambiguous": {
+          "gold": 15,
+          "strict": 1,
+          "fp": 0
+        },
+        "fp_sentences": 0,
+        "existing_cap_recall": 46,
+        "existing_cap_gold": 49,
+        "existing_fp_spans": 5,
+        "median_ms": 29.2
+      },
+      {
+        "approach": "B",
+        "label": "B. NER on a selectively re-cased copy",
+        "recall": 48,
+        "gold": 66,
+        "cue": {
+          "gold": 23,
+          "strict": 18,
+          "fp": 1
+        },
+        "no_cue": {
+          "gold": 28,
+          "strict": 27,
+          "fp": 3
+        },
+        "ambiguous": {
+          "gold": 15,
+          "strict": 3,
+          "fp": 2
+        },
+        "fp_sentences": 13,
+        "existing_cap_recall": 47,
+        "existing_cap_gold": 49,
+        "existing_fp_spans": 7,
+        "median_ms": 30.6
+      },
+      {
+        "approach": "C",
+        "label": "C. NER + context cues",
+        "recall": 29,
+        "gold": 66,
+        "cue": {
+          "gold": 23,
+          "strict": 21,
+          "fp": 1
+        },
+        "no_cue": {
+          "gold": 28,
+          "strict": 6,
+          "fp": 0
+        },
+        "ambiguous": {
+          "gold": 15,
+          "strict": 2,
+          "fp": 1
+        },
+        "fp_sentences": 5,
+        "existing_cap_recall": 49,
+        "existing_cap_gold": 49,
+        "existing_fp_spans": 9,
+        "median_ms": 33.2
+      },
+      {
+        "approach": "E",
+        "label": "E. B + C",
+        "recall": 53,
+        "gold": 66,
+        "cue": {
+          "gold": 23,
+          "strict": 23,
+          "fp": 1
+        },
+        "no_cue": {
+          "gold": 28,
+          "strict": 27,
+          "fp": 3
+        },
+        "ambiguous": {
+          "gold": 15,
+          "strict": 3,
+          "fp": 2
+        },
+        "fp_sentences": 15,
+        "existing_cap_recall": 49,
+        "existing_cap_gold": 49,
+        "existing_fp_spans": 11,
+        "median_ms": 31.5
+      }
+    ],
+    "checks": [
+      {
+        "approach": "B",
+        "gainPoints": 56.1,
+        "noRecallDrop": true,
+        "fpNegatives": false,
+        "fpExisting": true,
+        "latency": true,
+        "worthShipping": true,
+        "eligible": false
+      },
+      {
+        "approach": "C",
+        "gainPoints": 27.3,
+        "noRecallDrop": true,
+        "fpNegatives": false,
+        "fpExisting": false,
+        "latency": true,
+        "worthShipping": true,
+        "eligible": false
+      },
+      {
+        "approach": "E",
+        "gainPoints": 63.6,
+        "noRecallDrop": true,
+        "fpNegatives": false,
+        "fpExisting": false,
+        "latency": true,
+        "worthShipping": true,
+        "eligible": false
+      }
+    ]
+  },
   "browser_precheck": {
     "max_abs_diff": 0.0009356238442881359,
     "verdict_mismatches": 0,

@@ -56,6 +56,7 @@ function ClassifierTable({ rows, caption }: { rows: Row[]; caption: string }) {
 
 export function BenchmarksPage() {
   const H = R.hard_negatives;
+  const L = R.lowercase_names;
   return (
     <>
       <PageHead title="Benchmarks">
@@ -263,6 +264,72 @@ export function BenchmarksPage() {
           {R.browser_precheck.max_abs_diff.toFixed(4)}, {R.browser_precheck.verdict_mismatches} different verdicts). In Chrome it loads in about{" "}
           {(R.browser_precheck.load_ms / 1000).toFixed(1)} s and takes {ms(R.browser_precheck.short_median_ms)} for a short message and about{" "}
           {ms(R.browser_precheck.long[R.browser_precheck.long.length - 1].ms)} for a {R.browser_precheck.long[R.browser_precheck.long.length - 1].tokens}-token document.
+        </p>
+      </Section>
+      <Section
+        id="lowercase"
+        title="7. Trying to fix lowercase names (a result that did not ship)"
+        intro={
+          <>
+            Names typed in lowercase ("pls tell priya") are the browser layer's biggest gap. Three fixes were written and frozen, then measured on {L.n_positive_names} lowercase names and{" "}
+            {L.n_negatives} harmless lowercase sentences (AI-drafted, not reviewed by the project owner). The rule for shipping one was fixed before measuring: no drop in recall on
+            capitalised names, at most {L.rule.fpNegSentencesExtra} more harmless sentences wrongly flagged than today (and no more than {L.rule.fpNegSentencesMax} of {L.n_negatives}), at most{" "}
+            {L.rule.fpExistingExtra} more wrong spans on the earlier sample, under {L.rule.maxMedianMs} ms, and a gain of at least {L.rule.minGainPoints} points.{" "}
+            <strong>{L.selected ? `Selected: ${L.selected}.` : "No approach met the rule, so none was shipped and the browser keeps the plain method."}</strong>
+          </>
+        }
+      >
+        <table>
+          <caption className="sr-only">Lowercase name approaches</caption>
+          <thead>
+            <tr>
+              <th scope="col">Approach</th>
+              <th scope="col">Lowercase names hidden</th>
+              <th scope="col">With a cue ("tell X")</th>
+              <th scope="col">Without a cue</th>
+              <th scope="col">Name is also a word (joy, rose)</th>
+              <th scope="col">Harmless sentences wrongly flagged</th>
+              <th scope="col">Capitalised names hidden (earlier sample)</th>
+              <th scope="col">Median time</th>
+              <th scope="col">Passes the rule?</th>
+            </tr>
+          </thead>
+          <tbody>
+            {L.rows.map((r) => {
+              const chk = L.checks.find((c) => c.approach === r.approach);
+              return (
+                <tr key={r.approach}>
+                  <th scope="row">{r.label}</th>
+                  <td className="num">
+                    {r.recall} of {r.gold}
+                  </td>
+                  <td className="num">
+                    {r.cue.strict} of {r.cue.gold}
+                  </td>
+                  <td className="num">
+                    {r.no_cue.strict} of {r.no_cue.gold}
+                  </td>
+                  <td className="num">
+                    {r.ambiguous.strict} of {r.ambiguous.gold}
+                  </td>
+                  <td className="num">
+                    {r.fp_sentences} of {L.n_negatives}
+                  </td>
+                  <td className="num">
+                    {r.existing_cap_recall} of {r.existing_cap_gold}
+                  </td>
+                  <td className="num">{ms(r.median_ms)}</td>
+                  <td>{chk ? (chk.eligible ? "yes" : "no") : "(baseline)"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="muted small">
+          Re-casing finds most lowercase names, but it also hides ordinary Hinglish words, festivals and brands that the word list did not cover ("barish", "khatam", "holi", "swiggy"),
+          so it failed the false-alarm limit. Cue rules find most names written with a cue ("tell X", "X ne") but nothing extra without one, and they too flag some harmless words. Names that are also words
+          (joy, rose, grace, deep) are missed by every approach. Every sentence was written by the same assistant that wrote the rules, which favours the cue approach; the
+          results are indicative, not a benchmark.
         </p>
       </Section>
     </>
