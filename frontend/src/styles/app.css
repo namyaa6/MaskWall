@@ -234,3 +234,4 @@ td .pill { margin-left: 6px; font-size: 12px; padding: 0 8px; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
 }
+.crash { margin-top: var(--gap); }

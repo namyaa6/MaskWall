@@ -65,7 +65,11 @@ export function ChatPage() {
 
   const update = useCallback((id: number, patch: Partial<Turn>) => setTurns((ts) => ts.map((t) => (t.id === id ? { ...t, ...patch } : t))), []);
 
-  useEffect(() => endRef.current?.scrollIntoView?.({ block: "end" }), [turns.length]);
+  useEffect(() => {
+    // braces on purpose: an effect must return nothing or a cleanup function, and scrollIntoView's return value
+    // (a Promise under some scroll polyfills/extensions) crashed React when it was returned implicitly
+    endRef.current?.scrollIntoView?.({ block: "end" });
+  }, [turns.length]);
 
   const warmUp = () => {
     if (privacyOn && ner.status.state === "idle") ner.load();

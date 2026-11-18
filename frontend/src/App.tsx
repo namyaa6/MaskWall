@@ -1,4 +1,5 @@
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useHealth } from "./useHealth";
 import { ChatPage } from "./pages/ChatPage";
 import { PlaygroundPage } from "./pages/PlaygroundPage";
@@ -26,7 +27,13 @@ function FirewallStatus() {
   );
 }
 
+/** Dev-only (not in production builds): a page that always crashes, so the e2e test can see the error boundary. */
+function Crash(): never {
+  throw new Error("deliberate test crash");
+}
+
 export function App() {
+  const { pathname } = useLocation();
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>
@@ -42,15 +49,18 @@ export function App() {
         </div>
       </div>
       <main id="main">
-        <Routes>
-          <Route path="/" element={<Navigate to="/chat" replace />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/playground" element={<PlaygroundPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/how-it-works" element={<HowItWorksPage />} />
-          <Route path="/benchmarks" element={<BenchmarksPage />} />
+        <ErrorBoundary resetKey={pathname}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/chat" replace />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/playground" element={<PlaygroundPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/benchmarks" element={<BenchmarksPage />} />
+            {import.meta.env.DEV && <Route path="/__crash" element={<Crash />} />}
           <Route path="*" element={<Navigate to="/chat" replace />} />
-        </Routes>
+          </Routes>
+        </ErrorBoundary>
       </main>
     </>
   );

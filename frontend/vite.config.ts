@@ -13,7 +13,7 @@ export default defineConfig({
   // Transformers.js ships its own ESM build and loads onnxruntime-web dynamically; pre-bundling it breaks the WASM loader
   optimizeDeps: { exclude: ["@huggingface/transformers"] },
   test: {
-    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts", "eslint-rules/**/*.test.ts"],
     exclude: ["e2e/**", "node_modules/**"],
     environment: "node",
   },
