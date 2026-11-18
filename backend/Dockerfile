@@ -5,18 +5,17 @@
 # Port 7860 and the non-root uid 1000 are what Hugging Face Docker Spaces expect. API keys come from the environment at run time
 # (Space secrets); they are never baked into the image.
 #
-# The model is fetched at BUILD time from the public Hub repo, pinned to a commit (MODEL_REVISION), so a cold start needs no
-# network and the image is reproducible. To use a newer model: upload it, then change MODEL_REVISION.
+# The model is fetched at BUILD time from the public Hub repo, pinned to a commit (REVISION in scripts/fetch_model.py), so a cold start needs no
+# network and the image is reproducible. To use a newer model: upload it, then change REVISION there.
 # NOTE: this file has never been built on the development machine (no Docker there); CI builds it on every push and the Space
 # build log is the real test.
 
 # ---- stage 1: download the model files (huggingface_hub stays out of the final image) ----
 FROM python:3.13-slim AS model
-ARG MODEL_REPO=namya06/maskwall-injection-minilm
-ARG MODEL_REVISION=78085d047839aef62e6bc4bad01dad4b4e9cf370
 RUN pip install --no-cache-dir "huggingface_hub>=0.30"
-RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('${MODEL_REPO}', revision='${MODEL_REVISION}', local_dir='/model/minilm', allow_patterns=['model.int8.onnx','tokenizer.json','model_meta.json'])" \
- && ls -l /model/minilm && rm -rf /model/minilm/.cache
+# the repo and the pinned commit live in scripts/fetch_model.py (the same script CI uses)
+COPY scripts/fetch_model.py /tmp/fetch_model.py
+RUN python /tmp/fetch_model.py /model/minilm
 
 # ---- stage 2: the app ----
 FROM python:3.13-slim

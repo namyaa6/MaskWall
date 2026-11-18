@@ -1,7 +1,5 @@
 import json
 
-import httpx
-import pytest
 from fastapi.testclient import TestClient
 
 from app.abuse import client_key

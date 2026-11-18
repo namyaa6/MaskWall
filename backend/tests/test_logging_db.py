@@ -94,7 +94,8 @@ def test_fingerprint_is_stable_salted_and_not_a_plain_hash(tmp_path):
     assert a.fingerprint("hello") != b.fingerprint("hello")                 # different salt per database
     import hashlib
     assert a.fingerprint("hello") != hashlib.sha256(b"hello").hexdigest()[:16]
-    a.close(); b.close()
+    a.close()
+    b.close()
 
 
 def test_salt_persists_across_reopen(tmp_path):

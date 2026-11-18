@@ -1,0 +1,7 @@
+line-length = 160
+target-version = "py313"
+extend-exclude = ["model", "data"]
+
+[lint]
+# a small, bug-finding rule set (pyflakes + syntax errors + a few pycodestyle runtime errors); style is not enforced
+select = ["E4", "E7", "E9", "F"]

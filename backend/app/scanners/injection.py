@@ -16,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .windowing import CONTENT, STRIDE, covered_tokens, head_tail_ids, select_windows, window_spans
+from .windowing import CONTENT, covered_tokens, head_tail_ids, select_windows, window_spans
 
 
 @dataclass
