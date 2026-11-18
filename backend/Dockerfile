@@ -1,20 +1,36 @@
-# MaskWall firewall API.
-# Build:  docker build -t maskwall-api backend        (context = backend/; needs backend/model/<name>/ from scripts/prepare_model.py)
+# MaskWall firewall API (Hugging Face Docker Space; also runs anywhere with Docker).
+# Build:  docker build -t maskwall-api backend        (context = backend/; no local model needed, it is downloaded from the Hub)
 # Run:    docker run -p 7860:7860 --env-file .env maskwall-api
-# Port 7860 and the non-root uid 1000 are what Hugging Face Docker Spaces expect. API keys come from the environment at run
-# time (never baked into the image). On the Space the model folder will be fetched from the Hugging Face Hub (Day 4).
-# NOTE: written without Docker available on the development machine, so this file has not been built or run yet.
+#
+# Port 7860 and the non-root uid 1000 are what Hugging Face Docker Spaces expect. API keys come from the environment at run time
+# (Space secrets); they are never baked into the image.
+#
+# The model is fetched at BUILD time from the public Hub repo, pinned to a commit (MODEL_REVISION), so a cold start needs no
+# network and the image is reproducible. To use a newer model: upload it, then change MODEL_REVISION.
+# NOTE: this file has never been built on the development machine (no Docker there); CI builds it on every push and the Space
+# build log is the real test.
+
+# ---- stage 1: download the model files (huggingface_hub stays out of the final image) ----
+FROM python:3.13-slim AS model
+ARG MODEL_REPO=namya06/maskwall-injection-minilm
+ARG MODEL_REVISION=78085d047839aef62e6bc4bad01dad4b4e9cf370
+RUN pip install --no-cache-dir "huggingface_hub>=0.30"
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('${MODEL_REPO}', revision='${MODEL_REVISION}', local_dir='/model/minilm', allow_patterns=['model.int8.onnx','tokenizer.json','model_meta.json'])" \
+ && ls -l /model/minilm && rm -rf /model/minilm/.cache
+
+# ---- stage 2: the app ----
 FROM python:3.13-slim
 
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 RUN useradd -m -u 1000 user
 WORKDIR /home/user/app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# exact tested versions (requirements.lock.txt); requirements.txt only holds the minimums
+COPY requirements.lock.txt .
+RUN pip install -r requirements.lock.txt
 
 COPY app ./app
-COPY model ./model
+COPY --from=model /model ./model
 RUN mkdir -p /home/user/data && chown -R user:user /home/user
 USER user
 

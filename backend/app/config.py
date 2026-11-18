@@ -27,6 +27,8 @@ Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_MAX_CONCURRENT_SCANS  simultaneous ONNX inferences (default 1: the host has few cores)
   MASKWALL_MAX_OUTPUT_TOKENS   reply token limit (default 2048). Reasoning models count hidden reasoning tokens against it, so a
                                small value truncates answers; /chat reports `truncated: true` when the limit was hit
+  MASKWALL_DAILY_LLM_LIMIT     global cap on LLM calls per UTC day (default 500; 0 disables). Protects the free provider quotas from
+                               public traffic; when reached /chat returns 429 `daily_llm_limit_reached`, /scan and blocks still work
   GROQ_MODEL / GEMINI_MODEL    model ids for the two providers
 """
 from __future__ import annotations
@@ -82,6 +84,7 @@ class Settings:
     llm_order: tuple[str, ...] = ("groq", "gemini")
     llm_timeout_s: float = 20.0
     max_output_tokens: int = 2048
+    daily_llm_limit: int = 500
     ort_threads: int = 2
     max_concurrent_scans: int = 1
     groq_model: str = "openai/gpt-oss-20b"            # chosen from the live model list 2026-11-15; the first guesses were retired
@@ -105,6 +108,8 @@ class Settings:
                 _parse_limit(getattr(self, name))
             except Exception:
                 raise ConfigError(f"{name} must be a rate limit like '30/minute', got {getattr(self, name)!r}") from None
+        if self.daily_llm_limit < 0:
+            raise ConfigError("daily_llm_limit must be >= 0 (0 disables)")
         if self.log_retention_days < 0 or self.log_max_rows < 0:
             raise ConfigError("log_retention_days and log_max_rows must be >= 0 (0 disables)")
         for name in ("block_threshold", "warn_threshold"):
@@ -176,6 +181,7 @@ class Settings:
         kw["max_chars"] = num("MASKWALL_MAX_CHARS", cls.max_chars, int)
         kw["max_concurrent_scans"] = num("MASKWALL_MAX_CONCURRENT_SCANS", cls.max_concurrent_scans, int)
         kw["ort_threads"] = num("MASKWALL_ORT_THREADS", cls.ort_threads, int)
+        kw["daily_llm_limit"] = num("MASKWALL_DAILY_LLM_LIMIT", cls.daily_llm_limit, int)
         kw["max_output_tokens"] = num("MASKWALL_MAX_OUTPUT_TOKENS", cls.max_output_tokens, int)
         kw["llm_timeout_s"] = num("MASKWALL_LLM_TIMEOUT_S", cls.llm_timeout_s, float)
         kw["block_threshold"] = num("MASKWALL_BLOCK_THRESHOLD", None, float)

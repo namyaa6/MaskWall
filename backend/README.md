@@ -69,6 +69,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 | `MASKWALL_BLOCK_THRESHOLD` / `_WARN_THRESHOLD` | from the model | override the thresholds tuned on validation data |
 | `MASKWALL_STRICT` | `0` | `1`: treat warnings as blocks |
 | `MASKWALL_MAX_OUTPUT_TOKENS` | `2048` | reply token limit; reasoning models spend hidden reasoning tokens against it. `/chat` returns `truncated: true` (and `llm.finish_reason`) when a reply hit the limit |
+| `MASKWALL_DAILY_LLM_LIMIT` | `500` | global cap on LLM calls per UTC day (0 disables), so public traffic cannot use up the free Groq/Gemini quota. When reached, `/chat` returns `429` with `error: daily_llm_limit_reached` and a message pointing to the Attack playground; blocked attacks and `/scan` never use the quota. In memory: a restart resets it. `/health` reports `daily_llm_limit` and `daily_llm_remaining` |
 | `MASKWALL_RATE_LIMIT` | `30/minute` | per client, shared by `/chat` and `/scan` |
 | `MASKWALL_TRUST_PROXY` | `0` | `1` ONLY if the app is reachable exclusively through exactly one trusted proxy (rate-limit key = last `X-Forwarded-For` entry); clients that can connect directly could forge the header |
 | `MASKWALL_GLOBAL_RATE_LIMIT` | `120/minute` | per-client limit on EVERY request, including invalid ones; `/health` is exempt. Request bodies over `max_chars x 12 + 4096` bytes get HTTP 413 before parsing |
@@ -83,7 +84,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q            # 394 tests; no network, no keys; the real-model tests skip if backend\model is absent
+..\.venv\Scripts\python.exe -m pytest -q            # 404 tests; no network, no keys; the real-model tests skip if backend\model is absent
 ..\.venv\Scripts\python.exe scripts\smoke_llm.py    # optional: one real /chat call through Groq and one through Gemini (needs keys + network)
 ```
 
@@ -98,4 +99,4 @@ cd backend
 - **Stateless:** each `/chat` call is one message; conversation history is not accepted (scanning client-supplied history is a separate problem).
 - **Limits:** an output scanner cannot catch a paraphrased system prompt or credentials in unknown formats; the injection classifier is a model with
   measured error rates (docs/decisions.md Day 1.8, 1.11), not a guarantee.
-- **Docker:** `Dockerfile` and `docker-compose.yml` are written but have not been built or run (Docker is not installed on the dev machine).
+- **Docker:** the `Dockerfile` downloads the pinned model from the Hugging Face Hub at build time and installs `requirements.lock.txt`. It has never been built on the development machine (no Docker there); CI builds it on every push and the Space's build log is the runtime test. `docker-compose.yml` is the same image for local use and is likewise untested here.

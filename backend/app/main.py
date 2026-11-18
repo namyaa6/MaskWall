@@ -29,6 +29,7 @@ from .abuse import AbuseGuard, client_key as _client_key
 from .config import Settings
 from .llm import LLMFailure, build_llm
 from .logging_db import EventLog
+from .quota import LIMIT_REACHED_MESSAGE, DailyLimit
 from .policy import BLOCKED_INPUT_MESSAGE, BLOCKED_OUTPUT_MESSAGE, Action, decide_input, decide_output, thresholds_from_meta
 from .normalize import normalize_text
 from .scanners import pii_regex
@@ -105,6 +106,8 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
     app.state.settings = settings
     counters = {"rate_limited": 0, "too_large": 0}                 # in memory only: a flood must not be able to grow the database
     app.state.counters = counters
+    daily = DailyLimit(settings.daily_llm_limit)                    # global cap on LLM calls per UTC day (quota.py)
+    app.state.daily = daily
     # order matters: the guard is added first (inner) and CORS last (outer), so 429/413 responses still carry CORS headers
     app.add_middleware(AbuseGuard, rate_limit=settings.global_rate_limit, max_body_bytes=settings.max_chars * 12 + 4096,
                        trust_proxy=settings.trust_proxy, counters=counters)          # 12 bytes per character: worst-case JSON \u escaping
@@ -210,6 +213,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
             "status": "ok", "version": __version__, "server_model": settings.server_model, "scan_mode": settings.effective_scan_mode,
             "model_loaded": getattr(s, "scanner", None) is not None, "max_chars": settings.max_chars,
             "llm_providers": [p for p in settings.llm_order if settings.provider_key(p)],
+            "daily_llm_limit": daily.limit if daily.enabled else None, "daily_llm_remaining": daily.remaining,
         }
         if out["model_loaded"]:
             t = thresholds()
@@ -272,6 +276,12 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         llm = app.state.llm
         if llm is None:
             raise HTTPException(503, detail={"error": "no_llm_provider_configured"})
+        if not daily.try_acquire():                                     # after the input scan: blocked attacks and /scan never use the quota
+            counters["daily_limit_reached"] = counters.get("daily_limit_reached", 0) + 1
+            wait = daily.seconds_until_reset()
+            await record({**ev, "action": "rejected", "reasons": [*ev["reasons"], "daily_llm_limit"], "http_status": 429}, pii.masked_text)
+            raise HTTPException(429, detail={"error": "daily_llm_limit_reached", "message": LIMIT_REACHED_MESSAGE, "limit": daily.limit,
+                                             "retry_after_s": wait}, headers={"Retry-After": str(wait)})
         messages = [{"role": "system", "content": app.state.system_prompt}, {"role": "user", "content": pii.masked_text}]
         try:
             result = await llm.complete(messages, max_tokens=settings.max_output_tokens)
