@@ -18,14 +18,17 @@ from limits.storage import MemoryStorage
 from limits.strategies import FixedWindowRateLimiter
 
 
-def client_key(headers, client, trust_proxy: bool) -> str:
-    """Rate-limit key. X-Forwarded-For is client-controlled unless a trusted proxy sets it, so it is ignored by default;
-    with trust_proxy the LAST entry (appended by the one trusted proxy) is used, never the first (forgeable).
-    trust_proxy is only safe when the app is reachable ONLY through that proxy: if clients can connect directly, they can send any value."""
-    if trust_proxy:
-        xff = headers.get("x-forwarded-for")
-        if xff:
-            return xff.split(",")[-1].strip()
+def client_key(headers, client, trust_proxy: bool | int) -> str:
+    """Rate-limit key. X-Forwarded-For is client-controlled unless trusted proxies set it, so it is ignored by default (0).
+    `trust_proxy` is the number of trusted proxy hops N (True means 1): the key is the Nth entry FROM THE RIGHT, i.e. the address the
+    outermost trusted proxy saw. A client can only add entries on the LEFT, so the Nth-from-right entry cannot be forged. If the header has
+    fewer than N entries (the request did not come through the chain) the connection address is used.
+    Only safe when the app is reachable ONLY through those N proxies; N must be MEASURED on the real platform (docs/decisions.md Day 4.7)."""
+    hops = int(trust_proxy)
+    if hops > 0:
+        entries = [e.strip() for e in (headers.get("x-forwarded-for") or "").split(",") if e.strip()]
+        if len(entries) >= hops:
+            return entries[-hops]
     return client[0] if client else "unknown"
 
 
@@ -37,7 +40,7 @@ async def _respond(send, status: int, body: dict, headers: list[tuple[bytes, byt
 
 
 class AbuseGuard:
-    def __init__(self, app, *, rate_limit: str, max_body_bytes: int, trust_proxy: bool, counters: dict, exempt: tuple[str, ...] = ("/health",)):
+    def __init__(self, app, *, rate_limit: str, max_body_bytes: int, trust_proxy: bool | int, counters: dict, exempt: tuple[str, ...] = ("/health",)):
         self.app, self.max_body_bytes, self.trust_proxy, self.counters, self.exempt = app, max_body_bytes, trust_proxy, counters, exempt
         self.item = parse(rate_limit)
         self.limiter = FixedWindowRateLimiter(MemoryStorage())

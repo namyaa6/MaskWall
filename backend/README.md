@@ -71,7 +71,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 | `MASKWALL_MAX_OUTPUT_TOKENS` | `2048` | reply token limit; reasoning models spend hidden reasoning tokens against it. `/chat` returns `truncated: true` (and `llm.finish_reason`) when a reply hit the limit |
 | `MASKWALL_DAILY_LLM_LIMIT` | `500` | global cap on LLM calls per UTC day (0 disables), so public traffic cannot use up the free Groq/Gemini quota. When reached, `/chat` returns `429` with `error: daily_llm_limit_reached` and a message pointing to the Attack playground; blocked attacks and `/scan` never use the quota. In memory: a restart resets it. `/health` reports `daily_llm_limit` and `daily_llm_remaining` |
 | `MASKWALL_RATE_LIMIT` | `30/minute` | per client, shared by `/chat` and `/scan` |
-| `MASKWALL_TRUST_PROXY` | `0` | `1` ONLY if the app is reachable exclusively through exactly one trusted proxy (rate-limit key = last `X-Forwarded-For` entry); clients that can connect directly could forge the header |
+| `MASKWALL_TRUST_PROXY_HOPS` | `0` | N trusted proxy hops in front of the app (0 = ignore `X-Forwarded-For`). The rate-limit key is the Nth entry **from the right**, which a client cannot forge (it can only add entries on the left); if there are fewer entries the connection address is used. Measure N on your platform: Render's free tier is **3** (client, Cloudflare edge, Render proxy). `MASKWALL_TRUST_PROXY=1` is the older switch for N=1 |
 | `MASKWALL_GLOBAL_RATE_LIMIT` | `120/minute` | per-client limit on EVERY request, including invalid ones; `/health` is exempt. Request bodies over `max_chars x 12 + 4096` bytes get HTTP 413 before parsing |
 | `MASKWALL_FINGERPRINT_SECRET` | unset | key for the event log's input fingerprints. **Set it in production**: without it the key is a salt stored in the database file, so anyone who has the file can test guessed prompts |
 | `MASKWALL_LOG_RETENTION_DAYS` / `MASKWALL_LOG_MAX_ROWS` | `90` / `500000` | events older than this, or beyond the cap, are pruned |
@@ -84,7 +84,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q            # 404 tests; no network, no keys; the real-model tests skip if backend\model is absent
+..\.venv\Scripts\python.exe -m pytest -q            # 410 tests; no network, no keys; the real-model tests skip if backend\model is absent
 ..\.venv\Scripts\python.exe scripts\smoke_llm.py    # optional: one real /chat call through Groq and one through Gemini (needs keys + network)
 ```
 

@@ -155,3 +155,17 @@ def test_trust_proxy_env_parsing(env, expect):
 def test_cors_and_limit_env_parsing():
     s = Settings.from_env(env={"MASKWALL_CORS_ORIGINS": "https://a.app, https://b.app", "MASKWALL_STATS_RATE_LIMIT": "5/second"}, dotenv_path=None)
     assert s.cors_origins == ("https://a.app", "https://b.app") and s.stats_rate_limit == "5/second"
+
+
+def test_three_hop_chain_gives_each_real_client_its_own_budget_even_with_forged_headers(tmp_path):
+    """The shape measured on Render: <forged...>, client, Cloudflare edge, Render proxy. Every visitor shares the last two entries."""
+    app, _ = make(tmp_path, rate_limit="2/minute", proxy_hops=3)
+
+    def hit(c, client, forged=""):
+        xff = f"{forged}{client}, 104.22.222.95, 10.31.122.138"
+        return c.post("/scan", json={"text": "a b"}, headers={"X-Forwarded-For": xff}).status_code
+
+    with TestClient(app) as c:
+        a = [hit(c, "1.1.1.1", forged=f"6.6.6.{i}, ") for i in range(4)]      # one client forging a different left entry every time
+        b = hit(c, "2.2.2.2")                                                # another client is unaffected
+    assert a == [200, 200, 429, 429] and b == 200

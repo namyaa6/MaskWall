@@ -19,8 +19,11 @@ Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_FINGERPRINT_SECRET  HMAC key for input fingerprints in the event log. Set it: without it the key is a salt stored in the
                                database file, so anyone holding the file can test guesses against the fingerprints
   MASKWALL_LOG_RETENTION_DAYS  delete events older than this (default 90); MASKWALL_LOG_MAX_ROWS caps the table (default 500000)
-  MASKWALL_TRUST_PROXY         1: rate-limit by the LAST X-Forwarded-For entry. ONLY safe when the app is reachable exclusively through
-                               exactly one trusted proxy; if clients can connect directly they can forge the header
+  MASKWALL_TRUST_PROXY_HOPS    N (default 0 = ignore X-Forwarded-For): rate-limit by the Nth X-Forwarded-For entry from the RIGHT, i.e. the
+                               address seen by the outermost of N trusted proxies. Measure N on the real platform: Render's free tier adds
+                               3 (client, Cloudflare edge, Render's internal proxy), so the client is the 3rd from the right. Only safe when
+                               the app is reachable exclusively through those proxies
+  MASKWALL_TRUST_PROXY         1: older switch, same as MASKWALL_TRUST_PROXY_HOPS=1
   MASKWALL_CORS_ORIGINS        comma list of allowed browser origins (default: the Vite dev server); "*" allows any
   MASKWALL_LLM_ORDER           comma list of providers in failover order, e.g. "groq,gemini"
   MASKWALL_LLM_TIMEOUT_S       per-provider timeout
@@ -79,7 +82,8 @@ class Settings:
     global_rate_limit: str = "120/minute"
     log_retention_days: float = 90.0
     log_max_rows: int = 500_000
-    trust_proxy: bool = False
+    trust_proxy: bool = False             # legacy switch = 1 hop; use proxy_hops
+    proxy_hops: int = 0
     cors_origins: tuple[str, ...] = ("http://localhost:5173", "http://127.0.0.1:5173")
     llm_order: tuple[str, ...] = ("groq", "gemini")
     llm_timeout_s: float = 20.0
@@ -108,6 +112,8 @@ class Settings:
                 _parse_limit(getattr(self, name))
             except Exception:
                 raise ConfigError(f"{name} must be a rate limit like '30/minute', got {getattr(self, name)!r}") from None
+        if not 0 <= self.proxy_hops <= 10:
+            raise ConfigError(f"proxy_hops must be between 0 and 10, got {self.proxy_hops}")
         if self.daily_llm_limit < 0:
             raise ConfigError("daily_llm_limit must be >= 0 (0 disables)")
         if self.log_retention_days < 0 or self.log_max_rows < 0:
@@ -116,6 +122,10 @@ class Settings:
             v = getattr(self, name)
             if v is not None and not 0.0 <= v <= 1.0:
                 raise ConfigError(f"{name} must be in [0, 1], got {v}")
+
+    @property
+    def effective_proxy_hops(self) -> int:
+        return self.proxy_hops if self.proxy_hops > 0 else (1 if self.trust_proxy else 0)
 
     @property
     def effective_scan_mode(self) -> str:
@@ -171,6 +181,7 @@ class Settings:
         if get("MASKWALL_CORS_ORIGINS"):
             kw["cors_origins"] = tuple(o.strip() for o in get("MASKWALL_CORS_ORIGINS").split(",") if o.strip())
         kw["trust_proxy"] = (get("MASKWALL_TRUST_PROXY", "0") or "0").strip().lower() in ("1", "true", "yes", "on")
+        kw["proxy_hops"] = num("MASKWALL_TRUST_PROXY_HOPS", 0, int)
         if get("MASKWALL_LLM_ORDER"):
             kw["llm_order"] = tuple(p.strip().lower() for p in get("MASKWALL_LLM_ORDER").split(",") if p.strip())
         if get("GROQ_MODEL"):

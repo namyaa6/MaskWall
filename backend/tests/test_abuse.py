@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.abuse import client_key
@@ -117,3 +118,42 @@ def test_with_a_fingerprint_secret_there_is_no_warning_about_it(tmp_path, caplog
         c.get("/health")
         assert c.app.state.db.keyed_externally is True
     assert "FINGERPRINT_SECRET is not set" not in caplog.text
+
+
+# ------------------------------------------------------------------ N trusted proxy hops (Render: client, Cloudflare edge, Render proxy)
+RENDER_CHAIN = "223.181.33.56, 104.22.222.95, 10.31.122.138"           # as measured on Render's free tier (docs/decisions.md Day 4.7)
+
+
+def test_three_hops_picks_the_client_as_the_third_entry_from_the_right():
+    h = {"x-forwarded-for": RENDER_CHAIN}
+    assert client_key(h, ("127.0.0.1", 1), trust_proxy=3) == "223.181.33.56"
+
+
+def test_forged_entries_on_the_left_cannot_change_the_key():
+    forged = {"x-forwarded-for": "1.2.3.4, 9.9.9.9, " + RENDER_CHAIN}
+    assert client_key(forged, ("127.0.0.1", 1), trust_proxy=3) == "223.181.33.56"
+    assert client_key({"x-forwarded-for": "::1," + RENDER_CHAIN}, None, trust_proxy=3) == "223.181.33.56"
+
+
+def test_too_few_entries_falls_back_to_the_connection_address():
+    # a request that did not come through the three proxies must not be keyed by something it could have forged
+    assert client_key({"x-forwarded-for": "1.2.3.4, 5.6.7.8"}, ("8.8.8.8", 1), trust_proxy=3) == "8.8.8.8"
+    assert client_key({}, ("8.8.8.8", 1), trust_proxy=3) == "8.8.8.8"
+
+
+def test_zero_hops_ignores_the_header_and_true_means_one():
+    h = {"x-forwarded-for": RENDER_CHAIN}
+    assert client_key(h, ("8.8.8.8", 1), trust_proxy=0) == "8.8.8.8"
+    assert client_key(h, ("8.8.8.8", 1), trust_proxy=True) == "10.31.122.138"
+
+
+def test_hops_setting_from_env_legacy_switch_and_validation():
+    from app.config import ConfigError, Settings
+    s = lambda env: Settings.from_env(env=env, dotenv_path=None)             # noqa: E731
+    assert s({}).effective_proxy_hops == 0
+    assert s({"MASKWALL_TRUST_PROXY": "1"}).effective_proxy_hops == 1
+    assert s({"MASKWALL_TRUST_PROXY_HOPS": "3"}).effective_proxy_hops == 3
+    assert s({"MASKWALL_TRUST_PROXY": "1", "MASKWALL_TRUST_PROXY_HOPS": "3"}).effective_proxy_hops == 3
+    for bad in ("-1", "11", "x"):
+        with pytest.raises(ConfigError):
+            s({"MASKWALL_TRUST_PROXY_HOPS": bad})

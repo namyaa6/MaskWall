@@ -27,4 +27,5 @@ services:
         sync: false
       - key: MASKWALL_CORS_ORIGINS       # set after the Vercel URL exists (https://<project>.vercel.app, no trailing slash)
         sync: false
-      # MASKWALL_TRUST_PROXY / hop count: added only after the proxy chain has been measured (step 5b)
+      - key: MASKWALL_TRUST_PROXY_HOPS   # measured on Render's free tier 2026-11-19: X-Forwarded-For = client, Cloudflare edge, Render proxy
+        value: "3"
