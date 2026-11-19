@@ -31,6 +31,8 @@ jobs:
         run: |
           grep -m1 'model name' /proc/cpuinfo
           grep -m1 '^flags' /proc/cpuinfo | grep -oE '(avx[0-9a-z_]*|amx[0-9a-z_]*|[a-z_0-9]*vnni[a-z_0-9]*|sse4_[12]|fma)' | sort -u | tr -s '[:space:]' ' '; echo
+      - name: README results tables match ml/results (generated; run scripts/make_readme_results.py to refresh)
+        run: python scripts/make_readme_results.py --check
       - name: Lint (ruff)
         run: ruff check backend
       - name: Download the served model from the Hub (public repo, pinned commit)

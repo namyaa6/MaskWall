@@ -24,3 +24,5 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/public/ort/
 scripts/_cards/
+
+frontend/.env.local
