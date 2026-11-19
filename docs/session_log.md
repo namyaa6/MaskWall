@@ -158,7 +158,7 @@ export TEMP="D:\Projects2025\MaskWall\ml\cache\tmp" TMP="D:\Projects2025\MaskWal
 
 ## Need your decision or review
 1. The browser rule extension (decision 8) and the quantization settings (decision 7).
-2. **DeBERTa's latency margin is thin** (42.8 vs 50 ms) on this machine; on a 2-vCPU Hugging Face Space it will probably be slower. Decide whether the 50 ms gate should be re-measured on the target hardware before deployment.
+2. **DeBERTa's latency margin is thin** (42.8 vs 50 ms) on this machine; on a 2-vCPU Hugging Face Space it will probably be slower. Decide whether the 50 ms gate should be re-measured on the target hardware before deployment. **[Day 4: DeBERTa is not served and does not fit next to the app in 512 MB on Render; MiniLM was measured there (Day 4.8, 4.11) and the rule was reported against, not changed.]**
 3. Server design implication: a 512-token prompt costs 289 ms (MiniLM int8) to 785 ms (DeBERTa int8), so the server needs an input-length cap or rate limit regardless of the model.
 4. C: drive nearly full.
 
@@ -213,7 +213,7 @@ Nothing was pushed. `.env` was only read (its modification time is unchanged). N
 ### Results worth knowing
 - **Real smoke test (full pipeline, real MiniLM int8, real APIs):** Groq OK (allow, injection score 0.004, LLM 458 ms, total 463 ms), Gemini OK (allow, LLM 1,145 ms, total 1,149 ms), reply `pong` from both; the script verified that no key appears in its output.
 - **Live server check:** an obvious attack is blocked in about 4 ms with no LLM call; a message with an email is masked server-side (`[S_EMAIL_1]`) before the real Groq call (590 ms total); `/stats`, the 413 limit and `/docs` work; `MASKWALL_SERVER_MODEL=deberta` loads, reports `sliding`, and blocks the same attack (score 0.999, 14 ms inference on a 10-token prompt).
-- **Latency the firewall adds (short prompt, MiniLM):** about 4 ms (PII 0.05, tokenize 0.2, inference 3, output scan 0.15); the LLM is 0.5 to 1.1 s. Long inputs cost much more (about 0.4 s per 510-token window for MiniLM).
+- **Latency the firewall adds (short prompt, MiniLM):** about 4 ms (PII 0.05, tokenize 0.2, inference 3, output scan 0.15); the LLM is 0.5 to 1.1 s. Long inputs cost much more (about 0.4 s per 510-token window for MiniLM). **[Developer-laptop figures. On the deployed Render free tier (0.1 vCPU) the measured values are 3.8 ms for a short prompt, 1.2 s per window and 6.8 s for 4 windows: `ml/results/render_benchmark.md`, Day 4.8 and 4.11.]**
 - **Long documents (114 attack + 114 benign, 3,000 to 7,000 characters):** head+tail never sees middle injections (0/38); sliding finds 34/38 for both models. Benign FPR at the block threshold: MiniLM 0.053 -> 0.070, DeBERTa 0.018 -> 0.044. My pre-written criterion (<= 0.05) is met by DeBERTa and not by MiniLM, so `auto` = MiniLM head_tail, DeBERTa sliding.
 
 ### What failed or went wrong (all resolved unless stated)
@@ -258,7 +258,7 @@ Step 6 (skipped, as instructed), the frontend, CI, Hugging Face / Vercel deploym
 
 ## Update (2026-11-15, after your decisions on the review round)
 - **Sliding windows are now the default for MiniLM** (post-hoc, for security; it overrides the pre-registered FPR criterion and says so: `docs/decisions.md` Day 2.8). Regression tests added (padded-middle injection blocked with the real model; wiring test; opt-in head_tail still has the gap); mutation check: 6 tests fail if the default is reverted. 370 tests. Commit `8dec0df`.
-- **MiniLM int8 recorded as the confirmed server model** (served-threshold analysis plus Hinglish FPR); the Day 4 Space benchmark is for latency documentation only.
+- **MiniLM int8 recorded as the confirmed server model** (served-threshold analysis plus Hinglish FPR); the Day 4 benchmark (done on Render, not a Space) is for latency documentation only.
 - **Hard-negative round prepared, nothing trained.** Data: `ml/data/hardneg/hardneg_train.csv` (1,592 rows) and `hardneg_val.csv` (352), raw generations archived, build report `ml/results/hardneg_build_report.md`. Notebook: `ml/train_hardneg.ipynb` (single notebook, 12 runs); smoke-tested on CPU only. Upload: **one file**, `colab_upload/maskwall_hardneg_upload.zip` (5.5 MB, rebuilt by `python ml/pack_hardneg_upload.py`). Details, deviations and risks: Day 2.8.
 - **Colab instructions:** T4 runtime, upload the zip when the upload cell asks, run all cells (about 45 to 60 minutes, estimate), download `hardneg_results.json` and `hardneg_summary.md` into `ml/results/`. Optional: set `ZIP_TAGS` in the last cell to take one checkpoint (about 90 MB) for ONNX export before closing the session.
 - **After the results:** local paired analysis (McNemar, paired bootstrap, per-seed) from the saved raw scores, applied against the criteria in Day 2.6/2.8; if an arm passes, export to int8 and re-evaluate at the served thresholds before touching the server.
@@ -288,7 +288,7 @@ The plan was approved by the owner with four additions. Later the owner said the
 
 ## Numbers worth remembering
 - **Name model (browser, AI-drafted sample of 62 sentences / 56 names, not reviewed by the owner):** distilbert-NER 47/56 strict, 40 ms median, 66 MB; bert-base-NER 48/56, 73 ms, 109 MB (within the 2-name tie, so the smaller model won); multilingual 41/56 and over the size limit. **Lowercase names: 1/7 for every model**, the largest known gap.
-- **Browser pre-check parity** on the 25 golden prompts: identical token counts, max score difference 9.4e-4 (Node and WASM alike), 0 verdict differences. Browser speed: 22 ms for a short prompt, about 0.9 s per 510-token window, 5.2 s for a 1,920-token document. That's why it never delays sending.
+- **Browser pre-check parity** on the 25 golden prompts: identical token counts, max score difference 9.4e-4 (Node and WASM alike), 0 verdict differences. Browser speed (headless Chromium on the developer laptop; a visitor's device will differ): 22 ms for a short prompt, about 0.9 s per 510-token window, 5.2 s for a 1,920-token document. That's why it never delays sending.
 - **Verified on the wire:** the `/chat` body for "Email Rahul Verma at rahul.v@example.in or call 98765 43210 about the PAN ABCPE1234F." was `Email [NAME_1] at [EMAIL_1] or call [PHONE_1] about the PAN [PAN_1].`, and the reply was unmasked in the browser (one real Groq call, made by hand).
 - **Tests:** backend 394 (was 372); frontend 113 Vitest (including 61 shared fixture cases, parity, contrast and results freshness); e2e 3/3 against the production build.
 
@@ -308,7 +308,7 @@ The plan was approved by the owner with four additions. Later the owner said the
 - The name model is still downloaded from the Hugging Face Hub (it sees the visitor's IP address, never message text).
 - `frontend/public/models/maskwall-minilm/` (the 23 MB pre-check model) is gitignored and made by `node scripts/prepare_browser_model.mjs`. **Day 4 must host it** (HF Hub, or copy it during the build). Otherwise the deployed early warning shows "did not load", and the server check still works.
 - `dist/` contains the ONNX Runtime WASM twice (21.6 MB each; visitors download only `/ort/`).
-- The 12 ms server latency figure is from the previous MiniLM (same architecture); re-benchmark on the Space in Day 4.
+- The 12 ms server latency figure is from the previous MiniLM (same architecture). **Resolved in Day 4:** re-benchmarked on the deployed host (Render, not a Hugging Face Space; see Day 4.6 to 4.8 and 4.11 in decisions.md): short prompt 3.8 ms when requests are spaced, about 90 ms back-to-back.
 - Deployed CORS: set `MASKWALL_CORS_ORIGINS` to the Vercel URL, and `VITE_API_URL` to the Space URL at build time.
 
 ## How to run (Windows, from the repo root)
@@ -322,3 +322,7 @@ npm test; npm run lint                     # unit tests + lint/type check
 npm run e2e                                # needs the backend running; builds and serves the production build
 npm run export-results                     # after any change in ml/results
 ```
+
+## Day 4 (2026-11-18 to 11-19): shipping, so far
+- Hygiene (licence, NOTICE, secrets history, npm audit), models on the Hub, backend Dockerfile, CI (three green jobs), then the **hosting pivot: Hugging Face Docker Spaces need PRO, so the backend runs on Render's free tier** (Day 4.6). Measured there: memory fits (peak about 223 MB of 512), proxy chain is 3 hops, latency is CPU-throttled (Day 4.7, 4.8, 4.11). Latency numbers on the site and in the docs now come from the Render measurements (Benchmarks section 3b, How it works); laptop figures stay, labelled as laptop.
+- Mistakes made and fixed (all in decisions.md): a lock file that broke `npm ci` on Linux (4.4), the onnxruntime-node CUDA download (4.5), a too-tight int8 score tolerance (4.9), and invalid workflow YAML from a patch script (4.10).

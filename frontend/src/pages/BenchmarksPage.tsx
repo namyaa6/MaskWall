@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PageHead } from "../components/PageHead";
-import { f3, kn, ms, pct, R } from "../data/results";
+import { dur, f3, kn, ms, pct, R } from "../data/results";
 
 type Row = (typeof R.baselines)[number];
 
@@ -96,7 +96,7 @@ export function BenchmarksPage() {
       <Section
         id="int8"
         title="3. Shrinking the models (int8 quantisation)"
-        intro={`Size and CPU speed (${R.quantization_env.cpu_threads} threads, one message at a time, ONNX Runtime ${R.quantization_env.onnxruntime}) before and after converting the weights to 8-bit integers. F1 and false-alarm rate on the test set.`}
+        intro={`Size and CPU speed before and after converting the weights to 8-bit integers, measured on a developer laptop (${R.quantization_env.cpu_threads} threads, one message at a time, ONNX Runtime ${R.quantization_env.onnxruntime}; the MiniLM row is the previous version of the model, same architecture and size). These are laptop speeds: the speed on the deployed server is in section 3b. F1 and false-alarm rate on the test set.`}
       >
         <table>
           <caption className="sr-only">fp32 versus int8</caption>
@@ -125,6 +125,53 @@ export function BenchmarksPage() {
             ))}
           </tbody>
         </table>
+      </Section>
+
+      <Section
+        id="speed"
+        title="3b. Speed and memory on the deployed server"
+        intro={`The firewall runs on the ${R.hosting.label}: a small slice of one CPU core (the container's own CPU quota reads ${R.hosting.cgroup_vcpu} vCPU) and ${R.hosting.memory_limit_mb} MB of memory. Same code, same model, same 2 threads as the laptop. Two ways of measuring, because on a throttled CPU they differ a lot.`}
+      >
+        <table>
+          <caption className="sr-only">Detector time on the deployed server and on a laptop</caption>
+          <thead>
+            <tr>
+              <th scope="col">Input</th>
+              <th scope="col">Server, requests one at a time</th>
+              <th scope="col">Server, back-to-back</th>
+              <th scope="col">Developer laptop, back-to-back</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Short message ({R.hosting.sporadic.short.tokens} word-pieces)</th>
+              <td className="num">{dur(R.hosting.sporadic.short.p50_ms)} <span className="muted small">(95%: {dur(R.hosting.sporadic.short.p95_ms)}, n={R.hosting.sporadic.short.n})</span></td>
+              <td className="num">{dur(R.hosting.back_to_back.short.p50_ms)} <span className="muted small">(95%: {dur(R.hosting.back_to_back.short.p95_ms)}, n={R.hosting.back_to_back.short.n})</span></td>
+              <td className="num">{dur(R.hosting.laptop_back_to_back.short.p50_ms)}</td>
+            </tr>
+            <tr>
+              <th scope="row">One full chunk (about {R.hosting.back_to_back.window.n_tokens} word-pieces)</th>
+              <td className="num">{dur(R.hosting.sporadic.window.p50_ms)} <span className="muted small">({R.hosting.sporadic.window.tokens} word-pieces, n={R.hosting.sporadic.window.n})</span></td>
+              <td className="num">{dur(R.hosting.back_to_back.window.p50_ms)} <span className="muted small">(n={R.hosting.back_to_back.window.n})</span></td>
+              <td className="num">{dur(R.hosting.laptop_back_to_back.window.p50_ms)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Document of 7,000 characters ({R.hosting.sporadic.document.windows} chunks)</th>
+              <td className="num">{dur(R.hosting.sporadic.document.p50_ms)} <span className="muted small">(n={R.hosting.sporadic.document.n})</span></td>
+              <td className="num">{dur(R.hosting.back_to_back.document.p50_ms)} <span className="muted small">(n={R.hosting.back_to_back.document.n})</span></td>
+              <td className="num">{dur(R.hosting.laptop_back_to_back.document.p50_ms)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="muted small">
+          Median times for the detector itself (tokenising and scoring), not counting the network or the AI's own answer time. "One at a time" means requests spaced seconds apart, measured on the live site ({R.hosting.sporadic.measured}); "back-to-back" is a stream of requests with no pause, which a CPU quota throttles. The few-sample rows (n of 4 to 6) show typical values, not a spread.
+        </p>
+        <p>
+          <strong>Memory:</strong> the whole firewall process peaks at about {R.hosting.peak_rss_mb} MB ({R.hosting.cgroup_peak_mb} MB as the container counts it) out of {R.hosting.memory_limit_mb} MB, after scanning a 4-chunk document; the laptop peak was {R.hosting.laptop_back_to_back.peak_rss_mb} MB.
+        </p>
+        <p>
+          <strong>The 50 ms speed target.</strong> Before any model was trained we set a rule that the chosen model must take under 50 ms per message on a CPU. On this server a short message takes {dur(R.hosting.sporadic.short.p50_ms)} when requests are spaced (inside the target) and about {dur(R.hosting.back_to_back.short.p50_ms)} back-to-back (outside it); one chunk takes {dur(R.hosting.sporadic.window.p50_ms)} and a long document several seconds, far outside it. We report all of it and did not change the rule or the choice of model. Scores on this server can also differ slightly from the laptop's, because 8-bit arithmetic is not bit-identical across CPUs; a message scoring right at a threshold could be handled differently.
+        </p>
       </Section>
 
       <Section

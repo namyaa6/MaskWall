@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { PageHead } from "../components/PageHead";
-import { kn, ms, pct, R } from "../data/results";
+import { dur, kn, ms, pct, R } from "../data/results";
 
 const S = R.served;
 const NER = R.ner.rows.find((r) => r.model === R.ner.selected)!;
 const P = R.browser_precheck;
 const LC2_BASE = R.lowercase_names_r2.rows.find((r) => r.approach === "A")!;
 const LC2_B = R.lowercase_names_r2.rows.find((r) => r.approach === "B")!;
-const Q_INT8 = R.quantization.find((q) => q.model === "MiniLM-L6" && q.precision === "int8")!;
+const H = R.hosting;
 
 const JOURNEY = [
   { title: "You type", where: "Your device", text: "Your message stays in the browser tab until the next step is done." },
@@ -167,8 +167,9 @@ export function HowItWorksPage() {
           </div>
         </div>
         <p className="muted small">
-          Overall test F1 {S.test_f1.toFixed(3)}. Speed: the detector takes about {ms(Q_INT8.p50_ms)} for a typical message on a 2-thread server CPU (
-          {ms(Q_INT8.p50_512_ms)} for a full 510-word-piece chunk; measured on the previous version of the model, which has the same architecture and size); the early warning in your browser takes about {ms(P.short_median_ms)} for a short message.
+          Overall test F1 {S.test_f1.toFixed(3)}. Speed, measured on this site's server ({H.label}; the container's own CPU quota is {H.cgroup_vcpu} vCPU): the detector adds about {dur(H.sporadic.short.p50_ms)} to a short message when requests arrive one at a time,
+          about {dur(H.sporadic.window.p50_ms)} to a message of roughly {H.sporadic.window.tokens} word-pieces, and about {dur(H.sporadic.document.p50_ms)} to a {H.sporadic.document.windows}-chunk document of 7,000 characters, because this server has a small slice of one CPU core.
+          When many messages arrive back-to-back the free tier throttles it and a short message takes about {dur(H.back_to_back.short.p50_ms)}. On a developer laptop the same work takes {dur(H.laptop_back_to_back.short.p50_ms)} (short), {dur(H.laptop_back_to_back.window.p50_ms)} (one chunk) and {dur(H.laptop_back_to_back.document.p50_ms)} (four chunks). The early warning in your browser takes about {ms(P.short_median_ms)} for a short message. Details and the memory figures are on the <Link to="/benchmarks#speed">Benchmarks</Link> page.
         </p>
       </section>
 

@@ -211,6 +211,85 @@
       "fpr": 0.0391
     }
   ],
+  "hosting": {
+    "label": "Render free tier (0.1 vCPU)",
+    "cgroup_vcpu": 0.15,
+    "memory_limit_mb": 512,
+    "peak_rss_mb": 222.1,
+    "cgroup_peak_mb": 226.8,
+    "sporadic": {
+      "measured": "2026-11-19 10:30 UTC",
+      "short": {
+        "p50_ms": 3.8,
+        "p95_ms": 5.8,
+        "n": 20,
+        "tokens": 15
+      },
+      "window": {
+        "p50_ms": 1170.3,
+        "p95_ms": 1414.9,
+        "n": 6,
+        "tokens": 443
+      },
+      "document": {
+        "p50_ms": 6815.4,
+        "p95_ms": 7268.8,
+        "n": 4,
+        "windows": 4
+      }
+    },
+    "back_to_back": {
+      "short": {
+        "p50_ms": 91.9,
+        "p95_ms": 98.6,
+        "mean_ms": 51.7,
+        "n": 300
+      },
+      "window": {
+        "p50_ms": 1597.7,
+        "p95_ms": 1898.3,
+        "mean_ms": 1612.5,
+        "n": 56,
+        "n_tokens": 480,
+        "n_windows": 1
+      },
+      "document": {
+        "p50_ms": 6905.2,
+        "p95_ms": 7165.9,
+        "mean_ms": 6928.5,
+        "n": 14,
+        "n_tokens": 1192,
+        "n_windows": 4,
+        "chars": 7000
+      }
+    },
+    "laptop_back_to_back": {
+      "short": {
+        "p50_ms": 2.8,
+        "p95_ms": 4.3,
+        "mean_ms": 2.9,
+        "n": 300
+      },
+      "window": {
+        "p50_ms": 127.8,
+        "p95_ms": 172.7,
+        "mean_ms": 134.7,
+        "n": 60,
+        "n_tokens": 480,
+        "n_windows": 1
+      },
+      "document": {
+        "p50_ms": 551.8,
+        "p95_ms": 588.3,
+        "mean_ms": 553.8,
+        "n": 20,
+        "n_tokens": 1192,
+        "n_windows": 4,
+        "chars": 7000
+      },
+      "peak_rss_mb": 208.3
+    }
+  },
   "quantization_env": {
     "cpu_threads": 2,
     "onnxruntime": "1.31.1"

@@ -57,6 +57,12 @@ export function buildResults(repo: string) {
   const lc = read("ner_lowercase_eval.json");
   const lc2 = read("ner_lowercase_r2_eval.json");
   const lc2dev = read("ner_lowercase_r2_dev.json");
+  // hosting benchmarks (Day 4.8 / 4.11): back-to-back protocol on Render and on the laptop, plus spaced requests against the live API
+  const renderBench = read("bench_render.json").result as J;
+  const laptopBench = read("bench_laptop.json") as J;
+  const renderApi = read("render_api_latency.json");
+  const apiCase = (needle: string) => (renderApi.cases as J[]).find((c) => (c.case as string).includes(needle))!;
+  const [cpuQuota, cpuPeriod] = String(renderBench.host.cgroup_cpu_max).split(" ").map(Number);
 
   const BASE_NAMES: Record<string, string> = {
     length_lr: "Length only + logistic regression (floor)",
@@ -157,6 +163,30 @@ export function buildResults(repo: string) {
     baselines,
     transformers,
     quantization,
+    hosting: {
+      label: "Render free tier (0.1 vCPU)",
+      cgroup_vcpu: r4(cpuQuota / cpuPeriod),
+      memory_limit_mb: renderBench.memory_final.cgroup_limit_mb,
+      peak_rss_mb: r1(renderBench.memory_final.rss_peak_mb),
+      cgroup_peak_mb: r1(renderBench.memory_final.cgroup_peak_mb),
+      sporadic: {
+        measured: renderApi.measured,
+        short: { p50_ms: apiCase("short").server_total.p50_ms, p95_ms: apiCase("short").server_total.p95_ms, n: apiCase("short").n, tokens: apiCase("short").n_tokens_median },
+        window: { p50_ms: apiCase("one window").server_total.p50_ms, p95_ms: apiCase("one window").server_total.p95_ms, n: apiCase("one window").n, tokens: apiCase("one window").n_tokens_median },
+        document: { p50_ms: apiCase("long").server_total.p50_ms, p95_ms: apiCase("long").server_total.p95_ms, n: apiCase("long").n, windows: apiCase("long").n_windows_median },
+      },
+      back_to_back: {
+        short: renderBench.scanner.short_prompt,
+        window: renderBench.scanner.one_window,
+        document: renderBench.scanner.long_document,
+      },
+      laptop_back_to_back: {
+        short: laptopBench.scanner.short_prompt,
+        window: laptopBench.scanner.one_window,
+        document: laptopBench.scanner.long_document,
+        peak_rss_mb: r1(laptopBench.memory_final.rss_peak_mb),
+      },
+    },
     quantization_env: { cpu_threads: bench.env.threads, onnxruntime: bench.env.onnxruntime },
     hard_negatives: {
       thresholds_before: { block: r4(hard.thresholds.served.block), warn: r4(hard.thresholds.served.warn) },
