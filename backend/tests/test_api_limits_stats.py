@@ -169,3 +169,21 @@ def test_three_hop_chain_gives_each_real_client_its_own_budget_even_with_forged_
         a = [hit(c, "1.1.1.1", forged=f"6.6.6.{i}, ") for i in range(4)]      # one client forging a different left entry every time
         b = hit(c, "2.2.2.2")                                                # another client is unaffected
     assert a == [200, 200, 429, 429] and b == 200
+
+
+# ------------------------------------------------------------------ CORS origins copy-pasted with a trailing slash (found on the live site, Day 4.14)
+def test_a_trailing_slash_in_the_configured_origin_is_removed(tmp_path):
+    """A browser sends `Origin: https://site.example` (no slash). `https://site.example/` would never match and block every request."""
+    assert Settings.from_env(env={"MASKWALL_CORS_ORIGINS": "https://a.app/, https://b.app//"}, dotenv_path=None).cors_origins == ("https://a.app", "https://b.app")
+    app, _ = make(tmp_path, cors_origins=("https://site.example/",))          # also when Settings is built directly
+    with TestClient(app) as c:
+        r = c.options("/chat", headers={"Origin": "https://site.example", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "content-type"})
+    assert r.status_code == 200 and r.headers["access-control-allow-origin"] == "https://site.example"
+
+
+def test_malformed_origins_are_logged_not_silently_accepted(caplog):
+    import logging
+    with caplog.at_level(logging.WARNING, logger="maskwall"):
+        s = Settings.from_env(env={"MASKWALL_CORS_ORIGINS": "https://ok.app,site.example,https://x.app/path"}, dotenv_path=None)
+    assert s.cors_origins == ("https://ok.app", "site.example", "https://x.app/path")
+    assert caplog.text.count("is not of the form") == 2 and "https://ok.app" not in caplog.text

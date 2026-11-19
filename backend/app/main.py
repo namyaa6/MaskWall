@@ -26,7 +26,7 @@ from slowapi.errors import RateLimitExceeded
 
 from . import __version__
 from .abuse import AbuseGuard, client_key as _client_key
-from .config import Settings
+from .config import Settings, normalize_origins
 from .llm import LLMFailure, build_llm
 from .logging_db import EventLog
 from .quota import LIMIT_REACHED_MESSAGE, DailyLimit
@@ -112,7 +112,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
     # order matters: the guard is added first (inner) and CORS last (outer), so 429/413 responses still carry CORS headers
     app.add_middleware(AbuseGuard, rate_limit=settings.global_rate_limit, max_body_bytes=settings.max_chars * 12 + 4096,
                        trust_proxy=settings.effective_proxy_hops, counters=counters)          # 12 bytes per character: worst-case JSON \u escaping
-    app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["GET", "POST"], allow_headers=["*"],
+    app.add_middleware(CORSMiddleware, allow_origins=list(normalize_origins(settings.cors_origins)), allow_methods=["GET", "POST"], allow_headers=["*"],
                        allow_credentials=False)
 
     def client_key(request: Request) -> str:

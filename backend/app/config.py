@@ -36,7 +36,9 @@ Variables (all optional except the API keys, which are only needed for /chat):
 """
 from __future__ import annotations
 
+import logging
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping
@@ -64,6 +66,24 @@ DEFAULT_SYSTEM_PROMPT = (
 
 class ConfigError(ValueError):
     pass
+
+
+_ORIGIN_RE = re.compile(r"^https?://[^/\s?#]+$")
+
+
+def normalize_origins(origins) -> tuple[str, ...]:
+    """CORS origins as browsers send them: no trailing slash. `https://app.example/` (a copy-pasted URL) never matches an Origin header,
+    which silently blocks every request from the site, so a trailing slash is removed. Anything that still is not scheme://host[:port]
+    (a path, a missing scheme) is kept as written but logged, because it will not match either. "*" is allowed (any origin)."""
+    out = []
+    for o in origins:
+        o = o.strip().rstrip("/")
+        if o and o != "*" and not _ORIGIN_RE.match(o):
+            logging.getLogger("maskwall").warning("MASKWALL_CORS_ORIGINS entry %r is not of the form https://host[:port]; browsers will never send "
+                                                  "an Origin like that, so it will not allow anything", o)
+        if o:
+            out.append(o)
+    return tuple(out)
 
 
 @dataclass(frozen=True)
@@ -179,7 +199,7 @@ class Settings:
         if get("MASKWALL_STATS_RATE_LIMIT"):
             kw["stats_rate_limit"] = get("MASKWALL_STATS_RATE_LIMIT")
         if get("MASKWALL_CORS_ORIGINS"):
-            kw["cors_origins"] = tuple(o.strip() for o in get("MASKWALL_CORS_ORIGINS").split(",") if o.strip())
+            kw["cors_origins"] = normalize_origins(get("MASKWALL_CORS_ORIGINS").split(","))
         kw["trust_proxy"] = (get("MASKWALL_TRUST_PROXY", "0") or "0").strip().lower() in ("1", "true", "yes", "on")
         kw["proxy_hops"] = num("MASKWALL_TRUST_PROXY_HOPS", 0, int)
         if get("MASKWALL_LLM_ORDER"):
