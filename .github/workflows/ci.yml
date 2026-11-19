@@ -27,13 +27,19 @@ jobs:
       - name: Install
         run: |
           pip install -r backend/requirements.lock.txt -r backend/requirements-dev.txt ruff==0.17.5 huggingface_hub
+      - name: Runner CPU (int8 scores differ slightly between CPUs; recorded so a failure can be tied to hardware)
+        run: |
+          grep -m1 'model name' /proc/cpuinfo
+          grep -m1 '^flags' /proc/cpuinfo | tr ' ' '
+' | grep -E 'avx|amx|vnni|sse4' | sort | tr '
+' ' '; echo
       - name: Lint (ruff)
         run: ruff check backend
       - name: Download the served model from the Hub (public repo, pinned commit)
         run: python backend/scripts/fetch_model.py backend/model/minilm
       - name: Tests (real-model tests run because the model is present; -rs prints the reason for any skip)
         working-directory: backend
-        run: pytest -q -rs
+        run: pytest -rs
 
   frontend:
     name: Frontend (lint, unit tests, build)

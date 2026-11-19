@@ -1,10 +1,13 @@
 import json
+import math
+import platform
 from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
+from app.policy import decide_input, thresholds_from_meta
 from app.scanners.injection import InjectionScanner
 
 ATTACK = 999
@@ -140,14 +143,51 @@ def real_sliding():
     return InjectionScanner.load(MODEL_DIR, mode="sliding", max_windows=8)
 
 
+def _logit(p: float) -> float:
+    p = min(max(p, 1e-9), 1 - 1e-9)
+    return math.log(p / (1 - p))
+
+
+def _cpu() -> str:
+    try:
+        for line in Path("/proc/cpuinfo").read_text().splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or platform.machine()
+
+
+# int8 kernels are not bit-identical across CPUs: the reference scores were produced on one machine, CI runners and Render differ in
+# instruction sets (AVX2 / AVX-512 / VNNI), and even on ONE machine switching ORT's graph fusion moves logits by about 0.08
+# (docs/decisions.md Day 4.9). The tolerance is in LOGIT space because a probability near 0 or 1 hides a large logit change
+# (a 2.7e-4 difference at p = 0.002 is 0.136 logits, but the same 0.136 logits at p = 0.5 would be 0.034).
+LOGIT_TOL = 0.5      # about 3.7x the largest cross-CPU shift seen so far (0.136); still catches real bugs (wrong pooling, wrong tokens, etc.)
+
+
 @needs_model
 def test_serving_scanner_reproduces_reference_scores(real_head_tail):
-    """tokenizers + onnxruntime (serving) must match HF tokenizer + onnxruntime (the reference behind every reported metric)."""
+    """tokenizers + onnxruntime (serving) must match HF tokenizer + onnxruntime (the reference behind every reported metric).
+    Token counts must match EXACTLY (that is the tokenizer check); scores within LOGIT_TOL (hardware-robust, see above)."""
     g = json.loads(FIXTURE.read_text(encoding="utf-8"))
     for text, ref, n in zip(g["texts"], g["scores"], g["n_tokens"]):
         r = real_head_tail.scan(text)
         assert r.n_tokens == n, text[:60]
-        assert r.score == pytest.approx(ref, abs=1e-5), (text[:60], r.score, ref)
+        assert abs(_logit(r.score) - _logit(ref)) <= LOGIT_TOL, (text[:60], r.score, ref, "cpu:", _cpu())
+
+
+@needs_model
+def test_every_golden_prompt_gets_the_same_decision_as_the_reference(real_head_tail):
+    """What matters to users is allow/warn/block, and that must be IDENTICAL on every CPU. The check is only meaningful if no golden prompt
+    sits on a threshold, so that is asserted too (otherwise a harmless numeric wobble could flip it)."""
+    g = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    thr = thresholds_from_meta(real_head_tail.thr_f1, real_head_tail.thr_fpr1pct)
+    for text, ref in zip(g["texts"], g["scores"]):
+        assert min(abs(ref - thr.warn), abs(ref - thr.block)) > 0.05, ("golden prompt too close to a threshold", text[:60], ref)
+        r = real_head_tail.scan(text)
+        got = decide_input(r.score, r.coverage, thr).action
+        want = decide_input(ref, r.coverage, thr).action
+        assert got == want, (text[:60], r.score, ref, got, want, "cpu:", _cpu())
 
 
 @needs_model
