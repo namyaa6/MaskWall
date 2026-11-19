@@ -55,8 +55,10 @@ jobs:
       - run: npm ci
       - name: Lint and type check
         run: npm run lint
-      - name: Unit tests
+      - name: Unit tests (RUN_HUB_TESTS=1 also checks that the model production downloads from the Hub matches the server's golden scores)
         run: npm test
+        env:
+          RUN_HUB_TESTS: "1"
       - name: Production build
         run: npm run build
       - name: Dependency audit (production dependencies; informational, see docs/security.md)

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
-import { describeError, postChat, type ChatResponse } from "../api";
+import { dailyLimitMessage, describeError, postChat, type ChatResponse } from "../api";
 import { HandledPanel, type HandledTurn } from "../components/HandledPanel";
 import { ModelStatusLine } from "../components/ModelStatus";
 import { PageHead } from "../components/PageHead";
@@ -22,6 +22,8 @@ interface Turn extends HandledTurn {
   hiddenCount: number;
   reply?: string;        // the AI's reply with placeholders filled back in (on the device)
   error?: string;
+  /** the error is the global daily quota: point to the Attack playground, which never calls the AI */
+  dailyLimit?: boolean;
 }
 
 const INTRO_KEY = "maskwall.chatIntroDismissed";
@@ -134,7 +136,7 @@ export function ChatPage() {
       const res: ChatResponse = await postChat(sent);
       update(id, { res, status: "done", reply: res.response != null ? vault.current.unmask(res.response) : undefined });
     } catch (err) {
-      update(id, { status: "error", error: describeError(err) });
+      update(id, { status: "error", error: describeError(err), dailyLimit: dailyLimitMessage(err) != null });
     } finally {
       setBusy(false);
     }
@@ -278,6 +280,11 @@ function TurnResult({ t }: { t: Turn }) {
       <div className="bubble bubble-ai" role="alert">
         <ResultPill tone="blocked">Not answered</ResultPill>
         <p>{t.error}</p>
+        {t.dailyLimit && (
+          <p>
+            <Link to="/playground">Open the Attack playground</Link>
+          </p>
+        )}
       </div>
     );
   const res = t.res!;

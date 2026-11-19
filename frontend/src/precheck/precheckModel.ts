@@ -29,9 +29,16 @@ export interface Precheck {
   scan(text: string, mode?: "sliding" | "head_tail"): Promise<PrecheckResult>;
 }
 
+/** Load from the Hugging Face Hub instead of from `base` (production: the model is not part of the site). */
+export interface RemoteModel {
+  modelId: string;   // e.g. namya06/maskwall-injection-minilm (both layouts live at the repo root)
+  revision: string;  // a commit: the same model version the server runs (backend/scripts/fetch_model.py)
+}
+
 export interface LoadOptions {
-  /** URL path (browser) or directory (Node) that contains maskwall-minilm/ */
+  /** URL path (browser) or directory (Node) that contains maskwall-minilm/ (ignored when `remote` is set) */
   base: string;
+  remote?: RemoteModel;
   loadMeta: () => Promise<ModelMeta>;
   device?: "wasm" | "cpu";
   onProgress?: (loaded: number, total: number) => void;
@@ -45,16 +52,18 @@ const softmaxP1 = (a: number, b: number) => {
 };
 
 export async function loadPrecheck(opts: LoadOptions): Promise<Precheck> {
-  env.allowLocalModels = true;
-  env.allowRemoteModels = false;
+  const modelId = opts.remote ? opts.remote.modelId : MODEL_DIR;
+  env.allowLocalModels = !opts.remote;
+  env.allowRemoteModels = !!opts.remote;
   env.localModelPath = opts.base.endsWith("/") ? opts.base : opts.base + "/";
+  const revision = opts.remote?.revision;
   const progress_callback = (e: { status: string; loaded?: number; total?: number }) => {
     if (e.status === "progress" && opts.onProgress) opts.onProgress(e.loaded ?? 0, e.total ?? 0);
   };
   const [meta, tokenizer, model] = await Promise.all([
     opts.loadMeta(),
-    AutoTokenizer.from_pretrained(MODEL_DIR),
-    AutoModelForSequenceClassification.from_pretrained(MODEL_DIR, { dtype: "q8", device: opts.device ?? "wasm", progress_callback }),
+    AutoTokenizer.from_pretrained(modelId, revision ? { revision } : {}),
+    AutoModelForSequenceClassification.from_pretrained(modelId, { dtype: "q8", device: opts.device ?? "wasm", progress_callback, ...(revision ? { revision } : {}) }),
   ]);
   const thresholds = thresholdsFromMeta(meta);
 

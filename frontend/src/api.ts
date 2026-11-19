@@ -1,15 +1,16 @@
-// Thin client for the MaskWall firewall API (backend/README.md). Base URL from VITE_API_URL, default: local uvicorn.
-export const API_URL: string = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") || "http://127.0.0.1:8000";
+// Thin client for the MaskWall firewall API (backend/README.md). Base URL from VITE_API_URL (apiConfig.ts), default: local uvicorn.
+// Every call first makes sure the firewall is awake (serverState.ts): free hosting sleeps when idle and takes a minute or two to wake.
+import { API_URL, type Health } from "./apiConfig";
+import { ensureAwake, noteServerOk, noteServerUnreachable, ServerDownError } from "./serverState";
 
-export interface Health {
-  status: string;
-  version: string;
-  server_model: string;
-  scan_mode: string;
-  model_loaded: boolean;
-  max_chars: number;
-  llm_providers: string[];
-  thresholds?: { warn: number; block: number };
+export { API_URL };
+export type { Health };
+
+/** The request could not reach the firewall at all (network error), as opposed to the firewall answering with an error. */
+export class NetworkError extends Error {
+  constructor() {
+    super("network error");
+  }
 }
 
 export class ApiError extends Error {
@@ -18,22 +19,25 @@ export class ApiError extends Error {
   }
 }
 
-export async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const r = await fetch(`${API_URL}${path}`, { signal });
+async function request<T>(path: string, init: RequestInit): Promise<T> {
+  await ensureAwake(); // queues behind the wake-up; throws ServerDownError after about 3 minutes
+  let r: Response;
+  try {
+    r = await fetch(`${API_URL}${path}`, init);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    noteServerUnreachable(); // never re-sent automatically: a POST may already have reached the server
+    throw new NetworkError();
+  }
+  noteServerOk();
   if (!r.ok) throw new ApiError(r.status, await r.json().catch(() => null));
   return (await r.json()) as T;
 }
 
-export async function postJSON<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
-  const r = await fetch(`${API_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  if (!r.ok) throw new ApiError(r.status, await r.json().catch(() => null));
-  return (await r.json()) as T;
-}
+export const getJSON = <T>(path: string, signal?: AbortSignal) => request<T>(path, { signal });
+
+export const postJSON = <T>(path: string, body: unknown, signal?: AbortSignal) =>
+  request<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal });
 
 export const getHealth = (signal?: AbortSignal) => getJSON<Health>("/health", signal);
 
@@ -133,13 +137,22 @@ export interface Stats {
 
 export const getStats = (signal?: AbortSignal) => getJSON<Stats>("/stats", signal);
 
-/** Plain-English message for an HTTP error from the firewall. */
+/** The firewall's own explanation for a 429 that is the global daily quota (not the per-visitor rate limit). */
+export function dailyLimitMessage(e: unknown): string | null {
+  if (!(e instanceof ApiError) || e.status !== 429) return null;
+  const d = (e.detail as { detail?: { error?: string; message?: string } } | null)?.detail;
+  return d?.error === "daily_llm_limit_reached" ? (d.message ?? null) : null;
+}
+
+/** Plain-English message for an error from the firewall. */
 export function describeError(e: unknown): string {
+  if (e instanceof ServerDownError) return "The firewall is not answering. Free hosting can take a while to start up: wait a minute and try again.";
+  if (e instanceof NetworkError) return "Could not reach the firewall. Check your connection, then try again.";
   if (e instanceof ApiError) {
     switch (e.status) {
       case 413: return "That message is too long for the firewall (over 8,000 characters). Shorten it and try again.";
       case 422: return "That message is empty once hidden characters are removed, so there was nothing to send.";
-      case 429: return "Too many messages in a short time. Wait a minute and try again.";
+      case 429: return dailyLimitMessage(e) ?? "Too many messages in a short time. Wait a minute and try again.";
       case 502: return "The AI services did not answer (both the main one and the backup). Try again in a moment.";
       case 503: return "The firewall is running, but no AI service is set up, so it can check messages but not answer them.";
       default: return `The firewall returned an error (HTTP ${e.status}). Try again.`;

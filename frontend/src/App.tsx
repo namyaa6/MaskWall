@@ -1,4 +1,7 @@
+import { useEffect, useSyncExternalStore } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { WakeBanner } from "./components/WakeBanner";
+import { getServerState, subscribeServerState, wakeUp } from "./serverState";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useHealth } from "./useHealth";
 import { ChatPage } from "./pages/ChatPage";
@@ -17,8 +20,9 @@ const LINKS = [
 
 function FirewallStatus() {
   const h = useHealth();
-  const cls = h.state === "online" ? "online" : h.state === "offline" ? "offline" : "";
-  const label = h.state === "online" ? "Firewall online" : h.state === "offline" ? "Firewall offline" : "Checking firewall…";
+  const waking = useSyncExternalStore(subscribeServerState, getServerState, getServerState).status === "waking";
+  const cls = waking ? "" : h.state === "online" ? "online" : h.state === "offline" ? "offline" : "";
+  const label = waking ? "Waking up…" : h.state === "online" ? "Firewall online" : h.state === "offline" ? "Firewall offline" : "Checking firewall…";
   return (
     <span className={`status ${cls}`} role="status">
       <span className="status-dot" aria-hidden="true" />
@@ -34,6 +38,10 @@ function Crash(): never {
 
 export function App() {
   const { pathname } = useLocation();
+  // wake the (free, sleeping) server as soon as the site opens, so it is usually ready by the time someone has typed a message
+  useEffect(() => {
+    wakeUp().catch(() => undefined);
+  }, []);
   return (
     <>
       <a className="skip-link" href="#main">Skip to content</a>
@@ -48,6 +56,7 @@ export function App() {
           <FirewallStatus />
         </div>
       </div>
+      <WakeBanner />
       <main id="main">
         <ErrorBoundary resetKey={pathname}>
           <Routes>

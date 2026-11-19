@@ -16,7 +16,8 @@
     "e2e:dev": "cross-env E2E_MODE=dev playwright test",
     "e2e:all": "npm run e2e && npm run e2e:dev",
     "export-common-words": "vite-node scripts/export_common_words_cli.ts",
-    "export-results": "vite-node scripts/export_results_cli.ts"
+    "export-results": "vite-node scripts/export_results_cli.ts",
+    "e2e:wake": "cross-env VITE_API_URL=https://firewall.e2e.test WAKE_E2E=1 playwright test e2e/wake.spec.ts"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",
@@ -45,5 +46,8 @@
   },
   "overrides": {
     "sharp": "0.35.5"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

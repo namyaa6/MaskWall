@@ -1,4 +1,6 @@
+import { useSyncExternalStore } from "react";
 import { Link } from "react-router-dom";
+import { getServerState, subscribeServerState } from "../serverState";
 import { PageHead } from "../components/PageHead";
 import { dur, kn, ms, pct, R } from "../data/results";
 
@@ -25,6 +27,22 @@ const PII_ROWS = [
   { type: "Aadhaar number", how: "12 digits not starting with 0 or 1, and the Verhoeff checksum must be valid (so random 12-digit numbers are not hidden)", example: "2345 6789 0124 (made up)", ph: "[AADHAAR_1]" },
   { type: "PAN", how: "5 letters, 4 digits, 1 letter, and the 4th letter must be a valid holder type (P, C, H, F, A, T, B, L, J or G)", example: "ABCPE1234F", ph: "[PAN_1]" },
 ];
+
+/** The global daily cap on AI answers, read from the server's /health (shown once the server has answered). */
+function DailyQuota() {
+  const h = useSyncExternalStore(subscribeServerState, getServerState, getServerState).health;
+  const limit = h?.daily_llm_limit;
+  return (
+    <section aria-labelledby="quota-title" className="section card" data-testid="daily-quota">
+      <h2 id="quota-title">A daily limit on AI answers</h2>
+      <p>
+        This demo runs on free AI accounts, so the number of messages that get an AI answer is capped for <strong>everyone together</strong>
+        {limit ? <>: <strong>{limit} per day</strong>{h?.daily_llm_remaining != null && <> ({h.daily_llm_remaining} left right now)</>}, resetting at midnight UTC</> : <> (the current limit appears here once the server has answered)</>}.
+        Only messages that actually reach the AI count. Messages the firewall blocks and everything you do in the <Link to="/playground">Attack playground</Link> do not use any of it, so the playground keeps working when the limit is reached. Separately, each visitor can send about 30 messages a minute.
+      </p>
+    </section>
+  );
+}
 
 export function HowItWorksPage() {
   return (
@@ -173,6 +191,8 @@ export function HowItWorksPage() {
         </p>
       </section>
 
+      <DailyQuota />
+
       <section aria-labelledby="limits-title" className="section card limits">
         <h2 id="limits-title">What it can't do yet</h2>
         <ul className="plain-list">
@@ -208,8 +228,8 @@ export function HowItWorksPage() {
             <strong>Narrow evidence for Hinglish</strong>: no Devanagari script in training, and the Hinglish attack tests are AI-written. The retrained model is one training run.
           </li>
           <li>
-            <strong>Hugging Face sees the name-model download</strong>: the browser fetches the name model from the Hugging Face Hub on first use. No message text is
-            involved, but Hugging Face sees your IP address. Everything else (the attack model and the AI runtime) is served by this site.
+            <strong>Hugging Face sees the model downloads</strong>: on first use the browser fetches the name model and the attack early-warning model from the Hugging Face Hub
+            (the early-warning model only on the deployed site; the browser keeps both afterwards). No message text is involved, but Hugging Face sees your IP address. The AI runtime that runs them is served by this site.
           </li>
         </ul>
       </section>
