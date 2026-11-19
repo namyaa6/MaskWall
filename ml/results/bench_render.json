@@ -1,0 +1,102 @@
+{
+  "status": "done",
+  "result": {
+    "host": {
+      "platform": "Linux-7.0.0-1016-aws-x86_64-with-glibc2.41",
+      "python": "3.13.18",
+      "onnxruntime": "1.31.1",
+      "cpu_model": "AMD EPYC 7R13 Processor",
+      "cpu_count_visible": 8,
+      "cgroup_cpu_max": "15000 100000",
+      "ort_threads": 2
+    },
+    "memory_before_app": {
+      "rss_mb": 80.5,
+      "rss_peak_mb": 80.5,
+      "cgroup_current_mb": 72.8,
+      "cgroup_peak_mb": 72.8,
+      "cgroup_limit_mb": 512.0
+    },
+    "memory_app_started": {
+      "rss_mb": 139.5,
+      "rss_peak_mb": 139.5,
+      "cgroup_current_mb": 143.3,
+      "cgroup_peak_mb": 143.5,
+      "cgroup_limit_mb": 512.0
+    },
+    "scan_endpoint_in_process_short": {
+      "p50_ms": 191.4,
+      "p95_ms": 200.3,
+      "mean_ms": 149.9,
+      "n": 50,
+      "ok": 60,
+      "note": "POST /scan through the ASGI app in-process (no network): pii mask + scan + policy + event log"
+    },
+    "scanner": {
+      "memory_after_load": {
+        "rss_mb": 143.3,
+        "rss_peak_mb": 143.3,
+        "cgroup_current_mb": 147.7,
+        "cgroup_peak_mb": 147.7,
+        "cgroup_limit_mb": 512.0
+      },
+      "short_prompt": {
+        "p50_ms": 91.9,
+        "p95_ms": 98.6,
+        "mean_ms": 51.7,
+        "n": 300
+      },
+      "short_prompt_inference_only": {
+        "p50_ms": 49.3,
+        "p95_ms": 98.2,
+        "mean_ms": 50.0,
+        "n": 40
+      },
+      "memory_after_short": {
+        "rss_mb": 143.4,
+        "rss_peak_mb": 143.4,
+        "cgroup_current_mb": 147.6,
+        "cgroup_peak_mb": 148.1,
+        "cgroup_limit_mb": 512.0
+      },
+      "one_window": {
+        "p50_ms": 1597.7,
+        "p95_ms": 1898.3,
+        "mean_ms": 1612.5,
+        "n": 56,
+        "n_tokens": 480,
+        "n_windows": 1
+      },
+      "long_document": {
+        "p50_ms": 6905.2,
+        "p95_ms": 7165.9,
+        "mean_ms": 6928.5,
+        "n": 14,
+        "n_tokens": 1192,
+        "n_windows": 4,
+        "chars": 7000
+      },
+      "memory_after_long_document": {
+        "rss_mb": 222.2,
+        "rss_peak_mb": 222.2,
+        "cgroup_current_mb": 193.9,
+        "cgroup_peak_mb": 226.8,
+        "cgroup_limit_mb": 512.0
+      }
+    },
+    "memory_final": {
+      "rss_mb": 222.1,
+      "rss_peak_mb": 222.1,
+      "cgroup_current_mb": 193.5,
+      "cgroup_peak_mb": 226.8,
+      "cgroup_limit_mb": 512.0
+    }
+  },
+  "memory_now": {
+    "rss_mb": 222.0,
+    "rss_peak_mb": 222.0,
+    "cgroup_current_mb": 193.4,
+    "cgroup_peak_mb": 226.8,
+    "cgroup_limit_mb": 512.0
+  }
+}
