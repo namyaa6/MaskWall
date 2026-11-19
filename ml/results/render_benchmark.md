@@ -28,3 +28,13 @@ DeBERTa (not served): loading it into the same container made the request fail w
 - The rule was defined for `session.run` on natural-length validation prompts (private, not available on the host). The closest thing measured here: **back-to-back `scan()` on short prompts has p50 about 90 ms on Render's free tier: above 50 ms. By that measurement MiniLM does NOT meet the rule on this hardware.** The inference-only p50 (3.1 or 49.3 ms across two runs) is unstable, so it supports neither a pass nor a fail.
 - The rule's purpose was to choose between models on development hardware; it is **not** re-applied to change the choice. MiniLM stays the served model (DeBERTa is 4 to 5x slower on the laptop, so it would not pass either, and does not fit next to the app in 512 MB).
 - Consequence for users, stated plainly: a short message costs roughly 0.1 s of scanning when requests are back-to-back, a message of about 500 tokens about 1.6 s, and a long document (4+ windows) about 7 s, plus the LLM time. The Attack playground and Chat show server-measured timings, so users can see it.
+
+## Addendum: the deployed API under sporadic traffic (`render_api_latency.json`, 2026-11-19)
+Same hardware label: **Render free tier (0.1 vCPU)**, Singapore. `POST /scan` on `https://maskwall-api.onrender.com`, requests **spaced** (3 s, 5 s, 8 s) so the CPU quota is not exhausted; `server_*` are measured inside the API (what the firewall adds), the round trip is from the developer machine in India (network included). No LLM is called.
+| case | server total p50 / p95 | server inference p50 | round trip p50 / p95 | n |
+|---|---|---|---|---|
+| short prompt (20 fixed prompts, median 15 tokens) | **3.8 / 5.8 ms** | 3.1 ms | 149.9 / 205.9 ms | 20 |
+| one window (median 443 tokens) | 1,170.3 / 1,414.9 ms | 1,167.3 ms | 1,350.8 / 1,578.1 ms | 6 |
+| long document (7,000 characters = 4 windows) | 6,815.4 / 7,268.8 ms | 6,809.1 ms | 6,962.8 / 7,504.5 ms | 4 |
+**Reading the two benchmarks together:** the same server does a short scan in **3.8 ms when requests are spaced** and **about 90 ms when they are back-to-back**, because the 0.15 vCPU quota (15 ms of CPU per 100 ms) is available after a pause and exhausted by a stream. Window and document scans are compute-bound at this quota either way (1.2 to 1.6 s per window, 6.8 to 6.9 s for 4 windows).
+**The 50 ms rule, still unchanged:** sporadic short-prompt scans are far under it (3.8 ms); back-to-back short scans are over it (about 90 ms); the long-input cost is 1 to 7 seconds. Which of these is "the" Render number depends on traffic, so both are reported, with their conditions. Small n for the long cases (6 and 4): read them as typical values, not distributions.

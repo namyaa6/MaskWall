@@ -1,0 +1,93 @@
+{
+  "measured": "2026-11-19 10:30 UTC",
+  "host": "https://maskwall-api.onrender.com",
+  "health": {
+    "status": "ok",
+    "version": "0.1.0",
+    "server_model": "minilm",
+    "scan_mode": "sliding",
+    "model_loaded": true,
+    "max_chars": 8000,
+    "llm_providers": [
+      "groq",
+      "gemini"
+    ],
+    "daily_llm_limit": 500,
+    "daily_llm_remaining": 500,
+    "thresholds": {
+      "warn": 0.36826884746551514,
+      "block": 0.6102152466773988
+    }
+  },
+  "hardware": "Render free tier (0.1 vCPU nominal; cgroup quota 0.15 vCPU), Singapore",
+  "client": "developer machine (India), plain HTTPS",
+  "note": "spaced requests (sporadic traffic), POST /scan, no LLM; server_* are measured inside the API, client_round_trip includes the network",
+  "cases": [
+    {
+      "case": "short prompt (20 fixed prompts)",
+      "n": 20,
+      "gap_s": 3.0,
+      "server_total": {
+        "p50_ms": 3.8,
+        "p95_ms": 5.8,
+        "max_ms": 6.1
+      },
+      "server_inference": {
+        "p50_ms": 3.1,
+        "p95_ms": 4.5,
+        "max_ms": 5.3
+      },
+      "client_round_trip": {
+        "p50_ms": 149.9,
+        "p95_ms": 205.9,
+        "max_ms": 211.5
+      },
+      "n_tokens_median": 15.0,
+      "n_windows_median": 1.0
+    },
+    {
+      "case": "one window (~500 tokens)",
+      "n": 6,
+      "gap_s": 5.0,
+      "server_total": {
+        "p50_ms": 1170.3,
+        "p95_ms": 1414.9,
+        "max_ms": 1451.9
+      },
+      "server_inference": {
+        "p50_ms": 1167.3,
+        "p95_ms": 1401.6,
+        "max_ms": 1435.0
+      },
+      "client_round_trip": {
+        "p50_ms": 1350.8,
+        "p95_ms": 1578.1,
+        "max_ms": 1620.0
+      },
+      "n_tokens_median": 443.0,
+      "n_windows_median": 1.0
+    },
+    {
+      "case": "long document (7,000 characters)",
+      "n": 4,
+      "gap_s": 8.0,
+      "server_total": {
+        "p50_ms": 6815.4,
+        "p95_ms": 7268.8,
+        "max_ms": 7340.1
+      },
+      "server_inference": {
+        "p50_ms": 6809.1,
+        "p95_ms": 7261.3,
+        "max_ms": 7332.2
+      },
+      "client_round_trip": {
+        "p50_ms": 6962.8,
+        "p95_ms": 7504.5,
+        "max_ms": 7593.0
+      },
+      "n_tokens_median": 1192.0,
+      "n_windows_median": 4.0
+    }
+  ]
+}
