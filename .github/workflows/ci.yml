@@ -30,9 +30,7 @@ jobs:
       - name: Runner CPU (int8 scores differ slightly between CPUs; recorded so a failure can be tied to hardware)
         run: |
           grep -m1 'model name' /proc/cpuinfo
-          grep -m1 '^flags' /proc/cpuinfo | tr ' ' '
-' | grep -E 'avx|amx|vnni|sse4' | sort | tr '
-' ' '; echo
+          grep -m1 '^flags' /proc/cpuinfo | grep -oE '(avx[0-9a-z_]*|amx[0-9a-z_]*|[a-z_0-9]*vnni[a-z_0-9]*|sse4_[12]|fma)' | sort -u | tr -s '[:space:]' ' '; echo
       - name: Lint (ruff)
         run: ruff check backend
       - name: Download the served model from the Hub (public repo, pinned commit)
