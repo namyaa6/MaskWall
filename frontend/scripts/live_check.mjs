@@ -43,7 +43,8 @@ try {
 
   // 2. Chat: personal data masked on the device; the request that left the browser carried only placeholders; one real AI answer
   const email = "rahul.v@example.in";
-  const text = `Email Rahul Verma at ${email} or call 98765 43210 about the PAN ABCPE1234F.`;
+  const text = `Email Rahul Verma at ${email} or call 98765 43210 about the PAN ABCPE1234F. Reply in one short sentence.`;
+  await page.getByRole("button", { name: "Got it, hide this" }).click().catch(() => undefined);   // keeps the whole split screen in one screenshot
   await page.getByLabel("Your message").fill(text);
   await page.getByRole("button", { name: "Send" }).click();
   await page.locator(".received-text").waitFor({ timeout: 5 * 60_000 });   // first visit downloads the name model from the Hub
@@ -81,6 +82,7 @@ try {
 
   // 6. How it works: Render numbers, daily limit from /health
   await page.goto(`${site}/how-it-works`);
+  await page.getByTestId("daily-quota").getByText(/per day/).waitFor({ timeout: 60_000 });   // appears once the server has answered /health
   const how = await page.locator("main").innerText();
   check("How it works: hosting label and the daily limit are shown", how.includes("Render free tier (0.1 vCPU)") && /500 per day/.test(how), "");
   await shot("how-it-works.png");
