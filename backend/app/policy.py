@@ -25,6 +25,8 @@ class Action(str, Enum):
 
 
 BLOCKED_INPUT_MESSAGE = "This message was blocked by the MaskWall firewall because it looks like a prompt-injection or jailbreak attempt."
+PARTIAL_BLOCKED_MESSAGE = ("This message is too long or too dense for the MaskWall firewall to check completely, so it was not sent to the AI. "
+                           "Shorten it (or remove pasted text) and try again.")
 BLOCKED_OUTPUT_MESSAGE = "The model's reply was withheld by the MaskWall firewall because it appeared to leak protected information."
 
 
@@ -63,7 +65,10 @@ class OutputDecision:
 
 
 def decide_input(score: float, coverage: str, thresholds: Thresholds, *, pii_masked: int = 0, strict: bool = False,
-                 hidden_unicode: int = 0) -> InputDecision:
+                 hidden_unicode: int = 0, partial_action: Action = Action.WARN) -> InputDecision:
+    """`partial_action`: what a PARTIAL scan (the input did not fit the window cap) turns an otherwise allowed input into. The library default is
+    WARN; the API defaults to BLOCK (MASKWALL_PARTIAL_SCAN), because a warned input still reaches the LLM and padding can hide an injection
+    in the unscanned part (Day 4.17 review finding)."""
     reasons: list[str] = []
     if score >= thresholds.block:
         action = Action.BLOCK
@@ -75,8 +80,8 @@ def decide_input(score: float, coverage: str, thresholds: Thresholds, *, pii_mas
         action = Action.ALLOW
     if coverage != "full":
         reasons.append("partial_scan")
-        if action is Action.ALLOW:
-            action = Action.WARN
+        if action is Action.ALLOW or (partial_action is Action.BLOCK and action is Action.WARN):
+            action = partial_action
     if hidden_unicode > 0:                       # tag characters / variation selectors have no legitimate use in a prompt
         reasons.append("hidden_characters")
         if action is Action.ALLOW:

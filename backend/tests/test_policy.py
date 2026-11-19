@@ -85,3 +85,15 @@ def test_strict_mode_blocks_hidden_characters():
     d = decide_input(0.01, "full", T, hidden_unicode=1, strict=True)
     assert d.action is Action.BLOCK and d.reasons == ("hidden_characters", "strict_mode")
     assert decide_input(0.01, "full", T, hidden_unicode=0).action is Action.ALLOW
+
+
+# ------------------------------------------------------------------ partial scans can block (Day 4.17 review: a warned input still reaches the LLM)
+def test_partial_scan_action_block_blocks_inputs_that_would_only_be_warned():
+    for score in (0.10, 0.70):
+        d = decide_input(score, "partial", T, partial_action=Action.BLOCK)
+        assert d.action is Action.BLOCK and "partial_scan" in d.reasons
+    assert decide_input(0.10, "full", T, partial_action=Action.BLOCK).action is Action.ALLOW      # full coverage is unaffected
+
+
+def test_partial_scan_default_stays_warn_for_library_callers():
+    assert decide_input(0.10, "partial", T).action is Action.WARN

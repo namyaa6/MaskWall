@@ -160,3 +160,36 @@ describe("error messages", () => {
     expect(describeError(new NetworkError())).toMatch(/connection/);
   });
 });
+
+describe("a stalled server", () => {
+  it("a request that is never answered is abandoned after the timeout with TimeoutError (the page cannot stay stuck) and is not re-sent", async () => {
+    const { REQUEST_TIMEOUT_MS, TimeoutError } = await import("./api");
+    fetchMock.mockImplementation((url: string, init?: RequestInit) =>
+      String(url).endsWith("/health")
+        ? Promise.resolve(json(HEALTH))
+        : new Promise((_res, rej) => init?.signal?.addEventListener("abort", () => rej(new DOMException("aborted", "AbortError")))));
+    const r = postChat("hello").catch((e) => e);
+    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS + 1_000);
+    const err = await r;
+    expect(err).toBeInstanceOf(TimeoutError);
+    expect(describeError(err)).toMatch(/too long/);
+    expect(fetchMock.mock.calls.filter((c) => String(c[0]).endsWith("/chat"))).toHaveLength(1);
+  });
+
+  it("a caller's own abort still means 'Cancelled', not a timeout", async () => {
+    fetchMock.mockImplementation((url: string, init?: RequestInit) =>
+      String(url).endsWith("/health")
+        ? Promise.resolve(json(HEALTH))
+        : new Promise((_res, rej) => init?.signal?.addEventListener("abort", () => rej(new DOMException("aborted", "AbortError")))));
+    const ctrl = new AbortController();
+    const r = postChat("hello", ctrl.signal).catch((e) => e);
+    await vi.advanceTimersByTimeAsync(10);
+    ctrl.abort();
+    expect(describeError(await r)).toBe("Cancelled.");
+  });
+
+  it("the per-visitor daily allowance message is shown like the global one", () => {
+    const e = new ApiError(429, { detail: { error: "client_daily_llm_limit_reached", message: "You have used your free AI answers for today. Try the Attack playground." } });
+    expect(describeError(e)).toContain("Attack playground");
+  });
+});

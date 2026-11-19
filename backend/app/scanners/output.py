@@ -1,8 +1,9 @@
 """Output scanner (Layer 3): stop the LLM's reply from leaking the system prompt or secrets before it reaches the user.
 
 Checks, in order:
-  canary         a random token planted in the system prompt; seeing it (also reversed, base64, hex, or split by spaces /
-                 punctuation) in the output proves the prompt leaked
+  canary         a random token planted in the system prompt; seeing it (also reversed, hex, rot13, as decimal code points, base64 or
+                 base32 at any alignment inside a longer encoded text, fullwidth letters, or split by spaces / punctuation) in the
+                 output proves the prompt leaked
   system_prompt  verbatim (or near-verbatim) reproduction of the system prompt: shingles of K normalised words from the prompt
                  found in the output (>= MIN_SHINGLES of them, or >= MIN_FRACTION of all prompt shingles)
   known_secret   the application's own configured API keys appearing in the output (also with separators inserted)
@@ -10,14 +11,17 @@ Checks, in order:
                  and "key = value" assignments with a high-entropy value
 
 Findings carry only a kind and a name, never the matched text. Limits: paraphrased prompts, translated prompts and
-credentials in unknown formats are not detected.
+credentials in unknown formats are not detected; neither are encodings that are not listed above (for example a cipher of the
+model's own invention). The reply is NFKC-normalised first, so fullwidth and other compatibility forms are folded.
 """
 from __future__ import annotations
 
 import base64
+import codecs
 import math
 import re
 import secrets
+import unicodedata
 from dataclasses import dataclass, field
 
 _WORD = re.compile(r"[a-z0-9]+")
@@ -51,6 +55,22 @@ def _words(text: str) -> list[str]:
 def _squash(text: str) -> str:
     """Lowercase alphanumerics only: defeats spaces, hyphens and punctuation inserted inside a secret."""
     return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def _aligned_encodings(raw: bytes) -> list[str]:
+    """base64 and base32 of `raw` as they appear INSIDE a longer encoded text. Encoded alone, the canary is only found when it starts at a
+    group boundary (3 bytes for base64, 5 for base32); inside an encoded system prompt it can start at any offset, which changes the
+    characters. For every offset, encode with padding bytes in front and drop the first (partly padding-dependent) characters and the last
+    few (which depend on whatever follows). Compared lowercased, as everything else here."""
+    out: list[str] = []
+    for enc, group, bits_per_char in ((base64.b64encode, 3, 6), (base64.b32encode, 5, 5)):
+        for shift in range(group):
+            text = enc(b"\x00" * shift + raw).decode().rstrip("=")
+            drop = -(-shift * 8 // bits_per_char)          # ceil: characters holding the padding bytes (the last of them partly)
+            text = text[drop: len(text) - 3]
+            if len(text) >= 10:
+                out.append(text.lower())
+    return out
 
 
 def make_canary() -> str:
@@ -92,7 +112,8 @@ class OutputScanner:
         self._canary_forms: list[str] = []
         if canary:
             raw = canary.encode()
-            self._canary_forms = [canary.lower(), canary[::-1].lower(), base64.b64encode(raw).decode().lower().rstrip("="), raw.hex()]
+            self._canary_forms = [canary.lower(), canary[::-1].lower(), raw.hex(), codecs.encode(canary, "rot13").lower(),
+                                  "".join(str(ord(c)) for c in canary), *_aligned_encodings(raw)]
 
     # ---------------------------------------------------------------- individual checks
     def _canary(self, text: str):
@@ -135,5 +156,6 @@ class OutputScanner:
     def scan(self, text: str) -> OutputScan:
         if not text:
             return OutputScan()
+        text = unicodedata.normalize("NFKC", text)
         findings = [*self._canary(text), *self._prompt_leak(text), *self._known_secrets(text), *self._patterns(text)]
         return OutputScan(findings)

@@ -104,3 +104,33 @@ def test_cap_disabled_with_zero(tmp_path):
     with TestClient(app) as c:
         assert all(c.post("/chat", json={"message": f"hi {i}"}).status_code == 200 for i in range(5))
         assert c.get("/health").json()["daily_llm_limit"] is None
+
+
+# ------------------------------------------------------------------ per-client cap (Day 4.17)
+def test_per_client_counter_limits_each_key_and_rolls_over_at_utc_midnight():
+    from app.quota import PerClientDailyLimit
+    clock = Clock(t=10 * DAY_S + 100)
+    d = PerClientDailyLimit(2, clock=clock)
+    assert [d.try_acquire("a") for _ in range(3)] == [True, True, False]
+    assert d.try_acquire("b") and d.used("a") == 2
+    clock.t = 11 * DAY_S + 1
+    assert d.try_acquire("a") and d.used("a") == 1
+
+
+def test_per_client_counter_memory_is_bounded_and_zero_disables():
+    from app.quota import PerClientDailyLimit
+    d = PerClientDailyLimit(1, clock=Clock(), max_keys=3)
+    for k in "abcd":
+        assert d.try_acquire(k)
+    assert len(d._used) <= 3
+    off = PerClientDailyLimit(0, clock=Clock())
+    assert all(off.try_acquire("x") for _ in range(50))
+
+
+def test_config_for_partial_scan_and_per_client_cap():
+    s = Settings.from_env(env={}, dotenv_path=None)
+    assert s.partial_scan == "block" and s.daily_llm_limit_per_client == 40
+    assert Settings.from_env(env={"MASKWALL_PARTIAL_SCAN": "WARN", "MASKWALL_DAILY_LLM_LIMIT_PER_CLIENT": "5"}, dotenv_path=None).partial_scan == "warn"
+    for bad in ({"MASKWALL_PARTIAL_SCAN": "allow"}, {"MASKWALL_DAILY_LLM_LIMIT_PER_CLIENT": "-1"}):
+        with pytest.raises(ConfigError):
+            Settings.from_env(env=bad, dotenv_path=None)

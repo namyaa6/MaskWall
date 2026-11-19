@@ -105,8 +105,8 @@ def test_warn_still_answers_but_says_so(tmp_path):
     assert b["action"] == "warn" and b["response"] == "Here is a helpful answer." and b["input"]["reasons"] == ["injection_suspected"] and len(llm.calls) == 1
 
 
-def test_partial_coverage_warns(tmp_path):
-    app, *_ = make(tmp_path, scanner=FakeScanner(score=0.01, coverage="partial"))
+def test_partial_coverage_warns_when_configured_to_warn(tmp_path):
+    app, *_ = make(tmp_path, scanner=FakeScanner(score=0.01, coverage="partial"), partial_scan="warn")
     b = post_chat(app, "a very long document").json()
     assert b["action"] == "warn" and b["input"]["reasons"] == ["partial_scan"] and b["input"]["coverage"] == "partial"
 
@@ -436,3 +436,49 @@ def test_a_cancelled_request_keeps_its_scan_slot_until_the_worker_thread_finishe
 
     r = asyncio.run(go())
     assert r.status_code == 200 and scanner.max_active == 1 and len(scanner.calls) == 2
+
+
+# ------------------------------------------------------------------ Day 4.17 review findings
+def test_partial_scan_is_blocked_by_default_and_never_reaches_the_llm(tmp_path):
+    from app.policy import PARTIAL_BLOCKED_MESSAGE
+    app, _, llm, _ = make(tmp_path, scanner=FakeScanner(score=0.01, coverage="partial"))
+    b = post_chat(app, "a very long dense text").json()
+    assert b["action"] == "block" and b["response"] == PARTIAL_BLOCKED_MESSAGE and "partial_scan" in b["input"]["reasons"]
+    assert llm.calls == []
+    assert "attack" not in b["response"].lower()                    # it is not accused of being an attack
+
+
+def test_partial_scan_can_be_configured_to_warn(tmp_path):
+    app, _, llm, _ = make(tmp_path, scanner=FakeScanner(score=0.01, coverage="partial"), partial_scan="warn")
+    b = post_chat(app, "a very long dense text").json()
+    assert b["action"] == "warn" and len(llm.calls) == 1
+
+
+def test_input_that_expands_past_the_limit_after_normalisation_is_rejected_with_413(tmp_path):
+    app, _, llm, _ = make(tmp_path, max_chars=100)
+    with TestClient(app) as c:
+        r = c.post("/chat", json={"message": "ﷺ" * 20})            # 20 characters, 360 after NFKC
+        s = c.post("/scan", json={"text": "ﷺ" * 20})
+        ok = c.post("/chat", json={"message": "hello " * 10})
+    assert r.status_code == 413 and r.json()["detail"]["after_normalization"] is True and s.status_code == 413
+    assert ok.status_code == 200 and len(llm.calls) == 1
+
+
+def test_one_client_cannot_use_the_whole_daily_budget(tmp_path):
+    app, _, llm, _ = make(tmp_path, daily_llm_limit=100, daily_llm_limit_per_client=2)
+    with TestClient(app) as c:
+        codes = [c.post("/chat", json={"message": f"hello {i}"}).status_code for i in range(4)]
+        r = c.post("/chat", json={"message": "hello again"})
+        h = c.get("/health").json()
+    assert codes == [200, 200, 429, 429] and len(llm.calls) == 2
+    d = r.json()["detail"]
+    assert d["error"] == "client_daily_llm_limit_reached" and "Attack playground" in d["message"] and d["limit"] == 2
+    assert h["daily_llm_remaining"] == 98                           # the refused calls spent no global slot
+
+
+def test_per_client_cap_is_per_client(tmp_path):
+    app, _, llm, _ = make(tmp_path, daily_llm_limit_per_client=1, trust_proxy=True)
+    with TestClient(app) as c:
+        a = [c.post("/chat", json={"message": "hi"}, headers={"X-Forwarded-For": "1.1.1.1"}).status_code for _ in range(2)]
+        b = c.post("/chat", json={"message": "hi"}, headers={"X-Forwarded-For": "2.2.2.2"}).status_code
+    assert a == [200, 429] and b == 200

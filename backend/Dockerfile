@@ -7,12 +7,11 @@
 #
 # The model is fetched at BUILD time from the public Hub repo, pinned to a commit (REVISION in scripts/fetch_model.py), so a cold start needs no
 # network and the image is reproducible. To use a newer model: upload it, then change REVISION there.
-# NOTE: this file has never been built on the development machine (no Docker there); CI builds it on every push and the Render
-# deploy log is the real runtime test.
+# NOTE: not built on the development machine (no Docker there); CI builds it on every push (and smoke-tests the container) and Render builds it on deploy.
 
 # ---- stage 1: download the model files (huggingface_hub stays out of the final image) ----
 FROM python:3.13-slim AS model
-RUN pip install --no-cache-dir "huggingface_hub>=0.30"
+RUN pip install --no-cache-dir "huggingface_hub>=2.4,<3"
 # the repo and the pinned commit live in scripts/fetch_model.py (the same script CI uses)
 COPY scripts/fetch_model.py /tmp/fetch_model.py
 RUN python /tmp/fetch_model.py /model/minilm

@@ -26,7 +26,7 @@ jobs:
             backend/requirements-dev.txt
       - name: Install
         run: |
-          pip install -r backend/requirements.lock.txt -r backend/requirements-dev.txt ruff==0.17.5 huggingface_hub
+          pip install -r backend/requirements.lock.txt -r backend/requirements-dev.txt ruff==0.17.5 "huggingface_hub>=2.4,<3"
       - name: Runner CPU (int8 scores differ slightly between CPUs; recorded so a failure can be tied to hardware)
         run: |
           grep -m1 'model name' /proc/cpuinfo

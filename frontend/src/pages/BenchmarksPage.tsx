@@ -316,8 +316,8 @@ export function BenchmarksPage() {
           </tbody>
         </table>
         <p className="muted small">
-          Early attack warning: the served detector in the browser agrees with the server on all {R.browser_precheck.n} reference messages (largest score difference{" "}
-          {R.browser_precheck.max_abs_diff.toFixed(4)}, {R.browser_precheck.verdict_mismatches} different verdicts). In Chrome it loads in about{" "}
+          Early attack warning: the served detector in the browser gives the same verdict as the server on all {R.browser_precheck.n} reference messages (largest score difference{" "}
+          {R.browser_precheck.max_abs_diff.toFixed(4)}, {R.browser_precheck.verdict_mismatches} different verdicts; none of the reference messages is near a threshold, and the copy this site downloads from the Hugging Face Hub differs by up to about 0.09 on the logit scale). In Chrome it loads in about{" "}
           {(R.browser_precheck.load_ms / 1000).toFixed(1)} s and takes {ms(R.browser_precheck.short_median_ms)} for a short message and about{" "}
           {ms(R.browser_precheck.long[R.browser_precheck.long.length - 1].ms)} for a {R.browser_precheck.long[R.browser_precheck.long.length - 1].tokens}-token document.
         </p>

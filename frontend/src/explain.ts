@@ -36,7 +36,7 @@ export function actionLabel(action: string): string {
 const REASONS: Record<string, string> = {
   injection_detected: "It reads like an attempt to override the AI's instructions or bypass its rules.",
   injection_suspected: "Parts of it resemble instructions aimed at the AI, but the detector is not sure.",
-  partial_scan: "The message was too long to check completely, so part of it was not checked.",
+  partial_scan: "The message was too long or too dense (for example long runs of numbers or code) to check completely, so it was not sent.",
   hidden_characters: "It contained invisible characters that can be used to hide instructions.",
   strict_mode: "The firewall is in strict mode, which blocks anything suspicious.",
   empty_after_normalization: "It was empty once invisible characters were removed.",
@@ -67,6 +67,7 @@ export function mainReason(action: string, reasons: string[], outputKinds: strin
 /** What the user can do next. */
 export function nextStep(action: ChatAction, reasons: string[]): string | null {
   if (action === "block") {
+    if (reasons.includes("partial_scan") && !reasons.includes("injection_detected")) return "Send a shorter message, or paste less text, so all of it can be checked.";
     return reasons.includes("hidden_characters")
       ? "Retype the message instead of pasting it, so invisible characters are left out."
       : "If this was a genuine question, rephrase it without telling the AI to ignore or change its instructions. If you pasted a document, remove any instructions inside it.";

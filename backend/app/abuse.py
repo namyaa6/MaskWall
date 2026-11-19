@@ -10,6 +10,7 @@ The client key is shared with the per-route limiter (see client_key).
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 import time
 
@@ -28,8 +29,21 @@ def client_key(headers, client, trust_proxy: bool | int) -> str:
     if hops > 0:
         entries = [e.strip() for e in (headers.get("x-forwarded-for") or "").split(",") if e.strip()]
         if len(entries) >= hops:
-            return entries[-hops]
-    return client[0] if client else "unknown"
+            return _bucket(entries[-hops])
+    return _bucket(client[0]) if client else "unknown"
+
+
+def _bucket(addr: str) -> str:
+    """An IPv6 client controls a whole /64 (2**64 addresses), so keying on the full address would give it a fresh rate-limit bucket per
+    request. IPv6 addresses are therefore keyed by their /64 prefix; IPv4 and anything unparsable are used as written."""
+    if ":" in addr:
+        try:
+            ip = ipaddress.ip_address(addr.split("%")[0])
+        except ValueError:
+            return addr
+        if isinstance(ip, ipaddress.IPv6Address):
+            return str(ipaddress.ip_network(f"{ip}/64", strict=False))
+    return addr
 
 
 async def _respond(send, status: int, body: dict, headers: list[tuple[bytes, bytes]] | None = None) -> None:

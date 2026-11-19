@@ -46,15 +46,15 @@ def build() -> str:
         ["Public test set: harmless prompts wrongly flagged (false-positive rate)", kn(s["test_fp"])],
         ["Public test set: F1", f"{s['test_f1']:.3f}"],
         ["XSTest safe prompts (look dangerous, are not) wrongly flagged", kn(s["xstest_fp"])],
-        ["Hand-written tricky set: attacks caught / harmless flagged", f"{kn(s['tricky_attacks'])} / {kn(s['tricky_benign_fp'])}"],
-        ["Attacks hidden inside pasted documents (held-out): caught", kn(s["indirect_recall"])],
-        ["Human-written Hinglish assistant queries wrongly flagged", kn(s["hinglish_benign_fp"])],
+        ["Tricky set (49 prompts drafted with AI help, not blind): attacks caught / harmless flagged", f"{kn(s['tricky_attacks'])} / {kn(s['tricky_benign_fp'])}"],
+        ["Attacks hidden inside pasted documents (synthetic, same recipe as 800 training rows; an upper bound): caught", kn(s["indirect_recall"])],
+        ["Human-written Hinglish assistant queries (same domain as some training rows) wrongly flagged", kn(s["hinglish_benign_fp"])],
         ["LLM-written 'talks about prompts' harmless messages wrongly flagged", kn(s["prompt_talk_fp"])],
-        ["Hinglish attacks caught", kn(s["hinglish_attacks"])],
+        ["Hinglish attacks (AI-written, 24 prompts) caught", kn(s["hinglish_attacks"])],
         ["Long documents: harmless flagged / attack hidden in the middle caught", f"{kn(s['long_benign_fp'])} / {kn(s['long_middle_caught'])}"],
     ]))
     parts.append(f"\nThresholds: block at {s['block']:.3f}, warn at {s['warn']:.3f}, tuned on validation data only; the test set was never used for tuning. "
-                 "The public test set has 208 attacks and 717 harmless prompts, so one prompt moves a rate by 0.1 to 0.5 points; the other sets are smaller and their intervals are wide.\n")
+                 "The public test set has 208 attacks and 717 harmless prompts, so one prompt moves a rate by 0.1 to 0.5 points; the other sets are smaller (several are AI-drafted) and their intervals are wide.\n")
 
     # 2. baselines vs fine-tuned
     rows = []
@@ -64,7 +64,7 @@ def build() -> str:
                      f"{b['fp']}/{b['benign']} ({pct(b['fpr'])})", f"{b['xstest_fp']}/{b['xstest_n']}", f"{b['tricky_correct']}/{b['tricky_total']}"])
     rows.append(["**MiniLM-L6 int8, served (after the hard-negative round)**", f"**{s['test_f1']:.3f}**", "", f"{s['test_recall']['k'] / s['test_recall']['n']:.3f}",
                  f"{s['test_fp']['k']}/{s['test_fp']['n']} ({pct(s['test_fp']['k'] / s['test_fp']['n'])})", f"{s['xstest_fp']['k']}/{s['xstest_fp']['n']}", ""])
-    parts.append("### Baselines against fine-tuned models (public test set)\n")
+    parts.append("### Baselines against fine-tuned models (public test set; every row is the variant trained with the 800 synthetic hidden-instruction rows)\n")
     parts.append(table(["Model", "F1 [95% CI]", "Precision", "Recall", "False positives", "XSTest flagged", "Tricky set correct"], rows))
     parts.append("\nEach row uses its own threshold tuned on validation data. The 95% intervals overlap heavily: **on the public test set a word TF-IDF baseline is as good as the "
                  "fine-tuned models.** The reasons the transformer is served are the size (23 MB int8, small enough to also run in the browser) and the robustness work below, "
@@ -78,8 +78,8 @@ def build() -> str:
         rows.append([o["set"], str(o["n"]), str(o["before"]), f"{o['after']}{sig}", "<0.001" if o["p"] is not None and o["p"] < 0.001 else f"{o['p']:.3f}"])
     parts.append("### Before and after the hard-negative round (same model family, int8, at each model's own thresholds)\n")
     parts.append(table(["Evaluation set", "n", "Before", "After", "p (exact McNemar)"], rows))
-    parts.append(f"\nPre-registered criteria, all met: false alarms on the two benign sets at least halved, test F1 not worse ({hn['test_f1_before']:.3f} to {hn['test_f1_after']:.3f}, "
-                 f"difference 95% CI [{hn['test_f1_diff_ci'][0]:.3f}, {hn['test_f1_diff_ci'][1]:.3f}], so \"not worse\", not \"better\"), recall not lower, Hinglish-attack recall not lower.\n")
+    parts.append(f"\nPre-registered criteria (written before training), all met: false-alarm counts on the two benign sets at least halved, test F1 within 0.02 of before ({hn['test_f1_before']:.3f} to {hn['test_f1_after']:.3f}, "
+                 f"difference 95% CI [{hn['test_f1_diff_ci'][0]:.3f}, {hn['test_f1_diff_ci'][1]:.3f}], so \"not worse\", not \"better\"); recall on test, held-out-document and tricky attacks dropping by at most 0.03; Hinglish-attack recall not below before. 'p < 0.05' is marked without correcting for the 13 tests, and the gate itself used test-set numbers (thresholds were still tuned on validation data only).\n")
 
     # 4. size and speed
     q = {(r["model"], r["precision"]): r for r in R["quantization"]}
@@ -95,7 +95,7 @@ def build() -> str:
     parts.append(table(["Input", "Server, requests one at a time", "Server, back-to-back", "Developer laptop, back-to-back"], [
         [f"Short message ({sp['short']['tokens']:.0f} word-pieces)", f"{dur(sp['short']['p50_ms'])} (95%: {dur(sp['short']['p95_ms'])}, n={sp['short']['n']})",
          f"{dur(bb['short']['p50_ms'])} (95%: {dur(bb['short']['p95_ms'])}, n={bb['short']['n']})", dur(lp['short']['p50_ms'])],
-        [f"One full chunk (~{bb['window']['n_tokens']} word-pieces)", f"{dur(sp['window']['p50_ms'])} (n={sp['window']['n']})", f"{dur(bb['window']['p50_ms'])} (n={bb['window']['n']})", dur(lp['window']['p50_ms'])],
+        [f"One full chunk (about 480 word-pieces; {sp['window']['tokens']:.0f} in the one-at-a-time run)", f"{dur(sp['window']['p50_ms'])} (n={sp['window']['n']})", f"{dur(bb['window']['p50_ms'])} (n={bb['window']['n']})", dur(lp['window']['p50_ms'])],
         [f"7,000-character document ({sp['document']['windows']:.0f} chunks)", f"{dur(sp['document']['p50_ms'])} (n={sp['document']['n']})", f"{dur(bb['document']['p50_ms'])} (n={bb['document']['n']})", dur(lp['document']['p50_ms'])],
     ]))
     parts.append(f"\nMemory: the whole API process peaks at about {h['peak_rss_mb']:.0f} MB (container counter: {h['cgroup_peak_mb']:.0f} MB) of {h['memory_limit_mb']:.0f} MB. "
@@ -112,11 +112,11 @@ def build() -> str:
          f"{ner['strict']}/{ner['gold']} names fully hidden on an AI-drafted sample of {R['ner']['n_sentences']} sentences (not reviewed by the owner); lowercase names {ner['lowercase']['strict']}/{ner['lowercase']['gold']}; "
          f"Hinglish {ner['hinglish']['strict']}/{ner['hinglish']['gold']}; {ner['false_positives']} ordinary words wrongly hidden; median {ner['median_ms']:.0f} ms per sentence (headless Chromium on a laptop)"],
         ["Emails, Indian phone numbers, Aadhaar (Verhoeff checksum), PAN (format)", f"rule-based; pass all {n_pii} shared test cases (a test suite, not a recall measurement on held-out real data), the same cases run against the TypeScript and Python versions"],
-        ["Early attack warning in the browser (same int8 model, WASM)", f"identical verdicts to the server on {pc['n']} golden prompts, largest score difference {pc['max_abs_diff']:.1e}; {pc['short_median_ms']:.0f} ms for a short message (laptop)"],
+        ["Early attack warning in the browser (same int8 model, WASM)", f"same verdict as the server on all {pc['n']} golden prompts (none of them near a threshold), score difference up to {pc['max_abs_diff']:.1e} for the local copy and up to 0.09 logits for the copy production downloads from the Hub; {pc['short_median_ms']:.0f} ms for a short message (laptop)"],
     ]))
     parts.append("\nLatency added per layer for a short message: names and masking on your device about "
                  f"{ner['median_ms']:.0f} ms (lab figure; the first message on a fresh visit also downloads the models); the browser early warning runs in parallel and never delays sending; "
-                 f"the server's own work about {dur(sp['short']['p50_ms'])} when requests are spaced (PII backup, tokenise, score, policy, output scan); the AI's own answer time (Groq) is the largest part, about half a second in the smoke tests.\n")
+                 f"the server's own work about {dur(sp['short']['p50_ms'])} when requests are spaced (backup masking, tokenise, score; measured on /scan, so the output scan, about 0.1 ms in the smoke tests, is not part of that figure); the AI's own answer time (Groq) is the largest part, about half a second in the smoke tests.\n")
     return "\n".join(parts)
 
 

@@ -1,6 +1,6 @@
 # THROWAWAY benchmark service (see bench_service.py). Context: backend/. Built by Render from render.bench.yaml; delete it afterwards.
 FROM python:3.13-slim AS model
-RUN pip install --no-cache-dir "huggingface_hub>=0.30"
+RUN pip install --no-cache-dir "huggingface_hub>=2.4,<3"
 COPY scripts/fetch_model.py /tmp/fetch_model.py
 RUN python /tmp/fetch_model.py /model/minilm
 # DeBERTa is NOT served; it is downloaded only so it can be measured on request (/run_deberta). Unpinned: throwaway.

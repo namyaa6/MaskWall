@@ -46,7 +46,7 @@ async function loadStats(): Promise<CommonWordStats> {
 
 async function main() {
   const stats = await loadStats();
-  const model = await loadNer(NER_MODEL.id);
+  const model = await loadNer(NER_MODEL.id, undefined, NER_MODEL.revision);
   await model.detect("Warm-up sentence for Asha.");
   const cache = new Map<string, Set<string>>();
   const wordsFor = (c: CommonWordConfig | null) => {

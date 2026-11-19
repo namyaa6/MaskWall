@@ -18,7 +18,7 @@ const parse = (raw: string) => raw.trim().split("\n").map((l) => JSON.parse(l) a
 
 async function main() {
   const datasets = { existing: parse(existingRaw), lowercase: parse(lowercaseRaw) };
-  const model = await loadNer(NER_MODEL.id);
+  const model = await loadNer(NER_MODEL.id, undefined, NER_MODEL.revision);
   await model.detect("Warm-up sentence for Asha.");
   const out: Record<string, Record<string, { predicted: { start: number; end: number }[][]; ms: number[] }>> = {};
   for (const approach of ["A", "B", "C", "E"] as NameApproach[]) {

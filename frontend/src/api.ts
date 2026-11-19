@@ -6,6 +6,16 @@ import { ensureAwake, noteServerOk, noteServerUnreachable, ServerDownError } fro
 export { API_URL };
 export type { Health };
 
+/** The firewall accepted the request but did not answer in time (the message may or may not have been processed). */
+export class TimeoutError extends Error {
+  constructor() {
+    super("request timed out");
+  }
+}
+
+/** A request that is not answered within this long is abandoned, so a stalled server cannot leave the page stuck. */
+export const REQUEST_TIMEOUT_MS = 90_000;
+
 /** The request could not reach the firewall at all (network error), as opposed to the firewall answering with an error. */
 export class NetworkError extends Error {
   constructor() {
@@ -21,17 +31,35 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
   await ensureAwake(); // queues behind the wake-up; throws ServerDownError after about 3 minutes
-  let r: Response;
+  const ctrl = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    ctrl.abort();
+  }, REQUEST_TIMEOUT_MS);
+  const onCallerAbort = () => ctrl.abort();
+  if (init.signal?.aborted) ctrl.abort();
+  else init.signal?.addEventListener("abort", onCallerAbort, { once: true });
   try {
-    r = await fetch(`${API_URL}${path}`, init);
+    let r: Response;
+    try {
+      r = await fetch(`${API_URL}${path}`, { ...init, signal: ctrl.signal });
+    } catch (e) {
+      if (timedOut) throw new TimeoutError();
+      if (e instanceof DOMException && e.name === "AbortError") throw e;
+      noteServerUnreachable(); // never re-sent automatically: a POST may already have reached the server
+      throw new NetworkError();
+    }
+    noteServerOk();
+    if (!r.ok) throw new ApiError(r.status, await r.json().catch(() => null));
+    return (await r.json()) as T;
   } catch (e) {
-    if (e instanceof DOMException && e.name === "AbortError") throw e;
-    noteServerUnreachable(); // never re-sent automatically: a POST may already have reached the server
-    throw new NetworkError();
+    if (timedOut && !(e instanceof TimeoutError) && !(e instanceof ApiError)) throw new TimeoutError();
+    throw e;
+  } finally {
+    clearTimeout(timer);
+    init.signal?.removeEventListener("abort", onCallerAbort);
   }
-  noteServerOk();
-  if (!r.ok) throw new ApiError(r.status, await r.json().catch(() => null));
-  return (await r.json()) as T;
 }
 
 export const getJSON = <T>(path: string, signal?: AbortSignal) => request<T>(path, { signal });
@@ -141,12 +169,13 @@ export const getStats = (signal?: AbortSignal) => getJSON<Stats>("/stats", signa
 export function dailyLimitMessage(e: unknown): string | null {
   if (!(e instanceof ApiError) || e.status !== 429) return null;
   const d = (e.detail as { detail?: { error?: string; message?: string } } | null)?.detail;
-  return d?.error === "daily_llm_limit_reached" ? (d.message ?? null) : null;
+  return d?.error === "daily_llm_limit_reached" || d?.error === "client_daily_llm_limit_reached" ? (d.message ?? null) : null;
 }
 
 /** Plain-English message for an error from the firewall. */
 export function describeError(e: unknown): string {
   if (e instanceof ServerDownError) return "The firewall is not answering. Free hosting can take a while to start up: wait a minute and try again.";
+  if (e instanceof TimeoutError) return "The firewall took too long to answer. Your message may or may not have been processed; wait a moment and try again.";
   if (e instanceof NetworkError) return "Could not reach the firewall. Check your connection, then try again.";
   if (e instanceof ApiError) {
     switch (e.status) {

@@ -50,6 +50,11 @@ export class PlaceholderVault {
     return text.replace(PLACEHOLDER, (ph) => this.original.get(ph) ?? ph);
   }
 
+  /** The user's real values held by this vault (memory only). Used to keep them out of links in the AI's reply (components/linkSafety.ts). */
+  values(): string[] {
+    return Array.from(new Set(this.original.values()));
+  }
+
   /** True if `placeholder` was created by this vault (used to style pills). */
   has(placeholder: string): boolean {
     return this.original.has(placeholder);

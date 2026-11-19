@@ -157,3 +157,14 @@ def test_hops_setting_from_env_legacy_switch_and_validation():
     for bad in ("-1", "11", "x"):
         with pytest.raises(ConfigError):
             s({"MASKWALL_TRUST_PROXY_HOPS": bad})
+
+
+# ------------------------------------------------------------------ IPv6 clients are keyed by their /64 (Day 4.17 review)
+def test_ipv6_addresses_in_one_slash_64_share_a_bucket_and_others_do_not():
+    a = client_key({"x-forwarded-for": "2001:db8:1:2:aaaa:bbbb:cccc:1, 104.22.222.95, 10.31.122.138"}, ("127.0.0.1", 1), trust_proxy=3)
+    b = client_key({"x-forwarded-for": "2001:db8:1:2:1111:2222:3333:4444, 104.22.222.95, 10.31.122.138"}, ("127.0.0.1", 1), trust_proxy=3)
+    c = client_key({"x-forwarded-for": "2001:db8:1:3::1, 104.22.222.95, 10.31.122.138"}, ("127.0.0.1", 1), trust_proxy=3)
+    assert a == b == "2001:db8:1:2::/64" and c != a
+    assert client_key({}, ("2001:db8::5", 1), trust_proxy=0) == "2001:db8::/64"           # also the connection address
+    assert client_key({"x-forwarded-for": "9.9.9.9, a, b"}, None, trust_proxy=3) == "9.9.9.9"   # IPv4 unchanged
+    assert client_key({"x-forwarded-for": "not-an-ip:x, a, b"}, None, trust_proxy=3) == "not-an-ip:x"   # unparsable kept as written

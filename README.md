@@ -3,7 +3,7 @@
 [![CI](https://github.com/namyaa6/MaskWall/actions/workflows/ci.yml/badge.svg)](https://github.com/namyaa6/MaskWall/actions/workflows/ci.yml)
 [![Live demo](https://img.shields.io/badge/live%20demo-mask--wall.vercel.app-2ea043)](https://mask-wall.vercel.app)
 
-**MaskWall is a two-layer safety system for LLM apps: personal data is masked *in your browser* before anything is sent, and a firewall on the server checks every message for prompt injection and every reply for leaks.** A small quantised name-detection model and rule-based detectors (checksums for Aadhaar, formats for PAN, emails and phone numbers) run on your device (WebAssembly) and replace the personal data with placeholders such as `[EMAIL_1]`, so the server and the LLM only ever see placeholders; the real values are put back into the reply on your device. On the server, a fine-tuned MiniLM classifier (int8, ONNX) blocks injection and jailbreak attempts before they reach the LLM, a policy engine decides block / warn / allow, and an output scanner withholds replies that leak the system prompt or secrets. *Defense in depth, private by design.*
+**MaskWall is a two-layer safety system for LLM apps: personal data that its detectors find is masked *in your browser* before the message is sent, and a firewall on the server checks every message for prompt injection and every reply for leaks.** A small quantised name-detection model and rule-based detectors (checksums for Aadhaar, formats for PAN, emails and phone numbers) run on your device (WebAssembly) and replace the personal data they find with placeholders such as `[EMAIL_1]`, so the server and the LLM receive the placeholders instead of the values (anything the detectors miss, most lowercase names, addresses and bank details among it, is sent as typed); the real values are put back into the reply on your device. On the server, a fine-tuned MiniLM classifier (int8, ONNX) blocks injection and jailbreak attempts before they reach the LLM, a policy engine decides block / warn / allow, and an output scanner withholds replies that leak the system prompt or secrets. *Defense in depth, private by design.*
 
 **Try it: https://mask-wall.vercel.app** (the server is on free hosting that sleeps when idle: if the first visit shows "Waking up the firewall", give it up to a minute or two).
 
@@ -17,7 +17,7 @@
 ```mermaid
 flowchart TD
   U["You type a message"] --> B1
-  subgraph BR["Layer 1: your browser - nothing leaves unmasked"]
+  subgraph BR["Layer 1: your browser - detected personal data is masked here"]
     B1["Hide names, emails, phones, Aadhaar, PAN<br/>NER model plus regex and checksums<br/>becomes NAME_1, EMAIL_1, PHONE_1 ..."]
     B2["Early attack warning<br/>same int8 model, WebAssembly"]
   end
@@ -34,7 +34,7 @@ flowchart TD
   R --> UM["Placeholders filled back in on your device only"]
 ```
 
-The pages: **Chat** (split screen: what you typed against what the server received, with a step-by-step "how this message was handled" panel), **Attack playground** (preset and free-text attacks with verdict and score), **Dashboard** (attacks blocked, personal data caught, latency per layer, from the server's own log; message text is never stored), **How it works** and **Benchmarks** (every number on these two pages is generated from `ml/results`, none typed by hand).
+The pages: **Chat** (split screen: what you typed against what the server received, with a step-by-step "how this message was handled" panel), **Attack playground** (preset and free-text attacks with verdict and score), **Dashboard** (messages checked, blocked and safe, the median time the server added, and the latest events, from the server's own log; message text is never stored, only a keyed fingerprint), **How it works** and **Benchmarks** (every number on these two pages is generated from `ml/results`, none typed by hand).
 
 | Chat | Attack playground |
 |---|---|
@@ -56,16 +56,16 @@ Everything below is generated from `ml/results` by `scripts/make_readme_results.
 | Public test set: harmless prompts wrongly flagged (false-positive rate) | 12/717 (1.7%) |
 | Public test set: F1 | 0.905 |
 | XSTest safe prompts (look dangerous, are not) wrongly flagged | 0/250 (0.0%) |
-| Hand-written tricky set: attacks caught / harmless flagged | 16/21 (76.2%) / 2/28 (7.1%) |
-| Attacks hidden inside pasted documents (held-out): caught | 53/55 (96.4%) |
-| Human-written Hinglish assistant queries wrongly flagged | 1/104 (1.0%) |
+| Tricky set (49 prompts drafted with AI help, not blind): attacks caught / harmless flagged | 16/21 (76.2%) / 2/28 (7.1%) |
+| Attacks hidden inside pasted documents (synthetic, same recipe as 800 training rows; an upper bound): caught | 53/55 (96.4%) |
+| Human-written Hinglish assistant queries (same domain as some training rows) wrongly flagged | 1/104 (1.0%) |
 | LLM-written 'talks about prompts' harmless messages wrongly flagged | 2/100 (2.0%) |
-| Hinglish attacks caught | 23/24 (95.8%) |
+| Hinglish attacks (AI-written, 24 prompts) caught | 23/24 (95.8%) |
 | Long documents: harmless flagged / attack hidden in the middle caught | 14/114 (12.3%) / 37/38 (97.4%) |
 
-Thresholds: block at 0.610, warn at 0.368, tuned on validation data only; the test set was never used for tuning. The public test set has 208 attacks and 717 harmless prompts, so one prompt moves a rate by 0.1 to 0.5 points; the other sets are smaller and their intervals are wide.
+Thresholds: block at 0.610, warn at 0.368, tuned on validation data only; the test set was never used for tuning. The public test set has 208 attacks and 717 harmless prompts, so one prompt moves a rate by 0.1 to 0.5 points; the other sets are smaller (several are AI-drafted) and their intervals are wide.
 
-### Baselines against fine-tuned models (public test set)
+### Baselines against fine-tuned models (public test set; every row is the variant trained with the 800 synthetic hidden-instruction rows)
 
 | Model | F1 [95% CI] | Precision | Recall | False positives | XSTest flagged | Tricky set correct |
 |---|---|---|---|---|---|---|
@@ -97,7 +97,7 @@ Each row uses its own threshold tuned on validation data. The 95% intervals over
 | long benign docs (FP, sliding) | 114 | 8 | 14 (within noise) | 0.180 |
 | long middle injections (recall, sliding) | 38 | 34 | 37 (within noise) | 0.250 |
 
-Pre-registered criteria, all met: false alarms on the two benign sets at least halved, test F1 not worse (0.898 to 0.905, difference 95% CI [-0.013, 0.029], so "not worse", not "better"), recall not lower, Hinglish-attack recall not lower.
+Pre-registered criteria (written before training), all met: false-alarm counts on the two benign sets at least halved, test F1 within 0.02 of before (0.898 to 0.905, difference 95% CI [-0.013, 0.029], so "not worse", not "better"); recall on test, held-out-document and tricky attacks dropping by at most 0.03; Hinglish-attack recall not below before. 'p < 0.05' is marked without correcting for the 13 tests, and the gate itself used test-set numbers (thresholds were still tuned on validation data only).
 
 ### Quantisation (fp32 to int8)
 
@@ -117,7 +117,7 @@ The free tier gives a small slice of one CPU core (the container's own CPU quota
 | Input | Server, requests one at a time | Server, back-to-back | Developer laptop, back-to-back |
 |---|---|---|---|
 | Short message (15 word-pieces) | 3.8 ms (95%: 5.8 ms, n=20) | 92 ms (95%: 99 ms, n=300) | 2.8 ms |
-| One full chunk (~480 word-pieces) | 1.2 s (n=6) | 1.6 s (n=56) | 128 ms |
+| One full chunk (about 480 word-pieces; 443 in the one-at-a-time run) | 1.2 s (n=6) | 1.6 s (n=56) | 128 ms |
 | 7,000-character document (4 chunks) | 6.8 s (n=4) | 6.9 s (n=14) | 552 ms |
 
 Memory: the whole API process peaks at about 222 MB (container counter: 227 MB) of 512 MB. **The 50 ms speed rule set before training is met for a short message when requests arrive one at a time and not when they arrive back-to-back (a CPU quota throttles a stream), and long inputs cost seconds. The rule was reported against, not changed.** Scores can differ slightly between CPUs (8-bit arithmetic is not bit-identical), so these figures, measured on a laptop, are not guaranteed to the last prompt on every CPU.
@@ -128,9 +128,9 @@ Memory: the whole API process peaks at about 222 MB (container counter: 227 MB) 
 |---|---|
 | Name detection (onnx-community/distilbert-NER-ONNX, 65.8 MB, runs on your device) | 47/56 names fully hidden on an AI-drafted sample of 62 sentences (not reviewed by the owner); lowercase names 1/7; Hinglish 10/13; 5 ordinary words wrongly hidden; median 40 ms per sentence (headless Chromium on a laptop) |
 | Emails, Indian phone numbers, Aadhaar (Verhoeff checksum), PAN (format) | rule-based; pass all 49 shared test cases (a test suite, not a recall measurement on held-out real data), the same cases run against the TypeScript and Python versions |
-| Early attack warning in the browser (same int8 model, WASM) | identical verdicts to the server on 25 golden prompts, largest score difference 9.4e-04; 22 ms for a short message (laptop) |
+| Early attack warning in the browser (same int8 model, WASM) | same verdict as the server on all 25 golden prompts (none of them near a threshold), score difference up to 9.4e-04 for the local copy and up to 0.09 logits for the copy production downloads from the Hub; 22 ms for a short message (laptop) |
 
-Latency added per layer for a short message: names and masking on your device about 40 ms (lab figure; the first message on a fresh visit also downloads the models); the browser early warning runs in parallel and never delays sending; the server's own work about 3.8 ms when requests are spaced (PII backup, tokenise, score, policy, output scan); the AI's own answer time (Groq) is the largest part, about half a second in the smoke tests.
+Latency added per layer for a short message: names and masking on your device about 40 ms (lab figure; the first message on a fresh visit also downloads the models); the browser early warning runs in parallel and never delays sending; the server's own work about 3.8 ms when requests are spaced (backup masking, tokenise, score; measured on /scan, so the output scan, about 0.1 ms in the smoke tests, is not part of that figure); the AI's own answer time (Groq) is the largest part, about half a second in the smoke tests.
 
 <!-- RESULTS:END -->
 
@@ -142,26 +142,28 @@ Each one is argued, with the numbers, in [docs/decisions.md](docs/decisions.md).
 - **Masking happens on the device and the mapping stays in memory only.** The server cannot unmask; the reply is unmasked in the browser. The server's own backup masking uses different placeholders (`[S_EMAIL_1]`), so the two cannot collide.
 - **A small fine-tuned classifier, not an LLM judge.** About 23 MB, a few milliseconds per short message on the deployed server when requests arrive one at a time, runs on the server and in the browser, and its error rates are measured (below) instead of assumed.
 - **The data was cleaned before anything was trained** (see the story), and **thresholds are tuned on validation data only**; false-positive rates on harmless prompts are reported next to every recall.
-- **Long inputs are scanned in overlapping windows** (maximum score). A first version looked only at the head and tail of a long document and an injection hidden in the middle was never seen (recall 0 of 38); sliding windows fixed it (37 of 38) at a measured latency and false-alarm cost.
-- **The policy is explicit.** Block above one threshold, warn between two, and a partial scan of an over-long input is never silently "allowed".
-- **The event log stores no message text**, only verdicts, scores, counts, timings and a keyed fingerprint; the hosting limits (rate limits, a global daily cap on AI calls so public traffic cannot exhaust the free quotas, request-size caps) are in the API and tested.
+- **Long inputs are scanned in overlapping windows** (maximum score). A first version looked only at the head and tail of a long document and an injection hidden in the middle was never seen (recall 0 of 38); sliding windows fixed it (34 of 38 for the earlier model, 37 of 38 for the served one) at a measured latency and false-alarm cost. Inputs so token-dense that even the window cap cannot cover them (long runs of numbers, code) are blocked with a "too long to check completely" message, not sent on with a warning: a security review showed that padding could otherwise hide an injection.
+- **The policy is explicit.** Block above one threshold, warn between two, and an input that could not be scanned completely is blocked rather than allowed.
+- **The event log stores no message text**, only verdicts, scores, counts, timings and a keyed fingerprint; the hosting limits (rate limits, a global and a per-visitor daily cap on AI calls so public traffic cannot exhaust the free quotas, request-size caps) are in the API and tested.
 - **Failures are reported, not hidden.** Two attempts to fix lowercase-name detection did not meet their pre-registered rule, so nothing was shipped as a fix; the negative results are published on the Benchmarks page, and an opt-in "Strict name hiding" toggle (added after the results were known, and labelled so) is the only mitigation.
 
 ## Honest limitations
 
-- **It is a classifier, not a guarantee.** On the public test set it misses about 1 in 8 attacks (26 of 208) and flags about 1 in 60 harmless prompts (12 of 717); on the small hand-written tricky set it catches 16 of 21 attacks. Adaptive attackers who can probe it will find gaps. English and Hinglish only.
+- **It is a classifier, not a guarantee.** On the public test set it misses about 1 in 8 attacks (26 of 208) and flags about 1 in 60 harmless prompts (12 of 717); on the small tricky set (49 prompts drafted with AI help, so not a blind test) it catches 16 of 21 attacks. Adaptive attackers who can probe it will find gaps. English and Hinglish only.
 - **A word TF-IDF baseline scores about the same F1 on the public test set** (0.903 against 0.905; the intervals overlap). The transformer is served for its size, for running in the browser, and for the robustness work, not for a better headline number.
 - **Long harmless documents are flagged more often than short prompts** (14 of 114).
 - **Names are the weak spot of the privacy layer.** Lowercase names are mostly missed (1 of 7 in the sample); addresses, dates of birth and bank details are not detected at all; the names sample was drafted by an AI and not reviewed by a human, so its figures are indicative. The Aadhaar/PAN/email/phone detectors are rules checked on 49 test cases, not measured on real data.
 - **The Hugging Face Hub sees your IP address** when your browser downloads the two models (never message text).
-- **The deployment is a free-tier demo**, not production-grade: the server sleeps when idle (the first request can take a minute or two; I have not timed it precisely), it has a small slice of one CPU (a long document takes several seconds to scan), the Dashboard's data lives on the server's ephemeral disk and resets on a restart or redeploy, and the number of AI answers per day is capped for everyone together.
-- **Latency and accuracy figures were measured on specific hardware** (a laptop, and Render's free tier). 8-bit model scores differ slightly between CPUs, so a message scoring exactly at a threshold can be handled differently on different machines.
-- **The 50 ms speed rule set before training is not met on the deployed server under back-to-back load**; it is reported as such (see Results).
+- **The deployment is a free-tier demo**, not production-grade: the server sleeps when idle (the first request can take a minute or two; I have not timed it precisely), it has a small slice of one CPU (a long document takes several seconds to scan), the Dashboard's data lives on the server's ephemeral disk and resets on a restart or redeploy, and the number of AI answers per day is capped (for everyone together, and per visitor); those counters are in memory, so they also reset whenever the free server restarts.
+- **Latency was measured on a laptop and on Render's free tier; accuracy (F1, false-positive rates) only on a laptop.** 8-bit model scores differ slightly between CPUs, so the accuracy figures are not re-measured for the deployed hardware, and a message scoring exactly at a threshold can be handled differently on different machines.
+- **The 50 ms speed rule set before training is not met on the deployed server under back-to-back load**; it is reported as such (see Results). Note that only that latency threshold was fixed in advance: the rule for *which model to serve* was amended after results were seen (to account for the indirect-injection set), which `docs/decisions.md` (Day 1.9) records as post hoc, and the final choice of MiniLM rested on later analysis, not on the original rule.
+- **Labels and splits have known weaknesses.** Label cleaning was done by a single reviewer working with AI help, using a model's nominations, and it was applied to the test split as well (both label versions are reported in `ml/results`). Thresholds and hyperparameters were tuned on validation data only, but the pre-registered go/no-go gate for replacing the served model used test F1, test recall and the tricky-set recall. Templated prompts remain in all splits: excluding the 10% of test rows that share a 40-character prefix with a training row lowers the word-TF-IDF baseline's F1 from 0.893 to 0.882 (inside the interval), so the headline numbers are slightly flattering.
+- **Several evaluation sets are small or AI-made.** The tricky set (49 prompts), the Hinglish-attack set (24) and the hidden-instruction-in-document sets were drafted or generated with AI, the names sample (62 sentences) too; the "attacks hidden inside documents" set (53 of 55) is built with the same recipe as 800 training rows (held-out strings, same templates), so it is an upper bound: on 5 independently drafted hidden-instruction documents the *previous* model caught only 2. The "better" tags in the before/after table are 13 unadjusted tests; the weakest (tricky benign, 8 to 2 of 28) is on the AI-drafted set. Latency rows with n of 4 to 20 are typical values, not distributions.
 
 ## The story
 
-1. **Data cleaning first.** The first baseline's most confident "false positives" were mostly *mislabelled*: of the 79 harmless-labelled prompts the baseline scored as attacks, 81% (64) were really jailbreaks, and of the 131 attack-labelled prompts it scored as harmless, 56% (73) were harmless (210 rows read by hand, a recorded decision for each). A single fake-system-note template appeared with both labels in about 800 near-identical rows and was dropped. Duplicates across sources were removed (43 texts had conflicting labels), a near-duplicate leakage check was run against the training set, and the final split is 7,857 / 921 / 925 rows (train / validation / test; training also gets 800 synthetic "instruction hidden in pasted text" rows) with an XSTest set of 250 harmless-but-scary prompts held out for false-positive measurement.
-2. **Hard negatives.** The first fine-tuned MiniLM raised false alarms on harmless prompts that *talk about* attacks ("write me a system prompt") and on Hinglish (28 of 100 and 10 of 104). A retraining round was pre-registered with four success criteria before any training: one arm collapsed into a shortcut and failed, the other met all four (28 to 2 and 10 to 1 false alarms, F1 not worse), and only then replaced the served model.
+1. **Data cleaning first.** The first baseline's most confident "false positives" were mostly *mislabelled*: of the 79 harmless-labelled prompts the baseline scored as attacks, 81% (64) were really jailbreaks, and of the 131 attack-labelled prompts it scored as harmless, 56% (73) were harmless (210 rows reviewed one by one by a single reviewer with AI assistance, a recorded decision for each). A single fake-system-note template appeared with both labels in about 800 near-identical rows and was dropped. Duplicates across sources were removed (43 texts had conflicting labels), a near-duplicate leakage check was run against the training set, and the final split is 7,857 / 921 / 925 rows (train / validation / test; training also gets 800 synthetic "instruction hidden in pasted text" rows) with an XSTest set of 250 harmless-but-scary prompts held out for false-positive measurement.
+2. **Hard negatives.** The first fine-tuned MiniLM raised false alarms on harmless prompts that *talk about* attacks ("write me a system prompt") and on Hinglish (28 of 100 and 10 of 104). A retraining round was pre-registered with four success criteria (test F1 within 0.02, recall drops of at most 0.03, a halving of false alarms on both benign sets, Hinglish-attack recall not lower) before any training: one arm collapsed into a shortcut and failed, the other met all four (28 to 2 and 10 to 1 false alarms, F1 not worse), and only then replaced the served model.
 3. **Privacy in the browser.** The name model, the regex/checksum detectors and an early-warning copy of the classifier run on the device with Transformers.js (WASM). The model was chosen by a rule written before measuring, parity with the server was checked on 25 golden prompts, and the weak spots (lowercase names) were investigated twice with pre-registered rules and published as negative results.
 4. **Shipping.** Hugging Face Docker Spaces turned out to need a paid plan, so the API runs on Render's free tier; CPU throttling, memory (it fits with room to spare), the proxy chain (three hops, which would have put every visitor in one rate-limit bucket) and a CORS trailing-slash mistake were all measured or found and fixed on the real platform. Every mistake made on the way is recorded in `docs/decisions.md`.
 
@@ -189,7 +191,7 @@ npm ci
 npm run dev                                                                                            # http://localhost:5173
 ```
 
-Tests: `cd backend; ..\.venv\Scripts\python.exe -m pytest` (413 tests; the real-model tests run when the model from step 1 is present) and `cd frontend; npm run lint; npm test; npm run build` (169 tests, one of which needs network). `npm run e2e` runs a browser test against a local backend; `npm run e2e:wake` tests the "waking up" banner. `RUN_HUB_TESTS=1 npm test` also checks the model production downloads.
+Tests: `cd backend; ..\.venv\Scripts\python.exe -m pytest` (432 tests; the real-model tests run when the model from step 1 is present) and `cd frontend; npm run lint; npm test; npm run build` (180 tests, one of which needs network). `npm run e2e` runs a browser test against a local backend; `npm run e2e:wake` tests the "waking up" banner. `RUN_HUB_TESTS=1 npm test` also checks the model production downloads.
 
 Training and evaluation live in `ml/` (baselines, the Colab notebooks for the fine-tuning runs, ONNX export and quantisation, benchmarks, every result file). Backend configuration (rate limits, daily cap, proxy hops, CORS, scan mode) is in [backend/README.md](backend/README.md).
 

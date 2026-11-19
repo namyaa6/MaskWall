@@ -11,7 +11,7 @@ MaskWall's own code is MIT-licensed (see `LICENSE`). This file lists the third-p
 | `TrustAIRLab/in-the-wild-jailbreak-prompts` | MIT | train/val/test |
 | `databricks/databricks-dolly-15k` | **CC BY-SA 3.0** (Hub tag) | benign training rows (sampled) |
 | `Paul/XSTest` (safe prompts) | CC BY 4.0 (Hub tag) | evaluation only |
-| `WillHeld/hinglish_top` (Hinglish-TOP, Google Research) | Apache-2.0 per the dataset card as recorded in `docs/decisions.md` (**no Hub licence tag**) | Hinglish benign training negatives (train split) and an evaluation set (test split) |
+| `WillHeld/hinglish_top` (Hinglish-TOP, Google Research) | Apache-2.0 per the dataset card as recorded in `docs/decisions.md` (**no Hub licence tag**); the data is derived from TOPv2 (English), whose own upstream licence is **not recorded here and was not independently verified** | Hinglish benign training negatives (train split) and an evaluation set (test split) |
 | Synthetic hard negatives and Hinglish attacks | generated with Groq `gpt-oss-120b`; evaluation text with Gemini | training / evaluation, see `docs/decisions.md` Day 2.6 to 2.9 |
 
 Share-alike note: Dolly's CC BY-SA 3.0 applies to the dataset text. Whether it extends to a classifier trained on a sample of it is not settled law; this project does not redistribute the dataset text, only model weights, and states the training sources on the model card. Nothing under a non-commercial licence is used (Alpaca was rejected for that reason).

@@ -24,6 +24,8 @@ interface Turn extends HandledTurn {
   error?: string;
   /** the error is the global daily quota: point to the Attack playground, which never calls the AI */
   dailyLimit?: boolean;
+  /** the user's real values at the time of the reply, so links containing them can be neutralised (components/linkSafety.ts) */
+  sensitive?: string[];
 }
 
 const INTRO_KEY = "maskwall.chatIntroDismissed";
@@ -45,9 +47,9 @@ function Intro({ onDismiss }: { onDismiss: () => void }) {
         </button>
       </div>
       <ol className="intro-list">
-        <li>Names, emails, phone numbers, Aadhaar and PAN numbers are swapped for placeholders like <span className="ph">[EMAIL_1]</span> on your device, before anything is sent.</li>
+        <li>Names, emails, phone numbers, Aadhaar and PAN numbers are swapped for placeholders like <span className="ph">[EMAIL_1]</span> on your device, before the message is sent. Anything the detectors miss (most lowercase names, addresses, bank details) is sent as typed.</li>
         <li>The firewall checks every message for attacks on the AI (attempts to override its instructions) and blocks them.</li>
-        <li>The AI's reply is checked for leaks, then your details are put back into it on your device. The server never sees them.</li>
+        <li>The AI's reply is checked for leaks, then your details are put back into it on your device. The server only ever receives the placeholders, not the values they replaced.</li>
       </ol>
     </section>
   );
@@ -134,7 +136,7 @@ export function ChatPage() {
         .then((r) => update(id, { precheck: r }))
         .catch(() => update(id, { precheck: "error" }));
       const res: ChatResponse = await postChat(sent);
-      update(id, { res, status: "done", reply: res.response != null ? vault.current.unmask(res.response) : undefined });
+      update(id, { res, status: "done", reply: res.response != null ? vault.current.unmask(res.response) : undefined, sensitive: vault.current.values() });
     } catch (err) {
       update(id, { status: "error", error: describeError(err), dailyLimit: dailyLimitMessage(err) != null });
     } finally {
@@ -157,7 +159,7 @@ export function ChatPage() {
   return (
     <>
       <PageHead title="Chat">
-        Talk to an AI assistant. Your personal details are hidden on your device before anything is sent, and every message is checked for attacks.
+        Talk to an AI assistant. Personal details that the detectors find are hidden on your device before the message is sent, and every message is checked for attacks.
       </PageHead>
       {!introHidden && <Intro onDismiss={dismissIntro} />}
 
@@ -296,7 +298,7 @@ function TurnResult({ t }: { t: Turn }) {
         {res.action !== "allow" && <span>{mainReason(res.action, res.input.reasons, res.output?.kinds)}</span>}
       </p>
       {step && <p className="next-step">{step}</p>}
-      {res.action !== "block" && res.action !== "output_blocked" && t.reply != null && <Reply text={t.reply} />}
+      {res.action !== "block" && res.action !== "output_blocked" && t.reply != null && <Reply text={t.reply} sensitive={t.sensitive} />}
       {res.truncated && (
         <p className="cutoff" role="note">
           Reply was cut off: it reached the length limit. Ask for a shorter answer or for the rest.

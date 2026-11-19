@@ -155,7 +155,7 @@ function ResultCard({ r }: { r: Result }) {
     <section className={`card result-card result-${tone}`} aria-live="polite" aria-labelledby="result-title">
       <h2 id="result-title" className="result-headline">
         <ResultPill tone={tone}>{tone === "blocked" ? "Blocked" : tone === "suspicious" ? "Suspicious" : "Safe"}</ResultPill>
-        <span>{HEADLINE[res.action]}</span>
+        <span>{res.action === "block" && res.input.reasons.includes("partial_scan") && !res.input.reasons.includes("injection_detected") ? "Blocked: too long to check completely." : HEADLINE[res.action]}</span>
       </h2>
       <p className="score-line">
         Risk score <strong className="score">{fmtScore(inp.score)}</strong> out of 1

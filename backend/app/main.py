@@ -29,8 +29,8 @@ from .abuse import AbuseGuard, client_key as _client_key
 from .config import Settings, normalize_origins
 from .llm import LLMFailure, build_llm
 from .logging_db import EventLog
-from .quota import LIMIT_REACHED_MESSAGE, DailyLimit
-from .policy import BLOCKED_INPUT_MESSAGE, BLOCKED_OUTPUT_MESSAGE, Action, decide_input, decide_output, thresholds_from_meta
+from .quota import CLIENT_LIMIT_MESSAGE, LIMIT_REACHED_MESSAGE, DailyLimit, PerClientDailyLimit
+from .policy import BLOCKED_INPUT_MESSAGE, BLOCKED_OUTPUT_MESSAGE, PARTIAL_BLOCKED_MESSAGE, Action, decide_input, decide_output, thresholds_from_meta
 from .normalize import normalize_text
 from .scanners import pii_regex
 from .scanners.injection import InjectionScanner
@@ -108,7 +108,9 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
     counters = {"rate_limited": 0, "too_large": 0}                 # in memory only: a flood must not be able to grow the database
     app.state.counters = counters
     daily = DailyLimit(settings.daily_llm_limit)                    # global cap on LLM calls per UTC day (quota.py)
+    per_client = PerClientDailyLimit(settings.daily_llm_limit_per_client)      # and a smaller one per visitor, so one client cannot drain it
     app.state.daily = daily
+    partial_action = Action.BLOCK if settings.partial_scan == "block" else Action.WARN
     # order matters: the guard is added first (inner) and CORS last (outer), so 429/413 responses still carry CORS headers
     app.add_middleware(AbuseGuard, rate_limit=settings.global_rate_limit, max_body_bytes=settings.max_chars * 12 + 4096,
                        trust_proxy=settings.effective_proxy_hops, counters=counters)          # 12 bytes per character: worst-case JSON \u escaping
@@ -191,6 +193,10 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
     async def reject_if_empty(rid: str, endpoint: str, text: str):
         """Normalise; a message that is empty once invisible characters are removed (e.g. only Unicode tag characters) is rejected."""
         norm = normalize_text(text)
+        if len(norm.text) > settings.max_chars:                          # NFKC can expand a short input (U+FDFA becomes 18 characters)
+            await record({"request_id": rid, "endpoint": endpoint, "action": "rejected", "reasons": ["input_too_long_after_normalization"],
+                          "input_chars": len(text), "http_status": 413})
+            raise HTTPException(413, detail={"error": "input_too_long", "max_chars": settings.max_chars, "after_normalization": True})
         if not norm.text.strip():
             await record({"request_id": rid, "endpoint": endpoint, "action": "rejected", "reasons": ["empty_after_normalization"],
                           "input_chars": len(text), "http_status": 422})
@@ -235,7 +241,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         pii_ms = (time.perf_counter() - t) * 1000
         scan = await scan_text(pii.masked_text)
         decision = decide_input(scan.score, scan.coverage, thresholds(), pii_masked=pii.total, strict=settings.strict,
-                                hidden_unicode=norm.smuggling_chars)
+                                hidden_unicode=norm.smuggling_chars, partial_action=partial_action)
         lat = {"pii_ms": round(pii_ms, 2), "tokenize_ms": round(scan.tokenize_ms, 2), "inference_ms": round(scan.inference_ms, 2),
                "total_ms": round((time.perf_counter() - t_total) * 1000, 2)}
         await record({**base_event(rid, "/scan", req.text, scan, pii), "action": decision.action.value, "reasons": list(decision.reasons),
@@ -259,7 +265,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         scan = await scan_text(pii.masked_text)
         thr = thresholds()
         decision = decide_input(scan.score, scan.coverage, thr, pii_masked=pii.total, strict=settings.strict,
-                                hidden_unicode=norm.smuggling_chars)
+                                hidden_unicode=norm.smuggling_chars, partial_action=partial_action)
         lat = {"pii_ms": round(pii_ms, 2), "tokenize_ms": round(scan.tokenize_ms, 2), "inference_ms": round(scan.inference_ms, 2)}
         inp = input_section(scan, pii.masked_text, pii, decision, thr, norm)
         ev = {**base_event(rid, "/chat", text, scan, pii), "reasons": list(decision.reasons)}
@@ -270,13 +276,20 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
                 {**ev, "action": action, "http_status": 200, "latency_ms": dict(lat), **event_extra}
 
         if not decision.allowed_to_reach_llm:
-            body, event = finish("block", BLOCKED_INPUT_MESSAGE, {"output": None, "llm": None, "truncated": False})
+            msg = BLOCKED_INPUT_MESSAGE if "injection_detected" in decision.reasons or "strict_mode" in decision.reasons else PARTIAL_BLOCKED_MESSAGE
+            body, event = finish("block", msg, {"output": None, "llm": None, "truncated": False})
             await record(event, pii.masked_text)
             return body
 
         llm = app.state.llm
         if llm is None:
             raise HTTPException(503, detail={"error": "no_llm_provider_configured"})
+        if not per_client.try_acquire(client_key(request)):             # one visitor's daily allowance (checked first: no global slot is spent)
+            counters["client_daily_limit_reached"] = counters.get("client_daily_limit_reached", 0) + 1
+            wait = per_client.seconds_until_reset()
+            await record({**ev, "action": "rejected", "reasons": [*ev["reasons"], "client_daily_llm_limit"], "http_status": 429}, pii.masked_text)
+            raise HTTPException(429, detail={"error": "client_daily_llm_limit_reached", "message": CLIENT_LIMIT_MESSAGE, "limit": per_client.limit,
+                                             "retry_after_s": wait}, headers={"Retry-After": str(wait)})
         if not daily.try_acquire():                                     # after the input scan: blocked attacks and /scan never use the quota
             counters["daily_limit_reached"] = counters.get("daily_limit_reached", 0) + 1
             wait = daily.seconds_until_reset()

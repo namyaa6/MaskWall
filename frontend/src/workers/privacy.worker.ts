@@ -27,7 +27,7 @@ function load(): Promise<NerModel> {
       total += f.total;
     }
     post({ type: "progress", loaded, total });
-  }).then((m) => {
+  }, NER_MODEL.revision).then((m) => {
     post({ type: "ready", info: { model: NER_MODEL.id, approxMB: NER_MODEL.approxMB } });
     return m;
   });

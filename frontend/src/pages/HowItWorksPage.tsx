@@ -38,7 +38,7 @@ function DailyQuota() {
       <p>
         This demo runs on free AI accounts, so the number of messages that get an AI answer is capped for <strong>everyone together</strong>
         {limit ? <>: <strong>{limit} per day</strong>{h?.daily_llm_remaining != null && <> ({h.daily_llm_remaining} left right now)</>}, resetting at midnight UTC</> : <> (the current limit appears here once the server has answered)</>}.
-        Only messages that actually reach the AI count. Messages the firewall blocks and everything you do in the <Link to="/playground">Attack playground</Link> do not use any of it, so the playground keeps working when the limit is reached. Separately, each visitor can send about 30 messages a minute.
+        Each visitor also has a smaller daily allowance of their own, so one person cannot use it all up. Only messages that actually reach the AI count. Messages the firewall blocks and everything you do in the <Link to="/playground">Attack playground</Link> do not use any of it, so the playground keeps working when a limit is reached. The counters live in the server's memory, so they also reset when the free server restarts (after it has been idle, or after an update). Separately, each visitor can send about 30 messages a minute.
       </p>
     </section>
   );
@@ -151,8 +151,8 @@ export function HowItWorksPage() {
           </dd>
           <dt>Early warning on your device</dt>
           <dd>
-            Your browser runs the same detector ({S.int8_mb} MB, same thresholds) for an instant warning: it agrees with the server on all {P.n} reference
-            messages (scores within {P.max_abs_diff.toFixed(4)}). It can be switched off by anyone who controls the browser, so the server always makes the final decision.
+            Your browser runs the same detector ({S.int8_mb} MB, same thresholds) for an instant warning: it gives the same verdict as the server on all {P.n} reference
+            messages (none of them close to a threshold; scores within {P.max_abs_diff.toFixed(4)} for the copy checked locally, and within about 0.09 on the logit scale for the copy this site downloads from the Hugging Face Hub). It can be switched off by anyone who controls the browser, so the server always makes the final decision.
           </dd>
         </dl>
       </section>

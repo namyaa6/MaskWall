@@ -1,7 +1,8 @@
 """Create the two Hugging Face model repos and upload the model files + generated model cards.
 
     python scripts/upload_models.py --render-only      # write the cards to scripts/_cards/ and stop (review them first)
-    python scripts/upload_models.py                    # create/update the repos and upload
+    python scripts/upload_models.py --cards-only       # re-upload ONLY the README model cards (after a wording correction)
+    python scripts/upload_models.py                    # create/update the repos and upload everything
 
 Uses the login from `hf auth login` (the token is never read or printed here). Numbers in the cards are read from
 frontend/src/data/results.json (itself generated from ml/results), never typed by hand.
@@ -90,11 +91,11 @@ Source of truth: `ml/results/` in the repository; this table is generated from i
 | public test set, benign flagged (false positives) | {frac(s['test_fp'])} |
 | test F1 | {s['test_f1']:.3f} |
 | XSTest safe prompts flagged | {frac(s['xstest_fp'])} |
-| indirect (document-embedded) attacks caught | {frac(s['indirect_recall'])} |
-| human Hinglish benign flagged | {frac(s['hinglish_benign_fp'])} |
+| hidden-instruction-in-document attacks caught (synthetic, built with the same recipe as 800 training rows, so an upper bound) | {frac(s['indirect_recall'])} |
+| human-written Hinglish assistant queries flagged (same domain as some training rows) | {frac(s['hinglish_benign_fp'])} |
 | LLM-written "prompt-talk" benign flagged | {frac(s['prompt_talk_fp'])} |
-| Hinglish attacks caught | {frac(s['hinglish_attacks'])} |
-| hand-written tricky set: attacks caught / benign flagged | {frac(s['tricky_attacks'])} / {frac(s['tricky_benign_fp'])} |
+| Hinglish attacks caught (24 AI-written prompts) | {frac(s['hinglish_attacks'])} |
+| tricky set (49 prompts drafted with AI help, so not blind): attacks caught / benign flagged | {frac(s['tricky_attacks'])} / {frac(s['tricky_benign_fp'])} |
 | long documents (114 benign / 38 with a hidden attack): benign flagged / hidden attack caught | {frac(s['long_benign_fp'])} / {frac(s['long_middle_caught'])} |
 
 Latency depends on the CPU and on text length; see the Benchmarks page of the live app for the figures measured on the
@@ -131,14 +132,15 @@ tags: [prompt-injection, jailbreak, onnx, int8, benchmark]
 # MaskWall comparison model: DeBERTa-v3-small (int8 ONNX), benchmark only
 
 This is the larger comparison model from [MaskWall]({GITHUB}). It is **not served** by the live app: the served model is
-[`{{user}}/{REPO_MINILM}`](https://huggingface.co/{{user}}/{REPO_MINILM}). It is hosted so the latency of both models can be
-measured on the real deployment hardware.
+[`{{user}}/{REPO_MINILM}`](https://huggingface.co/{{user}}/{REPO_MINILM}). It is hosted as a benchmark reference: it did not fit next to the app in the 512 MB of the deployment host, so only
+laptop latency exists for it.
 
 - Fine-tuned from `microsoft/deberta-v3-small` (MIT) on the **first-round cleaned and augmented training set** (before the hard-negative round).
 - int8 file {i8['size_mb']} MB. Round-1 test results (at its own validation-tuned threshold): F1 {t['f1']:.3f}, false-positive
   rate {t['fpr']:.3f} ({t['fp']}/{t['benign']}), XSTest safe flagged {t['xstest_fp']}/{t['xstest_n']}.
-- Same limitations as the MiniLM model; it flags more benign prompts (higher false-positive rate), which is why it is not the
-  served model. Selection rule and numbers: `docs/decisions.md` in the repository.
+- Same limitations as the MiniLM model. It flags more benign prompts (higher false-positive rate) and is larger and slower; the final choice of
+  MiniLM rested on the served-threshold and Hinglish analysis in `docs/decisions.md` (the original selection rule was amended after results
+  were seen, and the record says so).
 - Training data and licences: see [NOTICE.md]({GITHUB}/blob/main/NOTICE.md).
 """
 
@@ -146,6 +148,7 @@ measured on the real deployment hardware.
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--render-only", action="store_true")
+    ap.add_argument("--cards-only", action="store_true")
     args = ap.parse_args()
     api = HfApi()
     user = api.whoami()["name"]            # the token stays inside huggingface_hub
@@ -176,6 +179,8 @@ def main() -> None:
     for repo, files in plan.items():
         api.create_repo(repo, repo_type="model", exist_ok=True, private=False)
         for src, dest in files:
+            if args.cards_only and dest != "README.md":
+                continue
             if not src.exists():
                 raise SystemExit(f"missing {src}")
             api.upload_file(path_or_fileobj=str(src), path_in_repo=dest, repo_id=repo, repo_type="model",

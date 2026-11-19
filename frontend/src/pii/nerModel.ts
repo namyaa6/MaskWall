@@ -28,12 +28,12 @@ interface ProgressEvent {
   total?: number;
 }
 
-export async function loadNer(modelId: string, onProgress?: (p: LoadProgress) => void): Promise<NerModel> {
+export async function loadNer(modelId: string, onProgress?: (p: LoadProgress) => void, revision?: string): Promise<NerModel> {
   const progress_callback = (e: ProgressEvent) => {
     if (e.status === "progress" && e.file && onProgress) onProgress({ file: e.file, loaded: e.loaded ?? 0, total: e.total ?? 0 });
   };
-  const tokenizer = await AutoTokenizer.from_pretrained(modelId, { progress_callback });
-  const model = await AutoModelForTokenClassification.from_pretrained(modelId, { dtype: "q8", device: "wasm", progress_callback });
+  const tokenizer = await AutoTokenizer.from_pretrained(modelId, { progress_callback, ...(revision ? { revision } : {}) });
+  const model = await AutoModelForTokenClassification.from_pretrained(modelId, { dtype: "q8", device: "wasm", progress_callback, ...(revision ? { revision } : {}) });
   const id2label = (model.config as unknown as { id2label: Record<string, string> }).id2label;
   const toTokens = (ids: number[]): string[] =>
     (tokenizer as unknown as { model: { convert_ids_to_tokens(ids: number[]): string[] } }).model.convert_ids_to_tokens(ids);
