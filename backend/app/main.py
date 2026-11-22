@@ -144,7 +144,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         except Exception:                                                 # logging must never break a request
             log.exception("failed to record event")
 
-    async def scan_text(text: str):
+    async def scan_text(text: str, *, skip_partial: bool = False):
         sc = app.state.scanner
         if sc is None:
             raise HTTPException(503, detail={"error": "scanner_not_loaded"})
@@ -152,7 +152,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         # its thread running, and freeing the slot early would let more inferences run at once than max_concurrent_scans allows.
         sem = app.state.scan_sem
         await sem.acquire()
-        task = asyncio.ensure_future(run_in_threadpool(sc.scan, text))
+        task = asyncio.ensure_future(run_in_threadpool(sc.scan, text, **({"skip_when_partial": True} if skip_partial else {})))
 
         def _release(t):
             sem.release()
@@ -170,7 +170,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
 
     def input_section(scan, masked, pii, decision, thr, norm) -> dict:
         return {
-            "score": round(scan.score, 4), "verdict": decision.action.value, "reasons": list(decision.reasons),
+            "score": None if scan.score is None else round(scan.score, 4), "scored": scan.scored, "verdict": decision.action.value, "reasons": list(decision.reasons),
             "notes": [*decision.notes, *(["unicode_normalized"] if norm.changed else [])],
             "hidden_characters_removed": norm.hidden_total,
             "coverage": scan.coverage, "mode": scan.mode, "n_tokens": scan.n_tokens, "n_windows": scan.n_windows,
@@ -239,8 +239,8 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         norm = await reject_if_empty(rid, "/scan", req.text)
         pii = pii_regex.mask(norm.text)
         pii_ms = (time.perf_counter() - t) * 1000
-        scan = await scan_text(pii.masked_text)
-        decision = decide_input(scan.score, scan.coverage, thresholds(), pii_masked=pii.total, strict=settings.strict,
+        scan = await scan_text(pii.masked_text, skip_partial=partial_action is Action.BLOCK)
+        decision = decide_input(0.0 if scan.score is None else scan.score, scan.coverage, thresholds(), pii_masked=pii.total, strict=settings.strict,
                                 hidden_unicode=norm.smuggling_chars, partial_action=partial_action)
         lat = {"pii_ms": round(pii_ms, 2), "tokenize_ms": round(scan.tokenize_ms, 2), "inference_ms": round(scan.inference_ms, 2),
                "total_ms": round((time.perf_counter() - t_total) * 1000, 2)}
@@ -262,9 +262,9 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
         norm = await reject_if_empty(rid, "/chat", text)                # Unicode normalisation first: scanner and LLM see the same text
         pii = pii_regex.mask(norm.text)                                 # backup masking, before anything else sees the text
         pii_ms = (time.perf_counter() - t) * 1000
-        scan = await scan_text(pii.masked_text)
+        scan = await scan_text(pii.masked_text, skip_partial=partial_action is Action.BLOCK)
         thr = thresholds()
-        decision = decide_input(scan.score, scan.coverage, thr, pii_masked=pii.total, strict=settings.strict,
+        decision = decide_input(0.0 if scan.score is None else scan.score, scan.coverage, thr, pii_masked=pii.total, strict=settings.strict,
                                 hidden_unicode=norm.smuggling_chars, partial_action=partial_action)
         lat = {"pii_ms": round(pii_ms, 2), "tokenize_ms": round(scan.tokenize_ms, 2), "inference_ms": round(scan.inference_ms, 2)}
         inp = input_section(scan, pii.masked_text, pii, decision, thr, norm)

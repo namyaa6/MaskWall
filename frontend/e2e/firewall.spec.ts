@@ -46,6 +46,22 @@ test("playground: the Hinglish attack example is blocked, the harmless Hinglish 
   await expect(page.getByRole("heading", { name: /Safe: this would be sent to the AI\./ })).toBeVisible();
 });
 
+test("playground: a token-dense input is refused without scanning, with an explanation and no score (Day 4.19)", async ({ page }) => {
+  const dense = Array.from({ length: 1400 }, (_, i) => i + 1).join(" ").slice(0, 7000);
+  await page.goto("/playground");
+  await page.getByLabel("Message to check").fill(dense);
+  await page.getByRole("button", { name: "Check message" }).click();
+  await expect(page.getByRole("heading", { name: /Blocked: too long to check completely\./ })).toBeVisible();
+  const unscored = page.getByTestId("unscored");
+  await expect(unscored).toContainText("Too long to check completely, so it is blocked without scanning.");
+  await expect(unscored).toContainText("Shorten it (or paste less text) and try again.");
+  await expect(unscored).toContainText("No risk score");
+  await expect(page.getByRole("meter", { name: "Risk score" })).toHaveCount(0);       // no meter: nothing was scanned
+  await expect(page.getByText(/Risk score\s*\d/)).toHaveCount(0);
+  await expect(page.getByText("None: it was refused before scanning.")).toBeVisible();
+  await expect(page.getByText(/the model did not run/)).toBeVisible();
+});
+
 test("keyboard: the menu is reachable and focus is visible", async ({ page }) => {
   await page.goto("/how-it-works");
   await page.keyboard.press("Tab");                          // skip link

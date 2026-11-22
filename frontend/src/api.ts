@@ -74,7 +74,9 @@ export type InputVerdict = "allow" | "warn" | "block";
 export type ChatAction = InputVerdict | "output_blocked";
 
 export interface InputSection {
-  score: number;
+  /** null when the message was refused right after tokenising because it cannot be scanned completely (`scored` is false) */
+  score: number | null;
+  scored: boolean;
   verdict: InputVerdict;
   reasons: string[];              // injection_detected | injection_suspected | partial_scan | hidden_characters | strict_mode
   notes: string[];                // pii_masked_server_side | unicode_normalized

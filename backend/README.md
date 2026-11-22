@@ -70,7 +70,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 | `MASKWALL_BLOCK_THRESHOLD` / `_WARN_THRESHOLD` | from the model | override the thresholds tuned on validation data |
 | `MASKWALL_STRICT` | `0` | `1`: treat warnings as blocks |
 | `MASKWALL_MAX_OUTPUT_TOKENS` | `2048` | reply token limit; reasoning models spend hidden reasoning tokens against it. `/chat` returns `truncated: true` (and `llm.finish_reason`) when a reply hit the limit |
-| `MASKWALL_PARTIAL_SCAN` | `block` | what happens to an input too long or dense to scan completely (more than `MASKWALL_MAX_WINDOWS` windows; mostly digits, code or CJK text): `block` (default) answers `block` with a "too long to check completely" message and never calls the LLM; `warn` sends it on with a warning, which lets padding hide an injection in the unscanned part (Day 4.17 review) |
+| `MASKWALL_PARTIAL_SCAN` | `block` | what happens to an input too long or dense to scan completely (more than `MASKWALL_MAX_WINDOWS` windows; mostly digits, code or CJK text): `block` (default) refuses it **right after tokenising, without running the model**: `action: block`, `input.scored: false`, `input.score: null`, no windows, a "too long to check completely" message, and the LLM is never called; `warn` sends it on with a warning, which lets padding hide an injection in the unscanned part (Day 4.17 review) |
 | `MASKWALL_DAILY_LLM_LIMIT_PER_CLIENT` | `40` | each visitor's own cap on LLM calls per UTC day (0 disables), so one client cannot use the whole global budget; over it `/chat` returns `429` `client_daily_llm_limit_reached` |
 | `MASKWALL_DAILY_LLM_LIMIT` | `500` | global cap on LLM calls per UTC day (0 disables), so public traffic cannot use up the free Groq/Gemini quota. When reached, `/chat` returns `429` with `error: daily_llm_limit_reached` and a message pointing to the Attack playground; blocked attacks and `/scan` never use the quota. In memory: any restart resets it (on Render's free tier, every sleep/wake and every deploy), so it is really "500 per awake period, at most per UTC day". `/health` reports `daily_llm_limit` and `daily_llm_remaining` |
 | `MASKWALL_RATE_LIMIT` | `30/minute` | per client, shared by `/chat` and `/scan` |
@@ -87,7 +87,7 @@ $env:MASKWALL_SERVER_MODEL = "deberta"; .\.venv\Scripts\python.exe -m uvicorn ap
 
 ```powershell
 cd backend
-..\.venv\Scripts\python.exe -m pytest -q            # 432 tests; no network, no keys; the real-model tests skip if backend\model is absent
+..\.venv\Scripts\python.exe -m pytest -q            # 440 tests; no network, no keys; the real-model tests skip if backend\model is absent
 ..\.venv\Scripts\python.exe scripts\smoke_llm.py    # optional: one real /chat call through Groq and one through Gemini (needs keys + network)
 ```
 

@@ -482,3 +482,38 @@ def test_per_client_cap_is_per_client(tmp_path):
         a = [c.post("/chat", json={"message": "hi"}, headers={"X-Forwarded-For": "1.1.1.1"}).status_code for _ in range(2)]
         b = c.post("/chat", json={"message": "hi"}, headers={"X-Forwarded-For": "2.2.2.2"}).status_code
     assert a == [200, 429] and b == 200
+
+
+def test_partial_input_is_refused_unscanned_with_no_score_and_no_llm_call(tmp_path):
+    scanner = FakeScanner(score=0.99, coverage="partial")            # would have been a block anyway; the point is that it is never scored
+    app, _, llm, db = make(tmp_path, scanner=scanner)
+    with TestClient(app) as c:
+        body = c.post("/chat", json={"message": "a very long dense text"}).json()
+        scan = c.post("/scan", json={"text": "a very long dense text"}).json()
+        recent = c.get("/stats").json()["recent"]
+    for b in (body, scan):
+        i = b["input"]
+        assert b["action"] == "block" and i["scored"] is False and i["score"] is None and i["n_windows"] == 0 and i["windows"] == []
+        assert i["reasons"] == ["partial_scan"] and i["coverage"] == "partial"
+        assert b["latency_ms"]["inference_ms"] == 0
+    assert llm.calls == []
+    assert [e["score"] for e in recent] == [None, None]              # logged without a score (the event log and /stats accept that)
+
+
+def test_partial_input_is_still_scored_when_configured_to_warn(tmp_path):
+    app, _, llm, _ = make(tmp_path, scanner=FakeScanner(score=0.01, coverage="partial"), partial_scan="warn")
+    b = post_chat(app, "a very long dense text").json()
+    assert b["action"] == "warn" and b["input"]["scored"] is True and b["input"]["score"] == 0.01 and b["input"]["n_windows"] == 1
+    assert len(llm.calls) == 1
+
+
+def test_the_scanner_is_only_asked_to_skip_when_partial_scans_are_blocked(tmp_path):
+    class Recording(FakeScanner):
+        def scan(self, text, *, skip_when_partial=False):
+            self.seen = getattr(self, "seen", []) + [skip_when_partial]
+            return super().scan(text, skip_when_partial=skip_when_partial)
+    for mode, expect in (("block", True), ("warn", False)):
+        sc = Recording(score=0.01, coverage="partial")
+        app, *_ = make(tmp_path, scanner=sc, partial_scan=mode)
+        post_chat(app, "text")
+        assert sc.seen == [expect], mode

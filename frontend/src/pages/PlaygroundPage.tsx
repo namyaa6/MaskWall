@@ -4,7 +4,7 @@ import { ModelStatusLine } from "../components/ModelStatus";
 import { PageHead } from "../components/PageHead";
 import { MaskedText, ResultPill } from "../components/Pills";
 import { RiskMeter } from "../components/RiskMeter";
-import { fmtMs, fmtScore, PII_LABELS, plural, reasonText, toneFor } from "../explain";
+import { fmtMs, fmtScore, PII_LABELS, plural, reasonText, toneFor, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP } from "../explain";
 import { normalizeText } from "../pii/normalize";
 import { PlaceholderVault } from "../pii/vault";
 import type { PrecheckResult } from "../precheck/types";
@@ -157,15 +157,24 @@ function ResultCard({ r }: { r: Result }) {
         <ResultPill tone={tone}>{tone === "blocked" ? "Blocked" : tone === "suspicious" ? "Suspicious" : "Safe"}</ResultPill>
         <span>{res.action === "block" && res.input.reasons.includes("partial_scan") && !res.input.reasons.includes("injection_detected") ? "Blocked: too long to check completely." : HEADLINE[res.action]}</span>
       </h2>
-      <p className="score-line">
-        Risk score <strong className="score">{fmtScore(inp.score)}</strong> out of 1
-        <span className="muted">
-          {" "}
-          · early warning on your device:{" "}
-          {r.pre === undefined ? "running…" : r.pre === "error" ? "not available" : `${fmtScore(r.pre.score)} (${fmtMs(r.pre.ms)})`}
-        </span>
-      </p>
-      <RiskMeter score={inp.score} warn={inp.thresholds.warn} block={inp.thresholds.block} />
+      {inp.score === null ? (
+        <p className="score-line" data-testid="unscored">
+          <strong>{UNSCORED_HEADLINE}</strong> {UNSCORED_NEXT_STEP}
+          <span className="muted block">No risk score: nothing was scanned, so there is no score or meter for this message.</span>
+        </p>
+      ) : (
+        <>
+          <p className="score-line">
+            Risk score <strong className="score">{fmtScore(inp.score)}</strong> out of 1
+            <span className="muted">
+              {" "}
+              · early warning on your device:{" "}
+              {r.pre === undefined ? "running…" : r.pre === "error" ? "not available" : `${fmtScore(r.pre.score)} (${fmtMs(r.pre.ms)})`}
+            </span>
+          </p>
+          <RiskMeter score={inp.score} warn={inp.thresholds.warn} block={inp.thresholds.block} />
+        </>
+      )}
 
       <dl className="facts">
         <div>
@@ -188,15 +197,23 @@ function ResultCard({ r }: { r: Result }) {
         <div>
           <dt>How much text was checked</dt>
           <dd>
-            {inp.coverage === "full" ? "All of it" : `Part of it (${inp.scanned_tokens} of ${inp.n_tokens} word pieces)`}: {plural(inp.n_tokens, "word piece")}
-            {inp.n_windows > 1 ? ` in ${inp.n_windows} overlapping chunks of up to 510` : " in one chunk"}.
+            {inp.score === null ? (
+              <>None: it was refused before scanning. It has {plural(inp.n_tokens, "word piece")} and would need {inp.n_windows_needed} overlapping chunks of up to 510 to check completely, more than the server allows.</>
+            ) : (
+              <>
+                {inp.coverage === "full" ? "All of it" : `Part of it (${inp.scanned_tokens} of ${inp.n_tokens} word pieces)`}: {plural(inp.n_tokens, "word piece")}
+                {inp.n_windows > 1 ? ` in ${inp.n_windows} overlapping chunks of up to 510` : " in one chunk"}.
+              </>
+            )}
           </dd>
         </div>
         <div>
           <dt>How long the check took</dt>
           <dd>
-            {fmtMs(res.latency_ms.total_ms)} on the server (model {fmtMs(res.latency_ms.inference_ms)})
-            {r.pre && r.pre !== "error" && `, ${fmtMs(r.pre.ms)} on your device`}.
+            {inp.score === null
+              ? `${fmtMs(res.latency_ms.total_ms)} on the server (it only counted the word pieces; the model did not run)`
+              : `${fmtMs(res.latency_ms.total_ms)} on the server (model ${fmtMs(res.latency_ms.inference_ms)})`}
+            {inp.score !== null && r.pre && r.pre !== "error" && `, ${fmtMs(r.pre.ms)} on your device`}.
           </dd>
         </div>
         <div>

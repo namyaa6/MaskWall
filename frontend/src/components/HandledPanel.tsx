@@ -1,5 +1,5 @@
 import type { ChatResponse } from "../api";
-import { fmtMs, fmtScore, mainReason, PII_LABELS, plural, type Tone } from "../explain";
+import { fmtMs, fmtScore, mainReason, PII_LABELS, plural, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP, type Tone } from "../explain";
 import type { PrecheckResult } from "../precheck/types";
 import { MaskedText, ResultPill } from "./Pills";
 
@@ -51,6 +51,7 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
     );
   const res = turn.res;
   const inp = res?.input;
+  const scoreValue = inp?.score ?? null;          // null: refused right after tokenising (too long to scan completely), no score
   const serverPii = inp ? Object.values(inp.pii_masked).reduce((a, b) => a + b, 0) : 0;
   const local = countsText(turn.counts);
   const llmMs = res?.latency_ms.llm_ms ?? 0;
@@ -83,9 +84,15 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
         </Step>
 
         <Step n={2} title="Checked for attacks">
-          {inp ? (
+          {inp && scoreValue === null ? (
+            <p data-testid="unscored">
+              <strong>Not scored.</strong> <ResultPill tone="blocked">Blocked</ResultPill>
+              <br />
+              <span className="muted">{UNSCORED_HEADLINE} {UNSCORED_NEXT_STEP}</span>
+            </p>
+          ) : inp && scoreValue !== null ? (
             <p>
-              Risk score <strong>{fmtScore(inp.score)} out of 1</strong>:{" "}
+              Risk score <strong>{fmtScore(scoreValue)} out of 1</strong>:{" "}
               <ResultPill tone={verdictTone(inp.verdict)}>{verdictWord(inp.verdict)}</ResultPill>
               <br />
               <span className="muted">{mainReason(inp.verdict, inp.reasons)}</span>
@@ -93,11 +100,13 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
           ) : (
             <p className="muted">{turn.status === "error" ? "Not checked: the message did not reach the firewall." : "Checking…"}</p>
           )}
+          {!(inp && scoreValue === null) && (
           <p className="muted small">
             Early warning on your device:{" "}
             {pc === undefined ? "running…" : pc === "error" ? "not available" : `${fmtScore(pc.score)} (${verdictWord(pc.verdict)}, ${fmtMs(pc.ms)})`}. The
             server makes the final decision.
           </p>
+          )}
         </Step>
 
         <Step n={3} title="Answered by the AI">

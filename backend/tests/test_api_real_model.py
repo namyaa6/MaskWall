@@ -81,7 +81,8 @@ def test_head_tail_mode_still_has_the_bypass_which_is_why_it_is_not_the_default(
 
 @needs_model
 def test_input_beyond_the_window_cap_is_reported_partial_and_warned(tmp_path):
-    s = Settings(db_path=tmp_path / "e.sqlite", model_dir=MODEL_DIR, max_windows=2, rate_limit="1000/minute")     # default scan mode (sliding)
+    # partial_scan="warn" is the opt-in mode that still SCANS a partially covered input (the default, "block", refuses it unscanned)
+    s = Settings(db_path=tmp_path / "e.sqlite", model_dir=MODEL_DIR, max_windows=2, partial_scan="warn", rate_limit="1000/minute")
     with TestClient(create_app(s, llm=StubLLM(), db=EventLog(":memory:"))) as c:
         r = c.post("/scan", json={"text": FILLER * 95}).json()
     assert r["input"]["coverage"] == "partial" and r["input"]["n_windows"] == 2
@@ -161,3 +162,23 @@ def test_dense_padding_that_hides_an_injection_in_the_unscanned_middle_is_blocke
     with TestClient(create_app(s, llm=llm, db=EventLog(":memory:"))) as c:
         r = c.post("/chat", json={"message": text}).json()
     assert r["input"]["coverage"] == "partial" and r["action"] == "block" and llm.calls == []
+    assert r["input"]["scored"] is False and r["input"]["score"] is None and r["input"]["n_windows"] == 0      # refused right after tokenising
+
+
+@needs_model
+def test_dense_input_is_refused_without_running_the_model_at_all(tmp_path):
+    """Day 4.19: the live Dashboard showed blocked dense inputs costing 9 to 10 s because six windows were scanned first. They are now refused
+    right after tokenising: no window, no inference time, no score, an explanation instead."""
+    text = " ".join(str(i) for i in range(1, 1400))[:7000]
+    s = Settings(db_path=tmp_path / "e.sqlite", model_dir=MODEL_DIR, rate_limit="1000/minute")
+    with TestClient(create_app(s, llm=StubLLM(), db=EventLog(":memory:"))) as c:
+        scan = c.post("/scan", json={"text": text}).json()
+        # a normal document and a short message are still scored in full
+        ok = c.post("/scan", json={"text": "What is the capital of France?"}).json()
+        doc = c.post("/scan", json={"text": FILLER * 95}).json()
+    i = scan["input"]
+    assert scan["action"] == "block" and i["coverage"] == "partial" and i["reasons"] == ["partial_scan"]
+    assert i["scored"] is False and i["score"] is None and i["n_windows"] == 0 and i["windows"] == [] and i["scanned_tokens"] == 0
+    assert scan["latency_ms"]["inference_ms"] == 0 and i["n_tokens"] > 2000 and i["n_windows_needed"] > 6
+    assert ok["input"]["scored"] is True and ok["input"]["score"] is not None and ok["action"] == "allow"
+    assert doc["input"]["scored"] is True and doc["input"]["coverage"] == "full" and doc["input"]["n_windows"] > 1

@@ -29,7 +29,7 @@ class WindowResult:
 
 @dataclass
 class ScanResult:
-    score: float                      # P(attack), max over scanned windows
+    score: float | None               # P(attack), max over scanned windows; None when scanning was skipped (see scan(skip_when_partial=...))
     coverage: str                     # "full" | "partial" (some tokens were never scanned)
     mode: str
     n_tokens: int
@@ -42,6 +42,10 @@ class ScanResult:
     @property
     def n_windows(self) -> int:
         return len(self.windows)
+
+    @property
+    def scored(self) -> bool:
+        return self.score is not None
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -92,7 +96,11 @@ class InjectionScanner:
         logits = self.session.run(["logits"], {"input_ids": ids, "attention_mask": np.ones_like(ids)})[0][0]
         return _softmax_p1(logits)
 
-    def scan(self, text: str) -> ScanResult:
+    def scan(self, text: str, *, skip_when_partial: bool = False) -> ScanResult:
+        """Score `text`. With skip_when_partial=True, an input that would only be PARTIALLY covered (it needs more windows than the cap, or
+        is longer than one window in head_tail mode) is not scored at all: the result comes back right after tokenising with score=None,
+        coverage="partial" and no windows. The API uses this when partial scans are blocked anyway (MASKWALL_PARTIAL_SCAN=block), because
+        scanning up to six windows (9 to 10 s on the free tier) cannot change that outcome."""
         t0 = time.perf_counter()
         ids = self.tokenizer.encode(text, add_special_tokens=False).ids if text.strip() else []
         tok_ms = (time.perf_counter() - t0) * 1000
@@ -110,6 +118,10 @@ class InjectionScanner:
             spans, partial = select_windows(all_spans, self.max_windows)
             batches = [ids[s:e] for s, e in spans]
             scanned = covered_tokens(spans)
+
+        if partial and skip_when_partial:
+            return ScanResult(score=None, coverage="partial", mode=self.mode, n_tokens=n, n_windows_needed=needed, windows=[],
+                              tokenize_ms=tok_ms, inference_ms=0.0, scanned_tokens=0)
 
         windows: list[WindowResult] = []
         for (s, e), content in zip(spans, batches):

@@ -16,7 +16,7 @@ class FakeScanner:
         self._active = self.max_active = 0
         self._lock = threading.Lock()
 
-    def scan(self, text: str) -> ScanResult:
+    def scan(self, text: str, *, skip_when_partial: bool = False) -> ScanResult:
         with self._lock:
             self._active += 1
             self.max_active = max(self.max_active, self._active)
@@ -27,6 +27,8 @@ class FakeScanner:
             if self.delay:
                 time.sleep(self.delay)
             n = max(len(text.split()), 1)
+            if skip_when_partial and self.coverage == "partial":        # mirrors InjectionScanner: not scored, right after tokenising
+                return ScanResult(None, "partial", self.mode, n, 7, [], 0.2, 0.0, 0)
             return ScanResult(self.score, self.coverage, self.mode, n, 1, [WindowResult(0, n, self.score, 1.5)], 0.2, 1.5, n)
         finally:
             with self._lock:

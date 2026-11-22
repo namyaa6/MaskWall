@@ -31,7 +31,9 @@ Variables (all optional except the API keys, which are only needed for /chat):
   MASKWALL_MAX_OUTPUT_TOKENS   reply token limit (default 2048). Reasoning models count hidden reasoning tokens against it, so a
                                small value truncates answers; /chat reports `truncated: true` when the limit was hit
   MASKWALL_PARTIAL_SCAN        block (default) | warn: what happens to an input too long/dense to scan completely (more than max_windows
-                               windows). warn still sends it to the LLM, so padding can hide an injection in the unscanned part
+                               windows). block refuses it right after tokenising WITHOUT running the model (no score; milliseconds, not the
+                               9 to 10 s that scanning six windows took). warn scans it and still sends it to the LLM, so padding can hide an
+                               injection in the unscanned part
   MASKWALL_DAILY_LLM_LIMIT     global cap on LLM calls per UTC day (default 500; 0 disables). Protects the free provider quotas from
                                public traffic; when reached /chat returns 429 `daily_llm_limit_reached`, /scan and blocks still work
   GROQ_MODEL / GEMINI_MODEL    model ids for the two providers

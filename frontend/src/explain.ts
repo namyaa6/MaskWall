@@ -49,6 +49,10 @@ const REASONS: Record<string, string> = {
   output_leak: "The reply appeared to leak protected information.",
 };
 
+/** Shown instead of a score when the server refuses a message it cannot scan completely (Day 4.19): no score, no meter. */
+export const UNSCORED_HEADLINE = "Too long to check completely, so it is blocked without scanning.";
+export const UNSCORED_NEXT_STEP = "Shorten it (or paste less text) and try again.";
+
 export function reasonText(reason: string): string {
   return REASONS[reason] ?? reason.replace(/[_:]/g, " ");
 }
