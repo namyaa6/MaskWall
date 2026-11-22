@@ -216,6 +216,11 @@ export function HowItWorksPage() {
             cost of the retraining that fixed the Hinglish false alarms.
           </li>
           <li>
+            <strong>Free hosting limits.</strong> The server sleeps when nobody uses it, so the first visit after a long idle shows a "Waking up the firewall" banner (the site waits up to about three minutes). I have not
+            timed a real cold start: when I tried, the server had stayed awake. It also has a small slice of one CPU, so long inputs take seconds to check, and a very long or token-dense message (long runs of numbers or
+            code) is blocked as "too long to check completely"; that check can still take 9 to 10 seconds of server time before it blocks.
+          </li>
+          <li>
             <strong>Encoded attacks</strong> (base64, letters spaced out, other scripts) are not decoded before checking.
           </li>
           <li>

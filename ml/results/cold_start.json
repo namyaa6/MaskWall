@@ -1,0 +1,23 @@
+{
+  "measured_at": "2026-11-22T16:43:04.790Z",
+  "site": "https://mask-wall.vercel.app",
+  "idle_minutes_before": 22,
+  "how": "headless Chromium on the developer machine (India), plain HTTPS; times in seconds from the start of navigation",
+  "page_loaded_s": 3.1,
+  "banner_first_visible_s": null,
+  "banner_gone_s": null,
+  "firewall_online_s": 3.6,
+  "banner_visible_for_s": null,
+  "first_health_responses": [
+    {
+      "t": 3.4509106999998913,
+      "status": 200
+    },
+    {
+      "t": 3.5595722999998833,
+      "status": 200
+    }
+  ],
+  "banner_text_seen": "",
+  "was_it_asleep": false
+}
