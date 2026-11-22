@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { dailyLimitMessage, describeError, postChat, type ChatResponse } from "../api";
+import { CopyReplyButton } from "../components/CopyReplyButton";
 import { HandledPanel, type HandledTurn } from "../components/HandledPanel";
 import { ModelStatusLine } from "../components/ModelStatus";
 import { PageHead } from "../components/PageHead";
@@ -298,7 +299,12 @@ function TurnResult({ t }: { t: Turn }) {
         {res.action !== "allow" && <span>{mainReason(res.action, res.input.reasons, res.output?.kinds)}</span>}
       </p>
       {step && <p className="next-step">{step}</p>}
-      {res.action !== "block" && res.action !== "output_blocked" && t.reply != null && <Reply text={t.reply} sensitive={t.sensitive} />}
+      {res.action !== "block" && res.action !== "output_blocked" && t.reply != null && (
+        <>
+          <Reply text={t.reply} sensitive={t.sensitive} />
+          <CopyReplyButton text={t.reply} sensitive={t.sensitive} />
+        </>
+      )}
       {res.truncated && (
         <p className="cutoff" role="note">
           Reply was cut off: it reached the length limit. Ask for a shorter answer or for the rest.

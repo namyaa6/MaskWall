@@ -147,6 +147,13 @@ th { color: var(--text-2); font-weight: 600; }
 .md blockquote { border-left: 3px solid var(--border); margin: 0 0 10px; padding-left: 10px; color: var(--text-2); }
 .md-img-blocked { color: var(--text-2); font-style: italic; }
 
+/* Copy button under an answered reply: bottom-right; shown on hover, on keyboard focus, while it reports a result, and always on touch screens */
+.reply-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 6px; }
+.reply-copy { opacity: 0; }
+.bubble-ai:hover .reply-copy, .reply-copy:focus, .reply-copy:focus-visible, .reply-copy[data-state="copied"], .reply-copy[data-state="failed"] { opacity: 1; }
+.reply-copy-note { font-size: 13.5px; color: var(--text-2); }
+@media (hover: none) { .reply-copy { opacity: 1; } }
+
 /* ------------------------------------------------------------ playground */
 .examples { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .example {
