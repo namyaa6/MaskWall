@@ -7,10 +7,9 @@
 
 **Try it: https://mask-wall.vercel.app** (the server is on free hosting that sleeps when idle: if the first visit shows "Waking up the firewall", give it up to a minute or two).
 
-![Chat: the left shows what you typed, the right shows what the AI actually received](docs/screenshots/chat.png)
+![Demo of the Chat page: a message with a name, an email address and a PAN number](docs/demo.gif)
 
-<!-- DEMO GIF: record about 20 seconds of the Chat page (type a message with a name, email and phone number; show "What the AI actually received"), save it as docs/demo.gif and replace this comment with: ![Demo](docs/demo.gif) -->
-> **Demo GIF: to be recorded** (placeholder; see the comment in the README source).
+*Demo of the Chat page: a message with personal details is masked on the device before it is sent; the panel on the right shows how it was handled.*
 
 ## How it works
 

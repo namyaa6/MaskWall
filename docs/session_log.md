@@ -337,3 +337,5 @@ npm run export-results                     # after any change in ml/results
 
 ## Day 4 addendum (2026-11-22): dense-input fix
 - The server now refuses an input that cannot be scanned completely right after tokenising (no model run, no score, milliseconds) instead of scanning six windows first (9 to 10 s on the free tier); the Playground and the Chat panel explain it. Tests: backend 440, frontend 183 (one needs network), e2e +1, live check +2. Details: decisions.md Day 4.19. The README, How it works and the backend README were updated; the open item about the dense-input cost is closed. Remaining open items for the owner: the demo GIF and a real cold-start measurement.
+
+- **Demo GIF added (2026-11-22):** `docs/demo.gif` (7.4 MiB, supplied by the owner, already cropped and optimised) now sits under the live link in the README, replacing the placeholder; the static Chat screenshot remains in the screenshot table. Remaining open item: a real cold-start measurement.
