@@ -7,9 +7,9 @@
 
 **Try it: https://mask-wall.vercel.app** (the server is on free hosting that sleeps when idle: if the first visit shows "Waking up the firewall", give it up to a minute or two).
 
-![Demo of the Chat page: a message with a name, an email address and a PAN number](docs/demo.gif)
+![Demo: Chat masks a name, email and PAN on the device; the Attack playground blocks an override and a Hinglish attack and lets a harmless Hinglish question through](docs/demo.gif)
 
-*Demo of the Chat page: a message with personal details is masked on the device before it is sent; the panel on the right shows how it was handled.*
+*Chat masks a name, email and PAN on the device; the Attack playground blocks an override and a Hinglish attack and lets a harmless Hinglish question through.*
 
 ## How it works
 
@@ -40,6 +40,8 @@ The pages: **Chat** (split screen: what you typed against what the server receiv
 | ![Chat](docs/screenshots/chat.png) | ![Playground](docs/screenshots/playground.png) |
 | **Dashboard** | **Benchmarks (speed on the deployed server)** |
 | ![Dashboard](docs/screenshots/dashboard.png) | ![Benchmarks](docs/screenshots/benchmarks.png) |
+| **A dense input is refused without scanning** | |
+| ![Too long to check completely](docs/screenshots/playground-too-long.png) | |
 
 ## Results
 
