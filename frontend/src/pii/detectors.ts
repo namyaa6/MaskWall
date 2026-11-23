@@ -1,6 +1,9 @@
 /**
- * Port of backend/app/scanners/pii_regex.py: Aadhaar (Verhoeff checksum), PAN, email, Indian mobile numbers.
- * Same patterns, same priority (Aadhaar > PAN > email > phone) and the same overlap rule; held to the same
+ * Port of backend/app/scanners/pii_regex.py: Aadhaar, PAN, email, Indian mobile numbers.
+ * Aadhaar and PAN are matched by SHAPE (12 digits; 5 letters + 4 digits + 1 letter, any case), not gated by their checks
+ * (decision Day 4.21: hiding wins over leaking). The strict checks (Aadhaar: first digit 2-9 and a valid Verhoeff checksum;
+ * PAN: the 4th letter is a holder type) only set `verified`, shown as "verified" vs "looks like" in the side panel.
+ * Same patterns, same priority (verified Aadhaar > PAN > email > phone > Aadhaar-shaped) and the same overlap rule; held to the same
  * shared cases (backend/tests/fixtures/pii_cases.json). Input is expected to be normalised first (normalize.ts),
  * so digits are ASCII; Python's Unicode-aware \w is matched with \p{L}\p{N}_ here.
  */
@@ -14,6 +17,8 @@ export interface PiiSpan {
   type: PiiType;
   /** normalised value: same value => same placeholder (e.g. "ABCPE 1234 F" and "abcpe1234f") */
   key: string;
+  /** false only for an Aadhaar/PAN-shaped value that fails the strict check: it is still hidden, and labelled "looks like" */
+  verified?: boolean;
 }
 
 // ---------------------------------------------------------------- Verhoeff
@@ -44,20 +49,31 @@ export function verhoeffCheckDigit(payload: string): string {
 }
 
 // ---------------------------------------------------------------- patterns (kept textually close to the Python ones)
-const AADHAAR = /(?<!\d)(?<!\d[ -])([2-9]\d{3}[ -]?\d{4}[ -]?\d{4})(?![ -]?\d)/g;
-const PAN = /(?<![A-Za-z0-9])([A-Za-z]{3}[PCHFATBLJGpchfatbljg][A-Za-z][ -]?\d{4}[ -]?[A-Za-z])(?![A-Za-z0-9])/g;
+const AADHAAR = /(?<!\d)(?<!\d[ -])(\d{4}[ -]?\d{4}[ -]?\d{4})(?![ -]?\d)/g;
+const PAN = /(?<![A-Za-z0-9])([A-Za-z]{5}[ -]?\d{4}[ -]?[A-Za-z])(?![A-Za-z0-9])/g;
+const PAN_HOLDER_TYPES = "PCHFATBLJG";
 const EMAIL = /(?<![\p{L}\p{N}_.+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\p{L}\p{N}_-])/gu;
 const PHONE = /(?<![\d+])(?:(?:(?:\+|00)?91[ -]?)|0)?[6-9](?:[ -]?\d){9}(?![ -]?\d)/g;
 
-/** Every valid hit, in priority order (overlaps not yet resolved). */
+/** The strict Aadhaar check: 12 digits, first digit 2-9, valid Verhoeff checksum. Only a confidence label, never a gate. */
+export const aadhaarVerified = (digits: string) => digits.length === 12 && "23456789".includes(digits[0]) && verhoeffValid(digits);
+/** The strict PAN check: the 4th letter is a valid holder type. Only a confidence label, never a gate. */
+export const panVerified = (pan: string) => pan.length === 10 && PAN_HOLDER_TYPES.includes(pan[3].toUpperCase());
+
+/** Every hit, in priority order (overlaps not yet resolved). Aadhaar-shaped values that fail the strict check come last, so a
+ *  +91 phone number (also 12 digits) stays a phone number; either way it is hidden. */
 function* candidates(text: string): Generator<PiiSpan> {
-  for (const m of text.matchAll(AADHAAR)) {
-    const digits = m[1].replace(/\D/g, "");
-    if (digits.length === 12 && verhoeffValid(digits)) yield { start: m.index!, end: m.index! + m[0].length, type: "AADHAAR", key: digits };
+  const aad = [...text.matchAll(AADHAAR)].map((m) => ({ m, digits: m[1].replace(/\D/g, "") }));
+  for (const { m, digits } of aad)
+    if (aadhaarVerified(digits)) yield { start: m.index!, end: m.index! + m[0].length, type: "AADHAAR", key: digits };
+  for (const m of text.matchAll(PAN)) {
+    const pan = m[1].replace(/[ -]/g, "").toUpperCase();
+    yield { start: m.index!, end: m.index! + m[0].length, type: "PAN", key: pan, ...(panVerified(pan) ? {} : { verified: false }) };
   }
-  for (const m of text.matchAll(PAN)) yield { start: m.index!, end: m.index! + m[0].length, type: "PAN", key: m[1].replace(/[ -]/g, "").toUpperCase() };
   for (const m of text.matchAll(EMAIL)) yield { start: m.index!, end: m.index! + m[0].length, type: "EMAIL", key: m[0].toLowerCase() };
   for (const m of text.matchAll(PHONE)) yield { start: m.index!, end: m.index! + m[0].length, type: "PHONE", key: m[0].replace(/\D/g, "").slice(-10) };
+  for (const { m, digits } of aad)
+    if (!aadhaarVerified(digits)) yield { start: m.index!, end: m.index! + m[0].length, type: "AADHAAR", key: digits, verified: false };
 }
 
 const overlaps = (a: { start: number; end: number }, b: { start: number; end: number }) => a.start < b.end && b.start < a.end;

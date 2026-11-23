@@ -4,7 +4,7 @@ import { ModelStatusLine } from "../components/ModelStatus";
 import { PageHead } from "../components/PageHead";
 import { MaskedText, ResultPill } from "../components/Pills";
 import { RiskMeter } from "../components/RiskMeter";
-import { fmtMs, fmtScore, PII_LABELS, plural, reasonText, toneFor, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP } from "../explain";
+import { describeCounts, fmtMs, fmtScore, LOOKS_LIKE_NOTE, plural, reasonText, toneFor, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP } from "../explain";
 import { normalizeText } from "../pii/normalize";
 import { PlaceholderVault } from "../pii/vault";
 import type { PrecheckResult } from "../precheck/types";
@@ -39,14 +39,9 @@ const HEADLINE = {
 interface Result {
   res: ScanResponse;
   localCounts: Record<string, number>;
+  localUnverified: Record<string, number>;
   normalizedChanged: boolean;
   pre?: PrecheckResult | "error";
-}
-
-function countsList(c: Record<string, number>): string {
-  return Object.entries(c)
-    .map(([t, n]) => plural(n, PII_LABELS[t] ?? t.toLowerCase(), t === "PAN" ? "PANs" : undefined))
-    .join(", ");
 }
 
 export function PlaygroundPage() {
@@ -76,7 +71,7 @@ export function PlaygroundPage() {
       const masked = new PlaceholderVault().mask(norm.text);
       const pending = precheck.run(masked.masked);
       const res = await postScan(masked.masked);
-      const r: Result = { res, localCounts: masked.counts as Record<string, number>, normalizedChanged: norm.changed };
+      const r: Result = { res, localCounts: masked.counts as Record<string, number>, localUnverified: masked.unverified as Record<string, number>, normalizedChanged: norm.changed };
       setResult(r);
       pending.then((pre) => setResult((cur) => (cur?.res === res ? { ...cur, pre } : cur))).catch(() => setResult((cur) => (cur?.res === res ? { ...cur, pre: "error" } : cur)));
     } catch (err) {
@@ -189,8 +184,9 @@ function ResultCard({ r }: { r: Result }) {
           <dt>Personal data found</dt>
           <dd>
             {!anyLocal && !anyServer && "None."}
-            {anyLocal && <span className="block">Hidden on your device: {countsList(r.localCounts)}.</span>}
-            {anyServer && <span className="block">Hidden by the server's backup check: {countsList(serverCounts)}.</span>}
+            {anyLocal && <span className="block">Hidden on your device: {describeCounts(r.localCounts, r.localUnverified)}.</span>}
+            {anyServer && <span className="block">Hidden by the server's backup check: {describeCounts(serverCounts, inp.pii_unverified)}.</span>}
+            {(Object.values(r.localUnverified).some(Boolean) || Object.values(inp.pii_unverified ?? {}).some(Boolean)) && <span className="block muted small">{LOOKS_LIKE_NOTE}</span>}
             <span className="block muted small">Names are only looked for in Chat (that needs the 66 MB privacy model).</span>
           </dd>
         </div>

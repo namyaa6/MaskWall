@@ -1,5 +1,5 @@
 import type { ChatResponse } from "../api";
-import { fmtMs, fmtScore, mainReason, PII_LABELS, plural, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP, type Tone } from "../explain";
+import { describeCounts, fmtMs, fmtScore, LOOKS_LIKE_NOTE, mainReason, plural, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP, type Tone } from "../explain";
 import type { PrecheckResult } from "../precheck/types";
 import { MaskedText, ResultPill } from "./Pills";
 
@@ -8,18 +8,13 @@ export interface HandledTurn {
   namesChecked: boolean;
   strict?: boolean;
   counts: Partial<Record<string, number>>;
+  /** of `counts`: Aadhaar/PAN-shaped values that failed the strict check (hidden anyway, shown as "looks like") */
+  unverified?: Partial<Record<string, number>>;
   sent: string;
   maskMs: number;
   precheck?: PrecheckResult | "error";
   res?: ChatResponse;
   status: "masking" | "sending" | "done" | "error";
-}
-
-function countsText(counts: Partial<Record<string, number>>): string {
-  const parts = Object.entries(counts)
-    .filter(([, n]) => n)
-    .map(([t, n]) => plural(n!, PII_LABELS[t] ?? t.toLowerCase(), t === "PAN" ? "PANs" : undefined));
-  return parts.join(", ");
 }
 
 const verdictWord = (v: string) => (v === "block" ? "attack" : v === "warn" ? "suspicious" : "safe");
@@ -53,7 +48,8 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
   const inp = res?.input;
   const scoreValue = inp?.score ?? null;          // null: refused right after tokenising (too long to scan completely), no score
   const serverPii = inp ? Object.values(inp.pii_masked).reduce((a, b) => a + b, 0) : 0;
-  const local = countsText(turn.counts);
+  const local = describeCounts(turn.counts, turn.unverified);
+  const anyLooksLike = Object.values(turn.unverified ?? {}).some(Boolean) || Object.values(inp?.pii_unverified ?? {}).some(Boolean);
   const llmMs = res?.latency_ms.llm_ms ?? 0;
   const serverAdded = res ? Math.max(0, res.latency_ms.total_ms - llmMs) : null;
   const pc = turn.precheck;
@@ -77,10 +73,11 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
           )}
           {inp && serverPii > 0 && (
             <p className="note-suspicious">
-              The server's backup check hid {plural(serverPii, "more detail")} ({countsText(inp.pii_masked)}), shown as S_ pills below. Your
+              The server's backup check hid {plural(serverPii, "more detail")} ({describeCounts(inp.pii_masked, inp.pii_unverified)}), shown as S_ pills below. Your
               device missed {serverPii === 1 ? "it" : "them"}, so {serverPii === 1 ? "it" : "they"} reached the server but not the AI.
             </p>
           )}
+          {anyLooksLike && <p className="muted small">{LOOKS_LIKE_NOTE}</p>}
         </Step>
 
         <Step n={2} title="Checked for attacks">

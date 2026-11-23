@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ChatResponse, InputSection } from "../api";
-import { UNSCORED_HEADLINE, UNSCORED_NEXT_STEP } from "../explain";
+import { describeCounts, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP } from "../explain";
 import { HandledPanel, type HandledTurn } from "./HandledPanel";
 
 const input = (over: Partial<InputSection>): InputSection => ({
@@ -39,3 +39,29 @@ describe("HandledPanel, step 2 (checked for attacks)", () => {
     expect(html(t)).toContain("Early warning on your device");
   });
 });
+
+describe("Day 4.21: Aadhaar/PAN are hidden by shape; the panel says 'verified' vs 'looks like'", () => {
+  it("describeCounts labels values that failed the strict check", () => {
+    expect(describeCounts({ EMAIL: 1, AADHAAR: 1 }, { AADHAAR: 1 })).toBe("1 email address, 1 Aadhaar number (looks like one, not verified)");
+    expect(describeCounts({ AADHAAR: 3 }, { AADHAAR: 2 })).toBe("3 Aadhaar numbers (1 verified, 2 only look like them)");
+    expect(describeCounts({ PAN: 2 }, { PAN: 1 })).toBe("2 PANs (1 verified, 1 only looks like one)");
+    expect(describeCounts({ PAN: 1, AADHAAR: 1 })).toBe("1 PAN, 1 Aadhaar number");
+  });
+
+  it("the device-side line and the explanation appear only when something looks like but is not verified", () => {
+    const base = { ...turn({ input: input({}) }), counts: { AADHAAR: 1 } };
+    const shaped = html({ ...base, unverified: { AADHAAR: 1 } });
+    expect(shaped).toContain("1 Aadhaar number (looks like one, not verified)");
+    expect(shaped).toContain("hidden anyway");                       // the explanation line (LOOKS_LIKE_NOTE)
+    const verified = html(base);
+    expect(verified).toContain("1 Aadhaar number");
+    expect(verified).not.toContain("not verified");
+    expect(verified).not.toContain("hidden anyway");
+  });
+
+  it("the server's backup line carries the label too", () => {
+    const out = html(turn({ input: input({ pii_masked: { AADHAAR: 1 }, pii_unverified: { AADHAAR: 1 }, masked_input: "id [S_AADHAAR_1]" }) }));
+    expect(out).toContain("1 Aadhaar number (looks like one, not verified)");
+  });
+});
+

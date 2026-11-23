@@ -176,7 +176,7 @@ def create_app(settings: Settings | None = None, *, scanner=None, llm=None, db=N
             "coverage": scan.coverage, "mode": scan.mode, "n_tokens": scan.n_tokens, "n_windows": scan.n_windows,
             "n_windows_needed": scan.n_windows_needed, "scanned_tokens": scan.scanned_tokens,
             "thresholds": {"warn": thr.warn, "block": thr.block},
-            "pii_masked": pii.counts, "masked_input": masked,
+            "pii_masked": pii.counts, "pii_unverified": pii.unverified, "masked_input": masked,
             "windows": [{"start": w.start, "end": w.end, "score": round(w.score, 4), "ms": round(w.ms, 2)} for w in scan.windows],
         }
 

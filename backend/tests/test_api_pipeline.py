@@ -80,6 +80,20 @@ def test_pii_is_masked_before_the_scanner_and_the_llm_see_the_text(tmp_path):
     assert b["input"]["pii_masked"] == {"AADHAAR": 1, "EMAIL": 1} and b["input"]["notes"] == ["pii_masked_server_side"]
     assert b["input"]["masked_input"] == scanner.calls[0] and b["action"] == "allow"
     assert db.stats()["pii_caught_server_side"] == {"AADHAAR": 1, "EMAIL": 1}
+    assert b["input"]["pii_unverified"] == {}                        # a valid Aadhaar carries no "looks like" label
+
+
+def test_aadhaar_shaped_number_that_fails_the_strict_check_is_still_hidden_and_labelled(tmp_path):
+    """Day 4.21: found on the live site: 1234 5768 9881 (first digit 1, bad checksum) was sent as typed."""
+    app, scanner, llm, db = make(tmp_path)
+    r = post_chat(app, "my aadhaar is 1234 5768 9881 and my pan is abcde1234f, please help")
+    b = r.json()
+    assert r.status_code == 200
+    for raw in ("1234 5768 9881", "abcde1234f"):
+        assert raw not in scanner.calls[0] and raw not in llm.calls[0][1]["content"] and raw not in r.text
+    assert b["input"]["pii_masked"] == {"AADHAAR": 1, "PAN": 1}
+    assert b["input"]["pii_unverified"] == {"AADHAAR": 1, "PAN": 1}
+    assert db.stats()["pii_caught_server_side"] == {"AADHAAR": 1, "PAN": 1}
 
 
 def test_browser_placeholders_pass_through_untouched(tmp_path):

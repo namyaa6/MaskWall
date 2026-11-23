@@ -97,6 +97,27 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+/**
+ * "2 emails, 1 Aadhaar number (only looks like one: it failed the strict check, hidden anyway)".
+ * Aadhaar and PAN are hidden by SHAPE (Day 4.21); `unverified` says how many of them failed the strict check
+ * (Aadhaar: first digit 2-9 and checksum; PAN: holder letter), so the panel can say "verified" vs "looks like".
+ */
+export function describeCounts(counts: Partial<Record<string, number>>, unverified: Partial<Record<string, number>> = {}): string {
+  return Object.entries(counts)
+    .filter(([, n]) => n)
+    .map(([t, n]) => {
+      const base = plural(n!, PII_LABELS[t] ?? t.toLowerCase(), t === "PAN" ? "PANs" : undefined);
+      const u = Math.min(unverified[t] ?? 0, n!);
+      if (!u) return base;
+      return u === n ? `${base} (looks like ${n === 1 ? "one" : "them"}, not verified)` : `${base} (${n! - u} verified, ${u} ${u === 1 ? "only looks like one" : "only look like them"})`;
+    })
+    .join(", ");
+}
+
+/** One line under the counts when anything was hidden by shape only. */
+export const LOOKS_LIKE_NOTE =
+  "“Looks like” means the value has the shape of an Aadhaar number (12 digits) or a PAN (5 letters, 4 digits, 1 letter) but failed the strict check (checksum, first digit or holder letter). It was hidden anyway: hiding too much is better than leaking.";
+
 export const fmtScore = (s: number) => s.toFixed(2);
 export function fmtMs(ms: number | null | undefined): string {
   if (ms == null) return "–";

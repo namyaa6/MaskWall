@@ -89,6 +89,7 @@ export interface InputSection {
   scanned_tokens: number;
   thresholds: { warn: number; block: number };
   pii_masked: Record<string, number>;   // what the SERVER's backup masking caught (placeholders [S_...])
+  pii_unverified?: Record<string, number>;   // of pii_masked: Aadhaar/PAN-shaped values that failed the strict check (hidden anyway)
   masked_input: string;                 // exactly what the scanner and the AI received
   windows: { start: number; end: number; score: number; ms: number }[];
 }

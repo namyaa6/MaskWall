@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from app.normalize import normalize_text
-from app.scanners.pii_regex import mask, scan, verhoeff_check_digit, verhoeff_valid
+from app.scanners.pii_regex import aadhaar_verified, mask, pan_verified, scan, verhoeff_check_digit, verhoeff_valid
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "pii_cases.json").read_text(encoding="utf-8"))
 SERVER_PREFIX = "S_"
@@ -27,6 +27,7 @@ def aadhaar(payload="23456789012"):
 def test_shared_pii_case(case):
     r = mask(case["text"])
     assert r.counts == case["counts"]
+    assert r.unverified == case.get("unverified", {})          # hidden by shape only ("looks like"), strict check failed
     if "masked" in case:
         assert r.masked_text == case["masked"].replace("{P}", SERVER_PREFIX)
 
@@ -99,3 +100,30 @@ def test_spans_point_at_original_text():
     text = f"x {n} y"
     f = scan(text)[0]
     assert text[f.start:f.end] == n and f.type == "AADHAAR"
+
+
+# ------------------------------------------------------------------ shape-based Aadhaar/PAN (Day 4.21): strict checks are labels, not gates
+def test_strict_checks_are_only_labels():
+    n = aadhaar()
+    assert aadhaar_verified(n) and not aadhaar_verified(n[:-1] + str((int(n[-1]) + 1) % 10))   # bad checksum
+    assert not aadhaar_verified("0" + n[1:]) and not aadhaar_verified("1" + n[1:])             # first digit 0 / 1
+    assert pan_verified("ABCPE1234F") and pan_verified("abcpe1234f") and not pan_verified("ABCDE1234F")
+
+
+def test_findings_carry_the_verified_flag():
+    n = aadhaar()
+    good = scan(f"{n} ABCPE1234F")
+    assert [f.verified for f in good] == [True, True]
+    bad = scan("1234 5768 9881 ABCDE1234F")
+    assert [f.type for f in bad] == ["AADHAAR", "PAN"] and [f.verified for f in bad] == [False, False]
+
+
+def test_plus91_phone_is_still_a_phone_and_not_an_unverified_aadhaar():
+    r = mask("call +919876543210 or 91-9876543210")
+    assert r.counts == {"PHONE": 2} and r.unverified == {}
+
+
+def test_unverified_values_are_still_numbered_and_never_leaked_in_findings():
+    r = mask("1234 5768 9881 and 123457689881 and 2222 3333 4444")
+    assert r.masked_text == "[S_AADHAAR_1] and [S_AADHAAR_1] and [S_AADHAAR_2]"
+    assert "1234" not in repr(r.findings)

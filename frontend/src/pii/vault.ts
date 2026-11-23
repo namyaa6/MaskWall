@@ -16,6 +16,8 @@ export interface MaskOutcome {
   /** one entry per masked occurrence (no raw values) */
   findings: { type: PiiType; placeholder: string }[];
   counts: Partial<Record<PiiType, number>>;
+  /** of `counts`: Aadhaar/PAN-shaped values that failed the strict check (hidden anyway, shown as "looks like") */
+  unverified: Partial<Record<PiiType, number>>;
 }
 
 const PLACEHOLDER = new RegExp(`\\[(${PII_TYPES.join("|")})_(\\d+)\\]`, "g");
@@ -32,6 +34,7 @@ export class PlaceholderVault {
     const spans = detect(text, extra);
     const findings: MaskOutcome["findings"] = [];
     const counts: MaskOutcome["counts"] = {};
+    const unverified: MaskOutcome["unverified"] = {};
     let out = "";
     let pos = 0;
     for (const s of spans) {
@@ -40,9 +43,10 @@ export class PlaceholderVault {
       pos = s.end;
       findings.push({ type: s.type, placeholder: ph });
       counts[s.type] = (counts[s.type] ?? 0) + 1;
+      if (s.verified === false) unverified[s.type] = (unverified[s.type] ?? 0) + 1;
     }
     out += text.slice(pos);
-    return { masked: out, findings, counts };
+    return { masked: out, findings, counts, unverified };
   }
 
   /** Replace this vault's placeholders with the original values. Unknown placeholders (including [S_...]) are left as they are. */

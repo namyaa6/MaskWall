@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { detect, verhoeffCheckDigit, verhoeffValid } from "./detectors";
+import { aadhaarVerified, detect, panVerified, verhoeffCheckDigit, verhoeffValid } from "./detectors";
 import { normalizeText } from "./normalize";
 import { PlaceholderVault } from "./vault";
 
 // The same cases the backend's pytest suite runs (backend/tests/test_pii_regex.py), with the browser prefix "".
-interface PiiCase { id: string; text: string; counts: Record<string, number>; masked?: string }
+interface PiiCase { id: string; text: string; counts: Record<string, number>; masked?: string; unverified?: Record<string, number> }
 interface NormCase { id: string; text: string; normalized: string; smuggling: number; invisible: number }
 const FIXTURE = JSON.parse(
   readFileSync(new URL("../../../backend/tests/fixtures/pii_cases.json", import.meta.url), "utf8"),
@@ -18,6 +18,7 @@ describe("shared fixture: detectors and masking (same cases as the server)", () 
     it(c.id, () => {
       const r = new PlaceholderVault().mask(c.text);
       expect(r.counts).toEqual(c.counts);
+      expect(r.unverified).toEqual(c.unverified ?? {});          // hidden by shape only ("looks like"): strict check failed
       if (c.masked !== undefined) expect(r.masked).toBe(c.masked.replaceAll("{P}", ""));
     });
   }
@@ -138,5 +139,52 @@ describe("vault", () => {
     const text = `x ${n} y`;
     const [s] = detect(text);
     expect(text.slice(s.start, s.end)).toBe(n);
+  });
+});
+
+describe("shape-based Aadhaar and PAN (Day 4.21): the strict checks are labels, not gates", () => {
+  it("the strict checks themselves", () => {
+    const n = aadhaar();
+    expect(aadhaarVerified(n)).toBe(true);
+    expect(aadhaarVerified(n.slice(0, -1) + String((Number(n.at(-1)) + 1) % 10))).toBe(false);   // bad checksum
+    expect(aadhaarVerified("0" + n.slice(1))).toBe(false);                                         // first digit 0
+    expect(aadhaarVerified("1" + n.slice(1))).toBe(false);                                         // first digit 1
+    expect(panVerified("ABCPE1234F") && panVerified("abcpe1234f")).toBe(true);
+    expect(panVerified("ABCDE1234F")).toBe(false);
+  });
+
+  it("the exact input from the live bug report is hidden and labelled 'looks like'", () => {
+    const r = new PlaceholderVault().mask("My name is Asha Rao, email asha@example.com, Aadhaar 1234 5768 9881.");
+    expect(r.masked).toBe("My name is Asha Rao, email [EMAIL_1], Aadhaar [AADHAAR_1].");
+    expect(r.unverified).toEqual({ AADHAAR: 1 });
+  });
+
+  it("an invalid checksum, a leading 0 or 1, ABCDE1234F and a lowercase PAN are all hidden", () => {
+    const cases: [string, string][] = [
+      ["234567890125", "[AADHAAR_1]"],
+      ["034567890128", "[AADHAAR_1]"],
+      ["1345-6789-0129", "[AADHAAR_1]"],
+      ["ABCDE1234F", "[PAN_1]"],
+      ["abcde1234f", "[PAN_1]"],
+    ];
+    for (const [text, masked] of cases) {
+      const r = new PlaceholderVault().mask(text);
+      expect(r.masked, text).toBe(masked);
+      expect(Object.values(r.unverified).reduce((a, b) => a! + b!, 0), text).toBe(1);
+    }
+  });
+
+  it("a verified Aadhaar and PAN carry no 'looks like' label", () => {
+    expect(new PlaceholderVault().mask(`${aadhaar()} ABCPE1234F`).unverified).toEqual({});
+  });
+
+  it("a 12-digit number inside a longer run is NOT cut out (card numbers, 16-digit ids)", () => {
+    for (const text of ["id 1234567890123456", "card 4111 1111 1111 1111", "ref 1234 5768 9881 7", "13 digits 1234567890124"]) {
+      expect(detect(text), text).toEqual([]);
+    }
+  });
+
+  it("a +91 phone number (also 12 digits) stays a phone number", () => {
+    expect(new PlaceholderVault().mask("call +919876543210")).toMatchObject({ masked: "call [PHONE_1]", counts: { PHONE: 1 }, unverified: {} });
   });
 });

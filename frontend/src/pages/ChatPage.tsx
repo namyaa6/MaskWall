@@ -100,7 +100,7 @@ export function ChatPage() {
     if (!raw.trim() || busy) return;
     const id = nextId.current++;
     const norm = normalizeText(raw);        // same normalisation as the server, before masking
-    const base: Turn = { id, original: raw, sent: norm.text, privacyOn, strict, namesChecked: false, counts: {}, hiddenCount: 0, maskMs: 0, status: "masking" };
+    const base: Turn = { id, original: raw, sent: norm.text, privacyOn, strict, namesChecked: false, counts: {}, unverified: {}, hiddenCount: 0, maskMs: 0, status: "masking" };
     setTurns((ts) => [...ts, base]);
     setSelected(id);
     setDraft("");
@@ -127,7 +127,7 @@ export function ChatPage() {
         const out = vault.current.mask(norm.text, names);
         sent = out.masked;
         // time on the device = name model inference + regex masking (a first-time download is not counted)
-        update(id, { sent, counts: out.counts, hiddenCount: out.findings.length, namesChecked, maskMs: nerMs + (performance.now() - t1), status: "sending" });
+        update(id, { sent, counts: out.counts, unverified: out.unverified, hiddenCount: out.findings.length, namesChecked, maskMs: nerMs + (performance.now() - t1), status: "sending" });
       } else {
         update(id, { status: "sending" });
       }
