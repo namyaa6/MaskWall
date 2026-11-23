@@ -57,7 +57,7 @@ describe("Verhoeff", () => {
 describe("vault", () => {
   it("round trip: mask then unmask restores the user's text exactly", () => {
     const v = new PlaceholderVault();
-    const text = "Mail Priya.Sharma@example.co.in or call +91 98765 43210, PAN abcpe-1234-f, aadhaar 2345 6789 0124.";
+    const text = "Mail Priya.Sharma@example.co.in or call +91 98765 43210, PAN ABCPE-1234-F, aadhaar 2345 6789 0124.";
     const r = v.mask(text);
     expect(r.masked).toBe("Mail [EMAIL_1] or call [PHONE_1], PAN [PAN_1], aadhaar [AADHAAR_1].");
     expect(v.unmask(r.masked)).toBe(text);

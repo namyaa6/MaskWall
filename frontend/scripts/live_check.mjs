@@ -25,6 +25,7 @@ const page = await ctx.newPage();
 const problems = [];
 const requests = [];
 const chatBodies = [];
+const scanBodies = [];
 page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
 page.on("console", (m) => {
   // the CSP probe in check 1b deliberately loads a blocked image, which the browser logs as an error: that is the expected proof, not a problem
@@ -33,6 +34,7 @@ page.on("console", (m) => {
 page.on("request", (r) => {
   requests.push(r.url());
   if (r.method() === "POST" && r.url().endsWith("/chat")) chatBodies.push(r.postData() ?? "");
+  if (r.method() === "POST" && r.url().endsWith("/scan")) scanBodies.push(r.postData() ?? "");
 });
 const shot = async (name) => shotsDir && (await page.screenshot({ path: join(shotsDir, name) }));
 
@@ -101,6 +103,21 @@ try {
     unscoredText.slice(0, 80).replace(/\n/g, " "));
   await shot("playground-too-long.png");
 
+  // 4c. Aadhaar and PAN are hidden by SHAPE on the device, even when the checksum, first digit or holder letter fail (Day 4.21 and 4.22;
+  //     the exact inputs from the owner's bug report). Scan only: no AI call.
+  const aadhaarRaw = "1234 5768 9881";
+  const panRaw = "ABCDE1234F";
+  const scansBefore = scanBodies.length;
+  await page.getByLabel("Message to check").fill(`My Aadhaar is ${aadhaarRaw} and my PAN is ${panRaw}, please help.`);
+  await page.getByRole("button", { name: "Check message" }).click();
+  await page.getByText(/Hidden on your device/).waitFor({ timeout: 60_000 });
+  const personal = await page.getByText(/Hidden on your device/).first().innerText();
+  check("Playground: a made-up Aadhaar (starts with 1, bad checksum) and a PAN with a non-holder 4th letter are hidden on the device and labelled 'looks like'",
+    /Aadhaar number \(looks like one, not verified\)/.test(personal) && /PAN \(looks like one, not verified\)/.test(personal), personal.replace(/\s+/g, " ").slice(0, 160));
+  const scanBody = scanBodies.slice(scansBefore).find((b) => b.includes("please help")) ?? "";
+  check("...and the request that left the browser carries [AADHAAR_1] and [PAN_1], never the digits or the PAN",
+    scanBody.includes("[AADHAAR_1]") && scanBody.includes("[PAN_1]") && !scanBody.includes(aadhaarRaw) && !scanBody.includes("12345768") && !scanBody.includes(panRaw), scanBody.slice(0, 120));
+
   // 5. Dashboard shows live numbers
   await page.goto(`${site}/dashboard`);
   await page.getByText(/never saved|never stored/i).first().waitFor({ timeout: 60_000 });
@@ -132,6 +149,11 @@ try {
   check("...without scanning it: no score, no windows, no model time, and answered in well under a second (it used to take 9 to 10 s)",
     scan.input?.scored === false && scan.input?.score === null && scan.input?.n_windows === 0 && scan.latency_ms?.inference_ms === 0 && scan.latency_ms?.total_ms < 1000,
     `scored=${scan.input?.scored}, windows=${scan.input?.n_windows}, inference ${scan.latency_ms?.inference_ms} ms, total ${scan.latency_ms?.total_ms} ms`);
+  // the server's own backup net has the same shape rule: send the raw text straight to the API (as if the browser had missed it)
+  const raw = await (await fetch(`${apiBase}/scan`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: `My Aadhaar is ${aadhaarRaw} and my PAN is ${panRaw}, please help.` }) })).json();
+  check("backend backup scanner hides the same two values by shape and reports them as unverified",
+    raw.input?.masked_input === "My Aadhaar is [S_AADHAAR_1] and my PAN is [S_PAN_1], please help." && raw.input?.pii_unverified?.AADHAAR === 1 && raw.input?.pii_unverified?.PAN === 1,
+    String(raw.input?.masked_input).slice(0, 90));
   const health = await (await fetch(`${apiBase}/health`)).json();
   check("backend /health reports the daily limit", typeof health.daily_llm_limit === "number", JSON.stringify({ limit: health.daily_llm_limit, remaining: health.daily_llm_remaining }));
 

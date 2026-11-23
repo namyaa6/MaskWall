@@ -50,7 +50,8 @@ export function verhoeffCheckDigit(payload: string): string {
 
 // ---------------------------------------------------------------- patterns (kept textually close to the Python ones)
 const AADHAAR = /(?<!\d)(?<!\d[ -])(\d{4}[ -]?\d{4}[ -]?\d{4})(?![ -]?\d)/g;
-const PAN = /(?<![A-Za-z0-9])([A-Za-z]{5}[ -]?\d{4}[ -]?[A-Za-z])(?![A-Za-z0-9])/g;
+// together: any case; with spaces or hyphens: UPPERCASE only (Day 4.22), so "early 1990s" is not a PAN
+const PAN = /(?<![A-Za-z0-9])([A-Za-z]{5}\d{4}[A-Za-z]|[A-Z]{5}[ -]?\d{4}[ -]?[A-Z])(?![A-Za-z0-9])/g;
 const PAN_HOLDER_TYPES = "PCHFATBLJG";
 const EMAIL = /(?<![\p{L}\p{N}_.+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\p{L}\p{N}_-])/gu;
 const PHONE = /(?<![\d+])(?:(?:(?:\+|00)?91[ -]?)|0)?[6-9](?:[ -]?\d){9}(?![ -]?\d)/g;

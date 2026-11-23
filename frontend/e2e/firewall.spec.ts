@@ -97,6 +97,24 @@ test("playground: the Hinglish attack example is blocked, the harmless Hinglish 
   await expect(page.getByRole("heading", { name: /Safe: this would be sent to the AI\./ })).toBeVisible();
 });
 
+test("playground: a made-up Aadhaar and a PAN with an unusual 4th letter are hidden by shape on the device and labelled 'looks like' (Day 4.21)", async ({ page }) => {
+  const sent: string[] = [];
+  page.on("request", (r: Request) => {
+    if (r.method() === "POST" && r.url().endsWith("/scan")) sent.push(r.postData() ?? "");
+  });
+  await page.goto("/playground");
+  await page.getByLabel("Message to check").fill("My Aadhaar is 1234 5768 9881 and my PAN is ABCDE1234F, please help.");   // the exact inputs from the bug report
+  await page.getByRole("button", { name: "Check message" }).click();
+  const personal = page.getByText(/Hidden on your device/).first();
+  await expect(personal).toContainText("Aadhaar number (looks like one, not verified)");
+  await expect(personal).toContainText("PAN (looks like one, not verified)");
+  expect(sent).toHaveLength(1);
+  expect(sent[0]).toContain("[AADHAAR_1]");
+  expect(sent[0]).toContain("[PAN_1]");
+  expect(sent[0]).not.toContain("1234 5768 9881");
+  expect(sent[0]).not.toContain("ABCDE1234F");
+});
+
 test("playground: a token-dense input is refused without scanning, with an explanation and no score (Day 4.19)", async ({ page }) => {
   const dense = Array.from({ length: 1400 }, (_, i) => i + 1).join(" ").slice(0, 7000);
   await page.goto("/playground");

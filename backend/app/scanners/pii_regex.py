@@ -53,8 +53,9 @@ def verhoeff_check_digit(payload: str) -> str:
 # Aadhaar shape: 12 digits (any first digit), optionally in 4-4-4 groups; not part of a longer digit run (also across single
 # space/hyphen separators, so card numbers are not cut up)
 _AADHAAR = re.compile(r"(?<!\d)(?<!\d[ -])(\d{4}[ -]?\d{4}[ -]?\d{4})(?![ -]?\d)")
-# PAN shape: 5 letters, 4 digits, 1 letter, any case; the 4th letter is checked separately (_PAN_HOLDER_TYPES)
-_PAN = re.compile(r"(?<![A-Za-z0-9])([A-Za-z]{5}[ -]?\d{4}[ -]?[A-Za-z])(?![A-Za-z0-9])")
+# PAN shape: 5 letters, 4 digits, 1 letter. Written together it is matched in any case; with spaces or hyphens only in UPPERCASE
+# (Day 4.22: lowercase phrases such as "early 1990s" or "write 1000s" are not PANs). The 4th letter is checked separately.
+_PAN = re.compile(r"(?<![A-Za-z0-9])([A-Za-z]{5}\d{4}[A-Za-z]|[A-Z]{5}[ -]?\d{4}[ -]?[A-Z])(?![A-Za-z0-9])")
 _PAN_HOLDER_TYPES = frozenset("PCHFATBLJG")
 _EMAIL = re.compile(r"(?<![\w.+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w-])")
 _PHONE = re.compile(r"(?<![\d+])(?:(?:(?:\+|00)?91[ -]?)|0)?[6-9](?:[ -]?\d){9}(?![ -]?\d)")

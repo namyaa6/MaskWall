@@ -2,15 +2,9 @@
   "train (benign)": {
     "texts": 5924,
     "strict": 3,
-    "shape": 6,
-    "shape_contiguous_pan": 2,
+    "shape": 2,
+    "shape_421": 6,
     "newly_hidden_examples": [
-      {
-        "matched": [
-          "Ryzen 4000 G"
-        ],
-        "context": " Ryzen 5 3400G & Ryzen 3 3200G) and AMD Ryzen 4000 G-Series desktop processors\nSupports DDR4"
-      },
       {
         "matched": [
           "012345678901"
@@ -28,84 +22,84 @@
   "val (benign)": {
     "texts": 715,
     "strict": 1,
-    "shape": 1,
-    "shape_contiguous_pan": 0,
+    "shape": 0,
+    "shape_421": 1,
     "newly_hidden_examples": []
   },
   "test (benign)": {
     "texts": 717,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "xstest_safe (benign)": {
     "texts": 250,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "indirect_eval (benign)": {
     "texts": 114,
     "strict": 1,
-    "shape": 1,
-    "shape_contiguous_pan": 0,
+    "shape": 0,
+    "shape_421": 1,
     "newly_hidden_examples": []
   },
   "tricky (benign)": {
     "texts": 28,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "hardneg_train (benign)": {
     "texts": 1142,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "hardneg_val (benign)": {
     "texts": 262,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "prompt_talk_benign_ai": {
     "texts": 100,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "pii_names_sample (name sentences)": {
     "texts": 62,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "pii_names_lowercase (name sentences)": {
     "texts": 120,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "pii_names_lowercase_r2 (name sentences)": {
     "texts": 120,
     "strict": 0,
     "shape": 0,
-    "shape_contiguous_pan": 0,
+    "shape_421": 0,
     "newly_hidden_examples": []
   },
   "TOTAL": {
     "texts": 9554,
     "strict": 5,
-    "shape": 8,
-    "shape_contiguous_pan": 2
+    "shape": 2,
+    "shape_421": 8
   }
 }
