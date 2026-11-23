@@ -1,7 +1,8 @@
 import type { ChatResponse } from "../api";
 import { describeCounts, fmtMs, fmtScore, LOOKS_LIKE_NOTE, mainReason, plural, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP, type Tone } from "../explain";
 import type { PrecheckResult } from "../precheck/types";
-import { MaskedText, ResultPill } from "./Pills";
+import { Fragment } from "react";
+import { MaskedText, placeholderLegend, ResultPill } from "./Pills";
 
 export interface HandledTurn {
   privacyOn: boolean;
@@ -54,8 +55,7 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
   const serverAdded = res ? Math.max(0, res.latency_ms.total_ms - llmMs) : null;
   const pc = turn.precheck;
   const receivedText = inp ? inp.masked_input : turn.sent;
-  const hasServerPh = /\[S_(NAME|EMAIL|PHONE|AADHAAR|PAN)_\d+\]/.test(receivedText);
-  const hasDevicePh = /\[(NAME|EMAIL|PHONE|AADHAAR|PAN)_\d+\]/.test(receivedText);
+  const legend = placeholderLegend(receivedText);       // only the placeholder types that are really in this message
 
   return (
     <aside className="card handled" aria-label="How this message was handled" aria-live="polite">
@@ -154,17 +154,27 @@ export function HandledPanel({ turn }: { turn: HandledTurn | null }) {
         <p className="received-text">
           <MaskedText text={receivedText} />
         </p>
-        {(hasDevicePh || hasServerPh) && (
-          <p className="muted small">
-            {hasDevicePh && (
+        {(legend.device.length > 0 || legend.server.length > 0) && (
+          <p className="muted small" data-testid="ph-legend">
+            {legend.device.length > 0 && (
               <>
-                <span className="ph">[EMAIL_1]</span> hidden on your device
+                {legend.device.map((ph) => (
+                  <Fragment key={ph}>
+                    <span className="ph">{ph}</span>{" "}
+                  </Fragment>
+                ))}
+                hidden on your device
               </>
             )}
-            {hasDevicePh && hasServerPh && " · "}
-            {hasServerPh && (
+            {legend.device.length > 0 && legend.server.length > 0 && " · "}
+            {legend.server.length > 0 && (
               <>
-                <span className="ph ph-server">[S_EMAIL_1]</span> hidden by the server's backup check
+                {legend.server.map((ph) => (
+                  <Fragment key={ph}>
+                    <span className="ph ph-server">{ph}</span>{" "}
+                  </Fragment>
+                ))}
+                hidden by the server's backup check
               </>
             )}
           </p>

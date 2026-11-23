@@ -97,6 +97,41 @@ test("playground: the Hinglish attack example is blocked, the harmless Hinglish 
   await expect(page.getByRole("heading", { name: /Safe: this would be sent to the AI\./ })).toBeVisible();
 });
 
+test("chat: 'Aadhaar 1234 5768 9881 and PAN ABCDE1234F' hides exactly 2 details (the name model must not call 'Aadhaar' a person), and the legend lists only what is there (Day 4.24)", async ({ page }) => {
+  const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "POST, OPTIONS" };
+  const sent: string[] = [];
+  await page.route(`${API}/chat`, async (route) => {                                              // the API only, not the page at /chat
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors });
+    const message = (JSON.parse(route.request().postData() ?? "{}") as { message: string }).message;
+    sent.push(message);
+    return route.fulfill({
+      status: 200,
+      headers: cors,
+      contentType: "application/json",
+      body: JSON.stringify({
+        request_id: "e2e-ids", action: "allow", response: "Noted.",
+        input: { score: 0.01, scored: true, verdict: "allow", reasons: [], notes: [], hidden_characters_removed: 0, coverage: "full", mode: "head_tail", n_tokens: 10, n_windows: 1, n_windows_needed: 1, scanned_tokens: 10, thresholds: { warn: 0.5, block: 0.9 }, pii_masked: {}, pii_unverified: {}, masked_input: message, windows: [] },
+        latency_ms: { pii_ms: 1, tokenize_ms: 1, inference_ms: 1, total_ms: 3 }, truncated: false, output: null, llm: null,
+      }),
+    });
+  });
+
+  for (const strict of [false, true]) {
+    sent.length = 0;
+    await page.goto("/chat");
+    if (strict) await page.getByRole("switch", { name: "Strict name hiding" }).check();
+    await page.getByLabel("Your message").fill("Aadhaar 1234 5768 9881 and PAN ABCDE1234F");       // the exact sentence from the report
+    await page.getByRole("button", { name: "Send" }).click();
+    await expect(page.getByText("2 personal details hidden before sending")).toBeVisible({ timeout: 4 * 60_000 });   // first run downloads the name model
+    expect(sent, `strict=${strict}`).toEqual(["Aadhaar [AADHAAR_1] and PAN [PAN_1]"]);              // no [NAME_1]: the word "Aadhaar" stays
+    const legend = page.getByTestId("ph-legend");
+    await expect(legend).toContainText("[AADHAAR_1]");
+    await expect(legend).toContainText("[PAN_1]");
+    await expect(legend).not.toContainText("[EMAIL_1]");
+    await expect(legend).not.toContainText("[NAME_1]");
+  }
+});
+
 test("playground: a made-up Aadhaar and a PAN with an unusual 4th letter are hidden by shape on the device and labelled 'looks like' (Day 4.21)", async ({ page }) => {
   const sent: string[] = [];
   page.on("request", (r: Request) => {

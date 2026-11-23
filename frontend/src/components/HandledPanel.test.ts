@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { ChatResponse, InputSection } from "../api";
 import { describeCounts, UNSCORED_HEADLINE, UNSCORED_NEXT_STEP } from "../explain";
 import { HandledPanel, type HandledTurn } from "./HandledPanel";
+import { placeholderLegend } from "./Pills";
 
 const input = (over: Partial<InputSection>): InputSection => ({
   score: 0.01, scored: true, verdict: "allow", reasons: [], notes: [], hidden_characters_removed: 0, coverage: "full", mode: "sliding", n_tokens: 12,
@@ -65,3 +66,33 @@ describe("Day 4.21: Aadhaar/PAN are hidden by shape; the panel says 'verified' v
   });
 });
 
+describe("Day 4.24: the legend under 'What the AI actually received' lists only the placeholder types that are in the message", () => {
+  const legendOf = (masked: string): string | null => {
+    const out = html(turn({ input: input({ masked_input: masked }) }));
+    return /<p[^>]*data-testid="ph-legend"[^>]*>(.*?)<\/p>/s.exec(out)?.[1] ?? null;
+  };
+  const plain = (h: string) => h.replace(/<[^>]+>/g, "").replace(/&#x27;/g, "'").replace(/\s+/g, " ").trim();
+
+  it("the reported message (Aadhaar and PAN, no email) names Aadhaar and PAN and never an email", () => {
+    const l = legendOf("Aadhaar [AADHAAR_1] and PAN [PAN_1]")!;
+    expect(plain(l)).toBe("[AADHAAR_1] [PAN_1] hidden on your device");
+    expect(l).not.toContain("EMAIL");
+  });
+
+  it("one example per type, even when a type occurs several times", () => {
+    expect(plain(legendOf("[EMAIL_1] wrote to [EMAIL_2] and [NAME_1], call [PHONE_1]")!)).toBe("[EMAIL_1] [NAME_1] [PHONE_1] hidden on your device");
+  });
+
+  it("server-only and mixed messages say which layer hid what", () => {
+    expect(plain(legendOf("hello [S_EMAIL_1]")!)).toBe("[S_EMAIL_1] hidden by the server's backup check");
+    expect(plain(legendOf("[NAME_1] and [S_PAN_1] and [S_EMAIL_1]")!)).toBe("[NAME_1] hidden on your device · [S_PAN_1] [S_EMAIL_1] hidden by the server's backup check");
+  });
+
+  it("is not shown at all when the message has no placeholders", () => {
+    expect(legendOf("just a plain message")).toBeNull();
+  });
+
+  it("placeholderLegend() itself ignores look-alikes", () => {
+    expect(placeholderLegend("[EMAIL_x] [CARD_1] [email_1] [S_NAME_2]")).toEqual({ device: [], server: ["[S_NAME_2]"] });
+  });
+});

@@ -21,7 +21,7 @@ const JOURNEY = [
 ];
 
 const PII_ROWS = [
-  { type: "Name", how: `A small AI model running in your browser (${NER.model.split("/")[1]}, about ${Math.round(NER.q8_mb)} MB, downloaded once). Names typed in lowercase are often missed: switch on Strict name hiding in Chat to catch more of them`, example: "Priya Sharma", ph: "[NAME_1]" },
+  { type: "Name", how: `A small AI model running in your browser (${NER.model.split("/")[1]}, about ${Math.round(NER.q8_mb)} MB, downloaded once). Names typed in lowercase are often missed: switch on Strict name hiding in Chat to catch more of them. Words such as Aadhaar, PAN, UPI or Passport are never treated as names (a person called “Pan” would not be hidden)`, example: "Priya Sharma", ph: "[NAME_1]" },
   { type: "Email address", how: "Pattern: something@domain.tld", example: "asha@example.com", ph: "[EMAIL_1]" },
   { type: "Indian mobile number", how: "Pattern: 10 digits starting with 6 to 9, with or without +91, 0, spaces or hyphens", example: "+91 98765 43210", ph: "[PHONE_1]" },
   { type: "Aadhaar number", how: "Anything shaped like 12 digits (any first digit), written together or in groups of four with spaces or hyphens. If it also passes the strict check (first digit 2 to 9 and a valid Verhoeff checksum) the panel calls it verified; if not, it is still hidden and the panel says it looks like one. Longer digit runs (card numbers) are left alone, and an ordinary 12-digit account or barcode number gets hidden too", example: "1234 5768 9881 (made up)", ph: "[AADHAAR_1]" },

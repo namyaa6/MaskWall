@@ -12,7 +12,9 @@ import { loadNer } from "../pii/nerModel";
 export interface Job {
   approach: NameApproach;
   config: CommonWordConfig | null;     // null: no word set (approach A ignores it; round-1 behaviour otherwise)
-  dataset: "existing" | "dev" | "fresh";
+  dataset: "existing" | "dev" | "fresh" | "custom";
+  /** only for dataset "custom" (Day 4.24, scripts/bench_nonname_filter.ts): sentences to run, no gold names */
+  texts?: string[];
 }
 export interface JobResult {
   predicted: { start: number; end: number }[][];
@@ -62,6 +64,7 @@ async function main() {
       let rows: (NameGold & { set?: string })[];
       if (job.dataset === "existing") rows = parse(existingRaw);
       else if (job.dataset === "dev") rows = parse(devRaw);
+      else if (job.dataset === "custom") rows = (job.texts ?? []).map((text, id) => ({ id, category: "custom", text, names: [] }));
       else rows = freshRows ??= parse(await loadFresh());
       const words = wordsFor(job.config);
       const predicted: { start: number; end: number }[][] = [];

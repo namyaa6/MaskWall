@@ -12,6 +12,24 @@ export function ActionPill({ action, label }: { action: string; label: string })
 const PLACEHOLDER = /\[(S_)?(NAME|EMAIL|PHONE|AADHAAR|PAN)_(\d+)\]/g;
 
 /**
+ * The placeholder types that actually occur in `text`, one example placeholder per type in order of first appearance, split into
+ * "hidden on your device" ([EMAIL_1]) and "hidden by the server's backup check" ([S_EMAIL_1]). Used for the legend under
+ * "What the AI actually received", so it never names a type (for example an email) that is not in the message.
+ */
+export function placeholderLegend(text: string): { device: string[]; server: string[] } {
+  const seen = new Set<string>();
+  const out = { device: [] as string[], server: [] as string[] };
+  for (const m of text.matchAll(PLACEHOLDER)) {
+    const server = Boolean(m[1]);
+    const key = `${server}:${m[2]}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    (server ? out.server : out.device).push(m[0]);
+  }
+  return out;
+}
+
+/**
  * Renders text with placeholders as light monospace pills. [EMAIL_1] = hidden on your device; [S_EMAIL_1] = hidden by the
  * server's backup scanner (the browser missed it). Plain text otherwise (no HTML is ever interpreted).
  */

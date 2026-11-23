@@ -8,12 +8,13 @@
  */
 import type { PiiSpan } from "./detectors";
 import { detectNames, type CommonWords, type NameModel } from "./nameApproaches";
+import { dropNonNames } from "./nonNames";
 
 export type NameMode = "standard" | "strict";
 
 export async function detectNamesForMode(mode: NameMode, text: string, model: NameModel, loadWords: () => Promise<CommonWords>): Promise<PiiSpan[]> {
-  if (mode === "strict") return detectNames("B", text, model, await loadWords());
-  return model.detect(text);
+  const spans = mode === "strict" ? await detectNames("B", text, model, await loadWords()) : await model.detect(text);
+  return dropNonNames(text, spans);      // Day 4.24: "Aadhaar", "PAN", "UPI" ... are never a person's name
 }
 
 /**

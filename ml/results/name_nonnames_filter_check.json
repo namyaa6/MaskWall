@@ -1,0 +1,303 @@
+{
+  "note": "Day 4.24: same raw model output scored with and without the non-name filter; see the header of frontend/scripts/bench_nonname_filter.ts",
+  "model": "onnx-community/distilbert-NER-ONNX (q8, WASM)",
+  "frozenConfig": {
+    "tEn": 500,
+    "kH": 2,
+    "share": 0.8
+  },
+  "measured": "2026-11-23T14:48:50.465Z",
+  "recallDropped": [],
+  "results": [
+    {
+      "approach": "A (standard mode)",
+      "set": "existing",
+      "sentences": 62,
+      "before": {
+        "gold": 56,
+        "strict": 47,
+        "overlap": 48,
+        "falsePositiveSpans": 5,
+        "flaggedNoNameSentences": 0,
+        "posGold": 56,
+        "posStrict": 47,
+        "negFalsePositiveSpans": 0
+      },
+      "after": {
+        "gold": 56,
+        "strict": 47,
+        "overlap": 48,
+        "falsePositiveSpans": 5,
+        "flaggedNoNameSentences": 0,
+        "posGold": 56,
+        "posStrict": 47,
+        "negFalsePositiveSpans": 0
+      }
+    },
+    {
+      "approach": "A (standard mode)",
+      "set": "dev",
+      "sentences": 120,
+      "before": {
+        "gold": 66,
+        "strict": 11,
+        "overlap": 14,
+        "falsePositiveSpans": 1,
+        "flaggedNoNameSentences": 0,
+        "posGold": 66,
+        "posStrict": 11,
+        "negFalsePositiveSpans": 0
+      },
+      "after": {
+        "gold": 66,
+        "strict": 11,
+        "overlap": 14,
+        "falsePositiveSpans": 1,
+        "flaggedNoNameSentences": 0,
+        "posGold": 66,
+        "posStrict": 11,
+        "negFalsePositiveSpans": 0
+      }
+    },
+    {
+      "approach": "A (standard mode)",
+      "set": "fresh",
+      "sentences": 120,
+      "before": {
+        "gold": 60,
+        "strict": 10,
+        "overlap": 11,
+        "falsePositiveSpans": 0,
+        "flaggedNoNameSentences": 0,
+        "posGold": 60,
+        "posStrict": 10,
+        "negFalsePositiveSpans": 0
+      },
+      "after": {
+        "gold": 60,
+        "strict": 10,
+        "overlap": 11,
+        "falsePositiveSpans": 0,
+        "flaggedNoNameSentences": 0,
+        "posGold": 60,
+        "posStrict": 10,
+        "negFalsePositiveSpans": 0
+      }
+    },
+    {
+      "approach": "A (standard mode)",
+      "set": "custom",
+      "sentences": 6
+    },
+    {
+      "approach": "B2 (strict mode)",
+      "set": "existing",
+      "sentences": 62,
+      "before": {
+        "gold": 56,
+        "strict": 53,
+        "overlap": 54,
+        "falsePositiveSpans": 11,
+        "flaggedNoNameSentences": 1,
+        "posGold": 56,
+        "posStrict": 53,
+        "negFalsePositiveSpans": 0
+      },
+      "after": {
+        "gold": 56,
+        "strict": 53,
+        "overlap": 54,
+        "falsePositiveSpans": 11,
+        "flaggedNoNameSentences": 1,
+        "posGold": 56,
+        "posStrict": 53,
+        "negFalsePositiveSpans": 0
+      }
+    },
+    {
+      "approach": "B2 (strict mode)",
+      "set": "dev",
+      "sentences": 120,
+      "before": {
+        "gold": 66,
+        "strict": 49,
+        "overlap": 49,
+        "falsePositiveSpans": 20,
+        "flaggedNoNameSentences": 13,
+        "posGold": 66,
+        "posStrict": 49,
+        "negFalsePositiveSpans": 13
+      },
+      "after": {
+        "gold": 66,
+        "strict": 49,
+        "overlap": 49,
+        "falsePositiveSpans": 20,
+        "flaggedNoNameSentences": 13,
+        "posGold": 66,
+        "posStrict": 49,
+        "negFalsePositiveSpans": 13
+      }
+    },
+    {
+      "approach": "B2 (strict mode)",
+      "set": "fresh",
+      "sentences": 120,
+      "before": {
+        "gold": 60,
+        "strict": 48,
+        "overlap": 48,
+        "falsePositiveSpans": 28,
+        "flaggedNoNameSentences": 21,
+        "posGold": 60,
+        "posStrict": 48,
+        "negFalsePositiveSpans": 21
+      },
+      "after": {
+        "gold": 60,
+        "strict": 48,
+        "overlap": 48,
+        "falsePositiveSpans": 28,
+        "flaggedNoNameSentences": 21,
+        "posGold": 60,
+        "posStrict": 48,
+        "negFalsePositiveSpans": 21
+      }
+    },
+    {
+      "approach": "B2 (strict mode)",
+      "set": "custom",
+      "sentences": 6
+    }
+  ],
+  "removedSpans": [
+    {
+      "approach": "A (standard)",
+      "set": "custom",
+      "text": "Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "removed": "Aadhaar"
+    },
+    {
+      "approach": "A (standard)",
+      "set": "custom",
+      "text": "Rahul Sharma's Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "removed": "Aadhaar"
+    },
+    {
+      "approach": "A (standard)",
+      "set": "custom",
+      "text": "aadhaar 1234 5768 9881 and pan abcde1234f",
+      "removed": "aadhaar"
+    },
+    {
+      "approach": "B2 (strict)",
+      "set": "custom",
+      "text": "Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "removed": "Aadhaar"
+    },
+    {
+      "approach": "B2 (strict)",
+      "set": "custom",
+      "text": "Rahul Sharma's Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "removed": "Aadhaar"
+    },
+    {
+      "approach": "B2 (strict)",
+      "set": "custom",
+      "text": "aadhaar 1234 5768 9881 and pan abcde1234f",
+      "removed": "aadhaar"
+    }
+  ],
+  "customSentences": [
+    {
+      "approach": "A (standard)",
+      "text": "Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "namesBefore": [
+        "Aadhaar"
+      ],
+      "namesAfter": []
+    },
+    {
+      "approach": "A (standard)",
+      "text": "My Aadhaar is 1234 5768 9881 and my PAN is ABCDE1234F.",
+      "namesBefore": [],
+      "namesAfter": []
+    },
+    {
+      "approach": "A (standard)",
+      "text": "Rahul Sharma's Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "namesBefore": [
+        "Rahul Sharma",
+        "Aadhaar"
+      ],
+      "namesAfter": [
+        "Rahul Sharma"
+      ]
+    },
+    {
+      "approach": "A (standard)",
+      "text": "Please verify my Passport and Voter ID, my UPI id and the OTP for KYC.",
+      "namesBefore": [],
+      "namesAfter": []
+    },
+    {
+      "approach": "A (standard)",
+      "text": "GSTIN 27ABCDE1234F1Z5 and IFSC HDFC0001234 are on the invoice",
+      "namesBefore": [],
+      "namesAfter": []
+    },
+    {
+      "approach": "A (standard)",
+      "text": "aadhaar 1234 5768 9881 and pan abcde1234f",
+      "namesBefore": [
+        "aadhaar"
+      ],
+      "namesAfter": []
+    },
+    {
+      "approach": "B2 (strict)",
+      "text": "Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "namesBefore": [
+        "Aadhaar"
+      ],
+      "namesAfter": []
+    },
+    {
+      "approach": "B2 (strict)",
+      "text": "My Aadhaar is 1234 5768 9881 and my PAN is ABCDE1234F.",
+      "namesBefore": [],
+      "namesAfter": []
+    },
+    {
+      "approach": "B2 (strict)",
+      "text": "Rahul Sharma's Aadhaar 1234 5768 9881 and PAN ABCDE1234F",
+      "namesBefore": [
+        "Rahul Sharma",
+        "Aadhaar"
+      ],
+      "namesAfter": [
+        "Rahul Sharma"
+      ]
+    },
+    {
+      "approach": "B2 (strict)",
+      "text": "Please verify my Passport and Voter ID, my UPI id and the OTP for KYC.",
+      "namesBefore": [],
+      "namesAfter": []
+    },
+    {
+      "approach": "B2 (strict)",
+      "text": "GSTIN 27ABCDE1234F1Z5 and IFSC HDFC0001234 are on the invoice",
+      "namesBefore": [],
+      "namesAfter": []
+    },
+    {
+      "approach": "B2 (strict)",
+      "text": "aadhaar 1234 5768 9881 and pan abcde1234f",
+      "namesBefore": [
+        "aadhaar"
+      ],
+      "namesAfter": []
+    }
+  ]
+}

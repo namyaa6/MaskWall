@@ -76,6 +76,40 @@ try {
   check("Chat: an AI answer came back through the firewall", reply.length > 20 && !/Not answered/.test(reply), reply.slice(0, 80).replace(/\n/g, " "));
   await shot("chat.png");
 
+  // 2b. the exact sentence from the owner's bug report (Day 4.24): the name model must not hide the word "Aadhaar" as a person, so exactly
+  //     2 details are hidden, and the legend lists only the placeholder types that are in the message. The request is answered by a stub
+  //     inside the browser (it never reaches the real API), so this makes NO AI call and costs no quota.
+  const idSentence = "Aadhaar 1234 5768 9881 and PAN ABCDE1234F";
+  const idBodies = [];
+  const stubHeaders = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "POST, OPTIONS" };
+  const isApiChat = (u) => u.pathname === "/chat" && u.origin !== site;     // the API, not the site's own /chat page
+  await page.route(isApiChat, async (route) => {
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: stubHeaders });
+    const message = JSON.parse(route.request().postData() ?? "{}").message ?? "";
+    idBodies.push(message);
+    return route.fulfill({
+      status: 200, headers: stubHeaders, contentType: "application/json",
+      body: JSON.stringify({
+        request_id: "live-check-ids", action: "allow", response: "Noted.",
+        input: { score: 0.01, scored: true, verdict: "allow", reasons: [], notes: [], hidden_characters_removed: 0, coverage: "full", mode: "head_tail", n_tokens: 10, n_windows: 1, n_windows_needed: 1, scanned_tokens: 10, thresholds: { warn: 0.5, block: 0.9 }, pii_masked: {}, pii_unverified: {}, masked_input: message, windows: [] },
+        latency_ms: { pii_ms: 1, tokenize_ms: 1, inference_ms: 1, total_ms: 3 }, truncated: false, output: null, llm: null,
+      }),
+    });
+  });
+  await page.goto(`${site}/chat`);
+  await page.getByLabel("Your message").fill(idSentence);
+  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByText(/personal details? hidden before sending/).last().waitFor({ timeout: 4 * 60_000 });
+  await page.getByTestId("ph-legend").waitFor({ timeout: 60_000 });
+  const idMeta = await page.getByText(/personal details? hidden before sending/).last().innerText();
+  check("Chat: 'Aadhaar 1234 5768 9881 and PAN ABCDE1234F' sends \"Aadhaar [AADHAAR_1] and PAN [PAN_1]\" (the word Aadhaar is not hidden as a name)",
+    idBodies.length === 1 && idBodies[0] === "Aadhaar [AADHAAR_1] and PAN [PAN_1]", JSON.stringify(idBodies));
+  check("...and the panel says exactly 2 personal details were hidden", idMeta.startsWith("2 personal details hidden"), idMeta);
+  const legendText = await page.getByTestId("ph-legend").innerText();
+  check("...and the legend under 'What the AI actually received' lists only Aadhaar and PAN placeholders (no email)",
+    legendText.includes("[AADHAAR_1]") && legendText.includes("[PAN_1]") && !legendText.includes("[EMAIL_1]") && !legendText.includes("[NAME_1]"), legendText.replace(/\s+/g, " "));
+  await page.unroute(isApiChat);
+
   // 3. the early-warning model came from the Hub (pinned commit), not from the site
   const hubModel = requests.filter((u) => u.includes("huggingface.co") && u.includes("namya06/maskwall-injection-minilm"));
   check("pre-check model was downloaded from the Hugging Face Hub", hubModel.some((u) => u.includes("model_quantized.onnx")), `${hubModel.length} requests`);
