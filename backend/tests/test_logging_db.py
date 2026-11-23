@@ -1,3 +1,5 @@
+import os
+import shutil
 import sqlite3
 import threading
 import time
@@ -236,23 +238,64 @@ def test_stats_result_is_cached_for_ttl_seconds_and_refreshed_after(tmp_path):
 
 
 def test_stats_on_a_large_table_is_fast_and_does_not_block_writers(tmp_path):
+    # This test builds a 100,000-row database (about 13 MB plus SQLite's temporary files) in the temp folder. On a nearly full drive SQLite
+    # fails with "database or disk is full", which looks like a flaky test but is not (seen locally with 20 MB free). Say so instead.
+    # CI never skips: there a failure must count.
+    free_mb = shutil.disk_usage(tmp_path).free / 2**20
+    if free_mb < 150 and not os.environ.get("CI"):
+        pytest.skip(f"needs about 150 MB of free disk space in the temp folder; only {free_mb:.0f} MB free")
     db = EventLog(tmp_path / "big.sqlite", retention_days=None, max_rows=None)
     now = time.time()
     rows = [(now - i, "r", "/chat", "allow" if i % 5 else "block", 0.1, '{"EMAIL":1}', '{"inference_ms":3.0,"total_ms":5.0}') for i in range(100_000)]
     with db._lock:
         db._db.executemany("INSERT INTO events (ts, request_id, endpoint, action, injection_score, pii, latency_ms) VALUES (?,?,?,?,?,?,?)", rows)
         db._db.commit()
-    t = time.perf_counter()
-    s = db.stats()
-    elapsed = time.perf_counter() - t
-    assert s["total_requests"] == 100_000 and s["pii_caught_server_side"] == {"EMAIL": 100_000} and elapsed < 3.0, elapsed
-    # a write during a long read is not blocked by the statistics lock (separate read connection, WAL)
-    done = []
-    reader = threading.Thread(target=lambda: [db.stats() for _ in range(3)])
+    # The limits are RELATIVE to work measured in the same moment on the same machine, not fixed seconds: a fixed limit (it used to be
+    # 3.0 s) fails on a busy machine although nothing is wrong (seen at 3.1 to 8.4 s while the CPU was saturated, against about
+    # 0.33 s when idle). Best of 3 filters one-off stalls.
+    def best_of(n, fn):
+        out = []
+        for _ in range(n):
+            t = time.perf_counter()
+            result = fn()
+            out.append(time.perf_counter() - t)
+        return min(out), result
+
+    # yardstick: the heaviest single query inside stats() (the JSON aggregate over every row), measured warm (the first read after the bulk
+    # insert is about twice as slow, which would loosen the limit). Idle, stats() is about 5.5x this; the limit is 12x, so stats() has to
+    # become more than twice as slow (for example by pulling all 100,000 rows into Python or scanning the table many more times) to fail.
+    aggregate = "SELECT j.key, SUM(j.value) FROM events, json_each(events.pii) AS j GROUP BY j.key"
+    db._read.execute(aggregate).fetchall()
+    yardstick, _ = best_of(3, lambda: db._read.execute(aggregate).fetchall())
+    stats_s, s = best_of(3, db.stats)
+    assert s["total_requests"] == 100_000 and s["pii_caught_server_side"] == {"EMAIL": 100_000}
+    assert stats_s < 12 * max(yardstick, 0.01), f"stats() {stats_s:.3f}s vs yardstick {yardstick:.3f}s"
+
+    # a write during long reads is not blocked by the statistics read (separate read connection, WAL). A reader runs stats() in a loop
+    # for the whole time; blocked writes would each wait for a stats() call, so 20 of them would take many times stats_s. Free writes
+    # take a few milliseconds each, far below one stats() call. A reader error is collected and asserted (not lost in the thread).
+    stop, started, reader_errors = threading.Event(), threading.Event(), []
+
+    def read_forever():
+        try:
+            while not stop.is_set():
+                started.set()
+                db.stats()
+        except Exception as e:                      # noqa: BLE001 - reported by the assertion below
+            reader_errors.append(repr(e))
+            started.set()
+
+    reader = threading.Thread(target=read_forever)
     reader.start()
-    t = time.perf_counter()
-    for _ in range(20):
-        db.record(ev())
-    done.append(time.perf_counter() - t)
-    reader.join()
-    assert done[0] < 2.0, done
+    try:
+        assert started.wait(10)
+        time.sleep(0.02)                            # let the reader get into a query
+        t = time.perf_counter()
+        for _ in range(20):
+            db.record(ev())
+        writes_s = time.perf_counter() - t
+    finally:
+        stop.set()
+        reader.join()
+    assert reader_errors == []
+    assert writes_s < stats_s, f"20 writes took {writes_s:.3f}s while one stats() takes {stats_s:.3f}s"

@@ -104,6 +104,7 @@ def build() -> str:
 
     # 5. privacy layer
     ner = next(r for r in R["ner"]["rows"] if r["model"] == R["ner"]["selected"])
+    shape_cost = json.loads((ROOT / "ml" / "results" / "pii_shape_cost.json").read_text(encoding="utf-8"))["TOTAL"]
     n_pii = len(json.loads((ROOT / "backend" / "tests" / "fixtures" / "pii_cases.json").read_text(encoding="utf-8"))["cases"])
     pc = R["browser_precheck"]
     parts.append("### The in-browser privacy layer\n")
@@ -111,7 +112,11 @@ def build() -> str:
         [f"Name detection ({ner['model']}, {ner['q8_mb']} MB, runs on your device)",
          f"{ner['strict']}/{ner['gold']} names fully hidden on an AI-drafted sample of {R['ner']['n_sentences']} sentences (not reviewed by the owner); lowercase names {ner['lowercase']['strict']}/{ner['lowercase']['gold']}; "
          f"Hinglish {ner['hinglish']['strict']}/{ner['hinglish']['gold']}; {ner['false_positives']} ordinary words wrongly hidden; median {ner['median_ms']:.0f} ms per sentence (headless Chromium on a laptop)"],
-        ["Emails, Indian phone numbers, Aadhaar (Verhoeff checksum), PAN (format)", f"rule-based; pass all {n_pii} shared test cases (a test suite, not a recall measurement on held-out real data), the same cases run against the TypeScript and Python versions"],
+        ["Emails, Indian phone numbers, Aadhaar (any 12 digits, optionally in 4-4-4 groups), PAN (5 letters, 4 digits, 1 letter; any case when written together, UPPERCASE only when it contains spaces or hyphens)",
+         f"rule-based; pass all {n_pii} shared test cases (a test suite, not a recall measurement on held-out real data), the same cases run against the TypeScript and Python versions. "
+         "Aadhaar and PAN are hidden **by shape**: the Verhoeff checksum, the first-digit rule and the PAN holder letter only label a hit “verified” or “looks like” in the side panel. "
+         f"Cost of the looser rule on the {shape_cost['texts']:,} benign texts we already have (ml/pii_shape_cost.py): {shape_cost['shape']} texts hid something harmless, against {shape_cost['strict']} with the old strict rule; "
+         "see [decisions](docs/decisions.md) Day 4.21 and 4.22"],
         ["Early attack warning in the browser (same int8 model, WASM)", f"same verdict as the server on all {pc['n']} golden prompts (none of them near a threshold), score difference up to {pc['max_abs_diff']:.1e} for the local copy and up to 0.09 logits for the copy production downloads from the Hub; {pc['short_median_ms']:.0f} ms for a short message (laptop)"],
     ]))
     parts.append("\nLatency added per layer for a short message: names and masking on your device about "
